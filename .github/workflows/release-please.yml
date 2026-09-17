@@ -16,6 +16,3 @@ jobs:
       - uses: googleapis/release-please-action@v4
         with:
           release-type: node
-          # Overrides release-please's 1.0.0 bootstrap default to stay pre-1.0.
-          # Remove after 0.2.0 ships, or every later release is pinned here too.
-          release-as: 0.2.0
