@@ -10,3 +10,6 @@ dist-ssr
 package-lock.json
 pnpm-lock.yaml
 yarn.lock
+
+# Owned by release-please, which emits its own markdown style
+CHANGELOG.md
