@@ -1,0 +1,18 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+dist-ssr
+*.local
+
+# Rust / Tauri (formatted by rustfmt)
+src-tauri/target
+src-tauri/gen
+src-tauri/**/*.rs
+
+# Lockfiles & generated
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+Cargo.lock
