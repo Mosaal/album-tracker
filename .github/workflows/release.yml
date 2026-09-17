@@ -1,0 +1,156 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  RELEASE_TAG: latest
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.create.outputs.result }}
+    steps:
+      - uses: actions/github-script@v9
+        id: create
+        with:
+          script: |
+            const tag = process.env.RELEASE_TAG;
+            const { owner, repo } = context.repo;
+
+            // Match on tag_name instead of getReleaseByTag, which 404s on drafts
+            // left behind by a cancelled or failed run.
+            const releases = await github.paginate(github.rest.repos.listReleases, {
+              owner,
+              repo,
+              per_page: 100,
+            });
+            for (const release of releases.filter((r) => r.tag_name === tag)) {
+              core.info(`Deleting release ${release.id} (draft: ${release.draft})`);
+              await github.rest.repos.deleteRelease({ owner, repo, release_id: release.id });
+            }
+
+            try {
+              await github.rest.git.deleteRef({ owner, repo, ref: `tags/${tag}` });
+              core.info(`Deleted tag ${tag}`);
+            } catch (error) {
+              if (error.status !== 404 && error.status !== 422) throw error;
+            }
+
+            const { data: created } = await github.rest.repos.createRelease({
+              owner,
+              repo,
+              tag_name: tag,
+              target_commitish: context.sha,
+              name: `Latest build (${context.sha.slice(0, 7)})`,
+              body: [
+                "Rolling build of `main`, rebuilt on every push.",
+                `Commit \`${context.sha.slice(0, 7)}\`.`,
+                "",
+                "Download the file for your platform below.",
+                "",
+                "**macOS** — `.dmg`. The app is not signed with an Apple Developer",
+                "ID, so Gatekeeper blocks it on first launch. After dragging it to",
+                "Applications, run once in Terminal:",
+                "",
+                "```",
+                'xattr -dr com.apple.quarantine "/Applications/album-tracker.app"',
+                "```",
+                "",
+                "Use the `aarch64` build on Apple Silicon and `x64` on Intel.",
+                "",
+                "**Windows** — `.msi` or `.exe`. SmartScreen will warn because the",
+                'installer is unsigned; choose "More info" then "Run anyway".',
+                "",
+                "**Linux** — `.AppImage` (`chmod +x` then run) or `.deb`.",
+              ].join("\n"),
+              draft: true,
+              prerelease: false,
+            });
+            return created.id;
+
+  build:
+    needs: create-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            target: aarch64-apple-darwin
+            args: --target aarch64-apple-darwin
+          - platform: macos-latest
+            target: x86_64-apple-darwin
+            args: --target x86_64-apple-darwin
+          - platform: ubuntu-22.04
+            target: ""
+            args: ""
+          - platform: windows-latest
+            target: ""
+            args: ""
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux build dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libxdo-dev
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: ./src-tauri -> target
+
+      - run: npm ci
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          releaseId: ${{ needs.create-release.outputs.release_id }}
+          uploadUpdaterJson: false
+          args: ${{ matrix.args }}
+
+  publish-release:
+    needs: [create-release, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v9
+        env:
+          RELEASE_ID: ${{ needs.create-release.outputs.release_id }}
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            await github.rest.repos.updateRelease({
+              owner,
+              repo,
+              release_id: Number(process.env.RELEASE_ID),
+              draft: false,
+              make_latest: "true",
+            });
