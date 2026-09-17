@@ -2,6 +2,7 @@ import {
   App as AntdApp,
   ConfigProvider,
   Layout,
+  Space,
   Switch,
   theme,
   Typography,
@@ -28,9 +29,17 @@ function AppHeader({ isDark, onThemeChange }: AppHeaderProps) {
         borderBottom: `1px solid ${token.colorSplit}`,
       }}
     >
-      <Typography.Title level={4} style={{ margin: 0 }}>
-        Album Tracker
-      </Typography.Title>
+      <Space align="baseline" size="small">
+        <Typography.Title level={4} style={{ margin: 0 }}>
+          Album Tracker
+        </Typography.Title>
+        <Typography.Text
+          type="secondary"
+          style={{ fontSize: token.fontSizeSM }}
+        >
+          v{__APP_VERSION__}
+        </Typography.Text>
+      </Space>
       <Switch
         checked={isDark}
         onChange={onThemeChange}
