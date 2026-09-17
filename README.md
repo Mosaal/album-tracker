@@ -1,7 +1,22 @@
-# Tauri + React + Typescript
+# Album Tracker
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+A React + TypeScript web app built with Vite and Ant Design.
 
-## Recommended IDE Setup
+## Development
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+```
+npm install
+npm run dev
+```
+
+## Scripts
+
+| Script                 | Purpose                          |
+| ---------------------- | -------------------------------- |
+| `npm run dev`          | Start the dev server             |
+| `npm run build`        | Type-check and build to `dist/`  |
+| `npm run preview`      | Serve the production build       |
+| `npm run lint`         | Run ESLint                       |
+| `npm run lint:fix`     | Run ESLint with autofix          |
+| `npm run format`       | Format with Prettier             |
+| `npm run format:check` | Check formatting without writing |

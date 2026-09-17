@@ -7,7 +7,7 @@ import tseslint from "typescript-eslint";
 import prettier from "eslint-config-prettier/flat";
 
 export default defineConfig(
-  globalIgnores(["dist", "src-tauri/target", "src-tauri/gen"]),
+  globalIgnores(["dist"]),
   {
     files: ["**/*.{ts,tsx}"],
     extends: [
