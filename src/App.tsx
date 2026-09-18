@@ -1,71 +1,79 @@
-import {
-  App as AntdApp,
-  ConfigProvider,
-  Layout,
-  Space,
-  Switch,
-  theme,
-  Typography,
-} from "antd";
+import { useMemo, useState } from "react";
+import { Flex } from "antd";
+import { AlbumCard, AlbumFilters, Layout } from "./components";
+import { Album, AlbumSortOrder, AlbumStatusFilter } from "./types";
 
-import { useThemeMode } from "./useThemeMode";
+const SORT_COMPARATORS: Record<AlbumSortOrder, (a: Album, b: Album) => number> =
+  {
+    "title-asc": (a, b) => a.title.localeCompare(b.title),
+    "title-desc": (a, b) => b.title.localeCompare(a.title),
+    "artist-asc": (a, b) => a.artist.localeCompare(b.artist),
+    "artist-desc": (a, b) => b.artist.localeCompare(a.artist),
+  };
 
-type AppHeaderProps = {
-  isDark: boolean;
-  onThemeChange: (isDark: boolean) => void;
-};
-
-function AppHeader({ isDark, onThemeChange }: AppHeaderProps) {
-  const { token } = theme.useToken();
-
-  return (
-    <Layout.Header
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingInline: token.paddingLG,
-        background: token.colorBgContainer,
-        borderBottom: `1px solid ${token.colorSplit}`,
-      }}
-    >
-      <Space align="baseline" size="small">
-        <Typography.Title level={4} style={{ margin: 0 }}>
-          Album Tracker
-        </Typography.Title>
-        <Typography.Text
-          type="secondary"
-          style={{ fontSize: token.fontSizeSM }}
-        >
-          v{__APP_VERSION__}
-        </Typography.Text>
-      </Space>
-      <Switch
-        checked={isDark}
-        onChange={onThemeChange}
-        checkedChildren="Dark"
-        unCheckedChildren="Light"
-        aria-label="Toggle dark theme"
-      />
-    </Layout.Header>
-  );
-}
+const albums: Album[] = [
+  {
+    id: "1",
+    title: "Europe Street beat",
+    artist: "Artist Name",
+    coverUrl: "https://placehold.co/600",
+    status: "owned",
+  },
+  {
+    id: "2",
+    title: "Another Album",
+    artist: "Another Artist",
+    coverUrl: "https://placehold.co/600",
+    status: "wishlisted",
+  },
+  {
+    id: "3",
+    title: "Third Album",
+    artist: "Third Artist",
+    coverUrl: "https://placehold.co/600",
+    status: "owned",
+  },
+];
 
 export default function App() {
-  const { isDark, setIsDark } = useThemeMode();
+  const [search, setSearch] = useState("");
+  const [sortOrder, setSortOrder] = useState<AlbumSortOrder>("title-asc");
+  const [statusFilter, setStatusFilter] = useState<AlbumStatusFilter>("all");
+
+  const visibleAlbums = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
+    return albums
+      .filter((album) => {
+        const matchesStatus =
+          statusFilter === "all" || album.status === statusFilter;
+        const matchesQuery =
+          query === "" ||
+          album.title.toLowerCase().includes(query) ||
+          album.artist.toLowerCase().includes(query);
+
+        return matchesStatus && matchesQuery;
+      })
+      .sort(SORT_COMPARATORS[sortOrder]);
+  }, [search, sortOrder, statusFilter]);
 
   return (
-    <ConfigProvider
-      theme={{
-        algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
-      }}
-    >
-      <AntdApp>
-        <Layout style={{ minHeight: "100vh" }}>
-          <AppHeader isDark={isDark} onThemeChange={setIsDark} />
-          <Layout.Content style={{ padding: 24 }} />
-        </Layout>
-      </AntdApp>
-    </ConfigProvider>
+    <Layout>
+      <Flex vertical gap="16px">
+        <AlbumFilters
+          search={search}
+          onSearchChange={setSearch}
+          sortOrder={sortOrder}
+          onSortOrderChange={setSortOrder}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+        />
+        <Flex gap="16px">
+          {visibleAlbums.map((album) => (
+            <AlbumCard key={album.id} album={album} />
+          ))}
+        </Flex>
+      </Flex>
+    </Layout>
   );
 }
