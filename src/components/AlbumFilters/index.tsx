@@ -3,10 +3,10 @@ import { Flex, Input, Select } from "antd";
 import { AlbumSortOrder, AlbumStatusFilter } from "../../types";
 
 const SORT_OPTIONS: { value: AlbumSortOrder; label: string }[] = [
-  { value: "title-asc", label: "Title (A–Z)" },
-  { value: "title-desc", label: "Title (Z–A)" },
-  { value: "artist-asc", label: "Artist (A–Z)" },
-  { value: "artist-desc", label: "Artist (Z–A)" },
+  { value: "title-asc", label: "Title (A-Z)" },
+  { value: "title-desc", label: "Title (Z-A)" },
+  { value: "artist-asc", label: "Artist (A-Z)" },
+  { value: "artist-desc", label: "Artist (Z-A)" },
 ];
 
 const STATUS_OPTIONS: { value: AlbumStatusFilter; label: string }[] = [

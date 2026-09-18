@@ -1,7 +1,18 @@
 import { useMemo, useState } from "react";
 import { Flex } from "antd";
-import { AlbumCard, AlbumFilters, Layout } from "./components";
-import { Album, AlbumSortOrder, AlbumStatusFilter } from "./types";
+import {
+  AlbumCard,
+  AlbumFilters,
+  AlbumRow,
+  AlbumViewToggle,
+  Layout,
+} from "./components";
+import {
+  Album,
+  AlbumSortOrder,
+  AlbumStatusFilter,
+  AlbumViewMode,
+} from "./types";
 
 const SORT_COMPARATORS: Record<AlbumSortOrder, (a: Album, b: Album) => number> =
   {
@@ -39,6 +50,7 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<AlbumSortOrder>("title-asc");
   const [statusFilter, setStatusFilter] = useState<AlbumStatusFilter>("all");
+  const [viewMode, setViewMode] = useState<AlbumViewMode>("grid");
 
   const visibleAlbums = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -60,19 +72,30 @@ export default function App() {
   return (
     <Layout>
       <Flex vertical gap="16px">
-        <AlbumFilters
-          search={search}
-          onSearchChange={setSearch}
-          sortOrder={sortOrder}
-          onSortOrderChange={setSortOrder}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-        />
-        <Flex gap="16px">
-          {visibleAlbums.map((album) => (
-            <AlbumCard key={album.id} album={album} />
-          ))}
+        <Flex justify="space-between" align="center" gap="16px" wrap>
+          <AlbumFilters
+            search={search}
+            onSearchChange={setSearch}
+            sortOrder={sortOrder}
+            onSortOrderChange={setSortOrder}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+          />
+          <AlbumViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
         </Flex>
+        {viewMode === "grid" ? (
+          <Flex gap="16px">
+            {visibleAlbums.map((album) => (
+              <AlbumCard key={album.id} album={album} />
+            ))}
+          </Flex>
+        ) : (
+          <Flex vertical gap="16px">
+            {visibleAlbums.map((album) => (
+              <AlbumRow key={album.id} album={album} />
+            ))}
+          </Flex>
+        )}
       </Flex>
     </Layout>
   );
