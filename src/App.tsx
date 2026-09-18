@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Flex } from "antd";
+import { createStyles } from "antd-style";
 import {
   AlbumCard,
   AlbumFilters,
@@ -13,6 +14,15 @@ import {
   AlbumStatusFilter,
   AlbumViewMode,
 } from "./types";
+
+const useAlbumGridStyles = createStyles(() => ({
+  grid: {
+    display: "grid",
+    // minmax(0, 1fr) rather than 1fr so wide covers shrink instead of overflowing.
+    gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
+    gap: 16,
+  },
+}));
 
 const SORT_COMPARATORS: Record<AlbumSortOrder, (a: Album, b: Album) => number> =
   {
@@ -47,6 +57,7 @@ const albums: Album[] = [
 ];
 
 export default function App() {
+  const { styles } = useAlbumGridStyles();
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<AlbumSortOrder>("title-asc");
   const [statusFilter, setStatusFilter] = useState<AlbumStatusFilter>("all");
@@ -84,11 +95,11 @@ export default function App() {
           <AlbumViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
         </Flex>
         {viewMode === "grid" ? (
-          <Flex gap="16px">
+          <div className={styles.grid}>
             {visibleAlbums.map((album) => (
               <AlbumCard key={album.id} album={album} />
             ))}
-          </Flex>
+          </div>
         ) : (
           <Flex vertical gap="16px">
             {visibleAlbums.map((album) => (
