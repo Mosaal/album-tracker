@@ -1,6 +1,7 @@
 import { Form, Input, Modal, Radio } from "antd";
 
 import { Album, AlbumInput } from "../../types";
+import { AlbumCoverField } from "../AlbumCoverField";
 
 const STATUS_OPTIONS: { value: Album["status"]; label: string }[] = [
   { value: "owned", label: "Owned" },
@@ -8,22 +9,6 @@ const STATUS_OPTIONS: { value: Album["status"]; label: string }[] = [
 ];
 
 const NEW_ALBUM: AlbumInput = { title: "", artist: "", status: "owned" };
-
-function isHttpUrl(value: string) {
-  try {
-    const { protocol } = new URL(value);
-    return protocol === "http:" || protocol === "https:";
-  } catch {
-    return false;
-  }
-}
-
-async function validateCoverUrl(_: unknown, value?: string) {
-  const url = value?.trim();
-  if (url && !isHttpUrl(url)) {
-    throw new Error("Enter a URL that starts with http:// or https://");
-  }
-}
 
 interface AlbumFormModalProps {
   open: boolean;
@@ -87,13 +72,7 @@ export function AlbumFormModal({
       >
         <Input />
       </Form.Item>
-      <Form.Item
-        name="coverUrl"
-        label="Cover image URL"
-        rules={[{ validator: validateCoverUrl }]}
-      >
-        <Input inputMode="url" placeholder="https://example.com/cover.jpg" />
-      </Form.Item>
+      <AlbumCoverField />
       <Form.Item name="status" label="Status" rules={[{ required: true }]}>
         <Radio.Group options={STATUS_OPTIONS} optionType="button" />
       </Form.Item>
