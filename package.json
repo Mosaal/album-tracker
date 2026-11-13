@@ -13,6 +13,7 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@ant-design/icons": "^6.3.4",
     "antd": "^6.6.4",
     "antd-style": "^4.1.0",
     "react": "^19.1.0",

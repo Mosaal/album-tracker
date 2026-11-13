@@ -1,15 +1,19 @@
 import { useMemo, useState } from "react";
-import { Flex } from "antd";
+import { Button, Empty, Flex, Modal } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
 import { createStyles } from "antd-style";
 import {
   AlbumCard,
   AlbumFilters,
+  AlbumFormModal,
   AlbumRow,
   AlbumViewToggle,
   Layout,
 } from "./components";
+import { useAlbums } from "./hooks";
 import {
   Album,
+  AlbumInput,
   AlbumSortOrder,
   AlbumStatusFilter,
   AlbumViewMode,
@@ -39,36 +43,18 @@ const SORT_COMPARATORS: Record<AlbumSortOrder, (a: Album, b: Album) => number> =
     "artist-desc": (a, b) => b.artist.localeCompare(a.artist),
   };
 
-const albums: Album[] = [
-  {
-    id: "1",
-    title: "Europe Street beat",
-    artist: "Artist Name",
-    coverUrl: "https://placehold.co/600",
-    status: "owned",
-  },
-  {
-    id: "2",
-    title: "Another Album",
-    artist: "Another Artist",
-    coverUrl: "https://placehold.co/600",
-    status: "wishlisted",
-  },
-  {
-    id: "3",
-    title: "Third Album",
-    artist: "Third Artist",
-    coverUrl: "https://placehold.co/600",
-    status: "owned",
-  },
-];
-
 export default function App() {
   const { styles } = useAlbumGridStyles();
+  const { albums, addAlbum, updateAlbum, deleteAlbum } = useAlbums();
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<AlbumSortOrder>("title-asc");
   const [statusFilter, setStatusFilter] = useState<AlbumStatusFilter>("all");
   const [viewMode, setViewMode] = useState<AlbumViewMode>("grid");
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  // Not cleared on close, so the modal keeps its title while it animates out.
+  const [editingAlbum, setEditingAlbum] = useState<Album>();
+  // Rendered inside Layout below, so confirm dialogs pick up the theme.
+  const [modal, modalContextHolder] = Modal.useModal();
 
   const visibleAlbums = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -85,7 +71,38 @@ export default function App() {
         return matchesStatus && matchesQuery;
       })
       .sort(SORT_COMPARATORS[sortOrder]);
-  }, [search, sortOrder, statusFilter]);
+  }, [albums, search, sortOrder, statusFilter]);
+
+  const openAddForm = () => {
+    setEditingAlbum(undefined);
+    setIsFormOpen(true);
+  };
+
+  const openEditForm = (album: Album) => {
+    setEditingAlbum(album);
+    setIsFormOpen(true);
+  };
+
+  const handleFormSubmit = (input: AlbumInput) => {
+    if (editingAlbum) {
+      updateAlbum(editingAlbum.id, input);
+    } else {
+      addAlbum(input);
+    }
+    setIsFormOpen(false);
+  };
+
+  const confirmDelete = (album: Album) => {
+    modal.confirm({
+      title: "Delete this album?",
+      content: `"${album.title}" by ${album.artist} will be permanently removed.`,
+      okText: "Delete",
+      okButtonProps: { danger: true },
+      // Start on Cancel so pressing Enter can't delete by accident.
+      focusable: { autoFocusButton: "cancel" },
+      onOk: () => deleteAlbum(album.id),
+    });
+  };
 
   return (
     <Layout>
@@ -99,22 +116,69 @@ export default function App() {
             statusFilter={statusFilter}
             onStatusFilterChange={setStatusFilter}
           />
-          <AlbumViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+          <Flex gap="16px" align="center">
+            <AlbumViewToggle
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+            />
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={openAddForm}
+            >
+              Add album
+            </Button>
+          </Flex>
         </Flex>
-        {viewMode === "grid" ? (
+        {visibleAlbums.length === 0 ? (
+          <Empty
+            description={
+              albums.length === 0
+                ? "No albums yet"
+                : "No albums match your search or filter"
+            }
+          >
+            {albums.length === 0 && (
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={openAddForm}
+              >
+                Add your first album
+              </Button>
+            )}
+          </Empty>
+        ) : viewMode === "grid" ? (
           <div className={styles.grid}>
             {visibleAlbums.map((album) => (
-              <AlbumCard key={album.id} album={album} />
+              <AlbumCard
+                key={album.id}
+                album={album}
+                onEdit={openEditForm}
+                onDelete={confirmDelete}
+              />
             ))}
           </div>
         ) : (
           <Flex vertical gap="16px">
             {visibleAlbums.map((album) => (
-              <AlbumRow key={album.id} album={album} />
+              <AlbumRow
+                key={album.id}
+                album={album}
+                onEdit={openEditForm}
+                onDelete={confirmDelete}
+              />
             ))}
           </Flex>
         )}
       </Flex>
+      <AlbumFormModal
+        open={isFormOpen}
+        album={editingAlbum}
+        onSubmit={handleFormSubmit}
+        onCancel={() => setIsFormOpen(false)}
+      />
+      {modalContextHolder}
     </Layout>
   );
 }
