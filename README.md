@@ -21,7 +21,7 @@ git checkout -b feat/my-change
 git push -u origin feat/my-change
 ```
 
-CI runs lint, format and build on every pull request.
+CI runs lint, format, tests and build on every pull request.
 
 ### Commit messages
 
@@ -57,3 +57,5 @@ version and publishes a GitHub release.
 | `npm run lint:fix`     | Run ESLint with autofix          |
 | `npm run format`       | Format with Prettier             |
 | `npm run format:check` | Check formatting without writing |
+| `npm test`             | Run the tests once               |
+| `npm run test:watch`   | Re-run the tests on every change |
