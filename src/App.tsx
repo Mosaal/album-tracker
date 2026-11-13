@@ -15,12 +15,19 @@ import {
   AlbumViewMode,
 } from "./types";
 
-const useAlbumGridStyles = createStyles(() => ({
+// minmax(0, 1fr) rather than 1fr so wide covers shrink instead of overflowing.
+const gridColumns = (count: number) => `repeat(${count}, minmax(0, 1fr))`;
+
+const useAlbumGridStyles = createStyles(({ responsive }) => ({
   grid: {
     display: "grid",
-    // minmax(0, 1fr) rather than 1fr so wide covers shrink instead of overflowing.
-    gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
+    gridTemplateColumns: gridColumns(6),
     gap: 16,
+    // Max-width queries overlap: keep them widest first so the narrowest wins.
+    [responsive.lg]: { gridTemplateColumns: gridColumns(5) },
+    [responsive.md]: { gridTemplateColumns: gridColumns(4) },
+    [responsive.sm]: { gridTemplateColumns: gridColumns(3) },
+    [responsive.xs]: { gridTemplateColumns: gridColumns(2) },
   },
 }));
 
