@@ -1,3 +1,4 @@
+import { useLayoutEffect } from "react";
 import {
   App as AntdApp,
   ConfigProvider,
@@ -19,6 +20,7 @@ export function Layout({ children }: { children?: React.ReactNode }) {
         algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
       }}
     >
+      <PageBackground isDark={isDark} />
       <AntdApp>
         <AntdLayout style={{ minHeight: "100vh" }}>
           <Header isDark={isDark} onThemeChange={setIsDark} />
@@ -29,6 +31,20 @@ export function Layout({ children }: { children?: React.ReactNode }) {
       </AntdApp>
     </ConfigProvider>
   );
+}
+
+// Mobile browsers show the page's own background around their status bar and
+// toolbars, so it has to follow the theme instead of staying the default white.
+function PageBackground({ isDark }: { isDark: boolean }) {
+  const { token } = theme.useToken();
+
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    root.style.colorScheme = isDark ? "dark" : "light";
+    root.style.backgroundColor = token.colorBgLayout;
+  }, [isDark, token.colorBgLayout]);
+
+  return null;
 }
 
 const useHeaderStyles = createStyles(({ token }) => ({
