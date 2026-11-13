@@ -8,6 +8,7 @@ import {
 import { createStyles } from "antd-style";
 
 import { Album } from "../../types";
+import { AlbumStatusSwitch } from "../AlbumStatusSwitch";
 
 const useCoverStyles = createStyles(({ token }) => ({
   image: {
@@ -21,6 +22,16 @@ const useCoverStyles = createStyles(({ token }) => ({
     fontSize: token.fontSizeHeading1,
     color: token.colorTextQuaternary,
     background: token.colorFillTertiary,
+  },
+}));
+
+const useCardStyles = createStyles(() => ({
+  // One line, like the title, so a long artist name can't push this card's
+  // switch and buttons out of line with its neighbours.
+  artist: {
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
   },
 }));
 
@@ -51,9 +62,17 @@ interface AlbumCardProps {
   album: Album;
   onEdit: (album: Album) => void;
   onDelete: (album: Album) => void;
+  onStatusChange: (album: Album, status: Album["status"]) => void;
 }
 
-export function AlbumCard({ album, onEdit, onDelete }: AlbumCardProps) {
+export function AlbumCard({
+  album,
+  onEdit,
+  onDelete,
+  onStatusChange,
+}: AlbumCardProps) {
+  const { styles } = useCardStyles();
+
   return (
     <Card
       cover={<AlbumCover album={album} />}
@@ -76,7 +95,15 @@ export function AlbumCard({ album, onEdit, onDelete }: AlbumCardProps) {
         />,
       ]}
     >
-      <Card.Meta title={album.title} description={album.artist} />
+      <Card.Meta
+        title={album.title}
+        description={<div className={styles.artist}>{album.artist}</div>}
+      />
+      <AlbumStatusSwitch
+        album={album}
+        onChange={onStatusChange}
+        style={{ marginTop: 12 }}
+      />
     </Card>
   );
 }

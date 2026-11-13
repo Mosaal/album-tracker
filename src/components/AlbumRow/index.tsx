@@ -6,14 +6,21 @@ import {
 } from "@ant-design/icons";
 
 import { Album } from "../../types";
+import { AlbumStatusSwitch } from "../AlbumStatusSwitch";
 
 interface AlbumRowProps {
   album: Album;
   onEdit: (album: Album) => void;
   onDelete: (album: Album) => void;
+  onStatusChange: (album: Album, status: Album["status"]) => void;
 }
 
-export function AlbumRow({ album, onEdit, onDelete }: AlbumRowProps) {
+export function AlbumRow({
+  album,
+  onEdit,
+  onDelete,
+  onStatusChange,
+}: AlbumRowProps) {
   return (
     <Card size="small">
       <Flex gap="16px" align="center">
@@ -31,6 +38,11 @@ export function AlbumRow({ album, onEdit, onDelete }: AlbumRowProps) {
           <Typography.Text type="secondary" ellipsis>
             {album.artist}
           </Typography.Text>
+          <AlbumStatusSwitch
+            album={album}
+            onChange={onStatusChange}
+            style={{ alignSelf: "flex-start", marginTop: 4 }}
+          />
         </Flex>
         <Flex gap="4px">
           <Button

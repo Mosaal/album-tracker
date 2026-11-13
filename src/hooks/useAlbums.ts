@@ -34,9 +34,15 @@ export function useAlbums() {
     );
   }, []);
 
+  const setAlbumStatus = useCallback((id: string, status: Album["status"]) => {
+    setAlbums((current) =>
+      current.map((album) => (album.id === id ? { ...album, status } : album)),
+    );
+  }, []);
+
   const deleteAlbum = useCallback((id: string) => {
     setAlbums((current) => current.filter((album) => album.id !== id));
   }, []);
 
-  return { albums, addAlbum, updateAlbum, deleteAlbum };
+  return { albums, addAlbum, updateAlbum, setAlbumStatus, deleteAlbum };
 }
