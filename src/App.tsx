@@ -45,7 +45,8 @@ const SORT_COMPARATORS: Record<AlbumSortOrder, (a: Album, b: Album) => number> =
 
 export default function App() {
   const { styles } = useAlbumGridStyles();
-  const { albums, addAlbum, updateAlbum, deleteAlbum } = useAlbums();
+  const { albums, addAlbum, updateAlbum, setAlbumStatus, deleteAlbum } =
+    useAlbums();
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<AlbumSortOrder>("title-asc");
   const [statusFilter, setStatusFilter] = useState<AlbumStatusFilter>("all");
@@ -90,6 +91,10 @@ export default function App() {
       addAlbum(input);
     }
     setIsFormOpen(false);
+  };
+
+  const changeStatus = (album: Album, status: Album["status"]) => {
+    setAlbumStatus(album.id, status);
   };
 
   const confirmDelete = (album: Album) => {
@@ -156,6 +161,7 @@ export default function App() {
                 album={album}
                 onEdit={openEditForm}
                 onDelete={confirmDelete}
+                onStatusChange={changeStatus}
               />
             ))}
           </div>
@@ -167,6 +173,7 @@ export default function App() {
                 album={album}
                 onEdit={openEditForm}
                 onDelete={confirmDelete}
+                onStatusChange={changeStatus}
               />
             ))}
           </Flex>
