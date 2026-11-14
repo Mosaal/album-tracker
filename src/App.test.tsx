@@ -78,7 +78,7 @@ describe("App", () => {
     await user.click(within(dialog).getByRole("button", { name: "Add" }));
 
     expect(await within(dialog).findByText("Enter a title")).toBeVisible();
-    expect(within(dialog).getByText("Enter an artist")).toBeVisible();
+    expect(await within(dialog).findByText("Enter an artist")).toBeVisible();
     expect(saved()).toEqual([]);
   });
 
