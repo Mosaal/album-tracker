@@ -9,6 +9,12 @@ import pkg from "./package.json" with { type: "json" };
 export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
+    {
+      // Fills in the version shown by the header copy in index.html.
+      name: "app-version",
+      transformIndexHtml: (html) =>
+        html.replaceAll("%APP_VERSION%", pkg.version),
+    },
     // Makes the built app installable and usable offline. Off in dev.
     VitePWA({
       registerType: "autoUpdate",

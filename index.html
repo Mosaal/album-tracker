@@ -12,10 +12,89 @@
       content="Keep track of the albums you own and the ones you want."
     />
     <title>Album Tracker</title>
+    <script>
+      // Picks the theme before the first paint, the same way useThemeMode
+      // does, so the page has the right colours while the app loads.
+      (() => {
+        const choice = localStorage.getItem("album-tracker:theme");
+        const isDark =
+          choice === "dark" ||
+          (choice !== "light" &&
+            matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.dataset.theme = isDark ? "dark" : "light";
+      })();
+    </script>
+    <style>
+      /* The page background and a copy of the app's header, shown until React
+         replaces everything in #root on its first render. Keep them in step
+         with components/Layout. */
+      html {
+        color-scheme: light;
+        background-color: #f5f5f5;
+      }
+      html[data-theme="dark"] {
+        color-scheme: dark;
+        background-color: #000;
+      }
+      .app-shell {
+        display: flex;
+        align-items: center;
+        box-sizing: border-box;
+        height: 64px;
+        padding: 0 24px;
+        border-bottom: 1px solid rgba(5, 5, 5, 0.06);
+        background-color: #fff;
+        color: rgba(0, 0, 0, 0.88);
+        font:
+          14px/64px -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          "Helvetica Neue",
+          Arial,
+          "Noto Sans",
+          sans-serif,
+          "Apple Color Emoji",
+          "Segoe UI Emoji",
+          "Segoe UI Symbol",
+          "Noto Color Emoji";
+      }
+      [data-theme="dark"] .app-shell {
+        border-bottom-color: rgba(253, 253, 253, 0.12);
+        background-color: #141414;
+        color: rgba(255, 255, 255, 0.85);
+      }
+      .app-shell-title {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+      }
+      .app-shell h4 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 600;
+        line-height: 1.4;
+      }
+      .app-shell span {
+        font-size: 12px;
+        line-height: 1.5714;
+        color: rgba(0, 0, 0, 0.55);
+      }
+      [data-theme="dark"] .app-shell span {
+        color: rgba(255, 255, 255, 0.5);
+      }
+    </style>
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <header class="app-shell">
+        <div class="app-shell-title">
+          <h4>Album Tracker</h4>
+          <div><span>v%APP_VERSION%</span></div>
+        </div>
+      </header>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
