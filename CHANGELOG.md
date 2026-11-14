@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.4.0](https://github.com/Mosaal/album-tracker/compare/v0.3.1...v0.4.0) (2026-11-14)
+
+
+### Features
+
+* import and export your collection as CSV ([#20](https://github.com/Mosaal/album-tracker/issues/20)) ([cbb46f2](https://github.com/Mosaal/album-tracker/commit/cbb46f24c2fa64b5cb156227cc0ca2329464bd32))
+
+
+### Bug Fixes
+
+* stop iOS zooming in when you tap a text field ([#21](https://github.com/Mosaal/album-tracker/issues/21)) ([3e04f7f](https://github.com/Mosaal/album-tracker/commit/3e04f7fab3871c350f6016f772ba9406bbc8994a))
+
 ## [0.3.1](https://github.com/Mosaal/album-tracker/compare/v0.3.0...v0.3.1) (2026-11-14)
 
 
