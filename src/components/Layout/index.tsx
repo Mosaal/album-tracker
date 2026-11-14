@@ -11,15 +11,12 @@ import {
 import { createStyles } from "antd-style";
 
 import { useThemeMode } from "../../hooks";
+import { getThemeConfig } from "../../theme";
 
 export function Layout({ children }: { children?: React.ReactNode }) {
   const { isDark, setIsDark } = useThemeMode();
   return (
-    <ConfigProvider
-      theme={{
-        algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
-      }}
-    >
+    <ConfigProvider theme={getThemeConfig(isDark)}>
       <PageBackground isDark={isDark} />
       <AntdApp>
         <AntdLayout style={{ minHeight: "100vh" }}>
