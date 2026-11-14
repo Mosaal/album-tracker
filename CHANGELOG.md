@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/Mosaal/album-tracker/compare/v0.4.0...v0.5.0) (2026-11-14)
+
+
+### Features
+
+* show bigger album cards, one column fewer at every screen width ([#23](https://github.com/Mosaal/album-tracker/issues/23)) ([a27c5c9](https://github.com/Mosaal/album-tracker/commit/a27c5c97f2cf4d9ab87d8e74142edbb3d35b4ecb))
+
 ## [0.4.0](https://github.com/Mosaal/album-tracker/compare/v0.3.1...v0.4.0) (2026-11-14)
 
 
