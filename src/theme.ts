@@ -43,6 +43,23 @@ const darkTheme: ThemeConfig = {
   },
 };
 
-export function getThemeConfig(isDark: boolean): ThemeConfig {
+// iOS zooms in on a text field when it's focused if its text is smaller than
+// 16px. antd keeps the field the same height at that size.
+const touchComponents: ThemeConfig["components"] = {
+  Input: { inputFontSize: 16 },
+};
+
+const withTouch = (config: ThemeConfig): ThemeConfig => ({
+  ...config,
+  components: { ...config.components, ...touchComponents },
+});
+
+const lightTouchTheme = withTouch(lightTheme);
+const darkTouchTheme = withTouch(darkTheme);
+
+export function getThemeConfig(isDark: boolean, isTouch: boolean): ThemeConfig {
+  if (isTouch) {
+    return isDark ? darkTouchTheme : lightTouchTheme;
+  }
   return isDark ? darkTheme : lightTheme;
 }
