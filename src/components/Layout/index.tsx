@@ -35,11 +35,14 @@ export function Layout({ children }: { children?: React.ReactNode }) {
 
 // Mobile browsers show the page's own background around their status bar and
 // toolbars, so it has to follow the theme instead of staying the default white.
+// index.html sets data-theme first, to style the header it shows while the app
+// loads; keeping it current means it never disagrees with the app.
 function PageBackground({ isDark }: { isDark: boolean }) {
   const { token } = theme.useToken();
 
   useLayoutEffect(() => {
     const root = document.documentElement;
+    root.dataset.theme = isDark ? "dark" : "light";
     root.style.colorScheme = isDark ? "dark" : "light";
     root.style.backgroundColor = token.colorBgLayout;
   }, [isDark, token.colorBgLayout]);
