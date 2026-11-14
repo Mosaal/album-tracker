@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
+import { mergeAlbums } from "../backup";
 import { Album, AlbumInput } from "../types";
 
 const STORAGE_KEY = "album-tracker:albums";
@@ -44,5 +45,22 @@ export function useAlbums() {
     setAlbums((current) => current.filter((album) => album.id !== id));
   }, []);
 
-  return { albums, addAlbum, updateAlbum, setAlbumStatus, deleteAlbum };
+  /** Adds albums from a backup, skipping any already in the collection. */
+  const importAlbums = useCallback(
+    (imported: Album[]) => {
+      const result = mergeAlbums(albums, imported);
+      setAlbums(result.albums);
+      return result;
+    },
+    [albums],
+  );
+
+  return {
+    albums,
+    addAlbum,
+    updateAlbum,
+    setAlbumStatus,
+    deleteAlbum,
+    importAlbums,
+  };
 }

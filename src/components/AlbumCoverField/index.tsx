@@ -5,6 +5,7 @@ import { createStyles } from "antd-style";
 
 import { CoverResult, searchCovers } from "../../api/coverArt";
 import { AlbumInput } from "../../types";
+import { isHttpUrl } from "../../urls";
 
 type CoverSearch =
   | { status: "idle" | "loading" | "error" }
@@ -60,15 +61,6 @@ const useStyles = createStyles(({ token }) => ({
     color: token.colorTextSecondary,
   },
 }));
-
-function isHttpUrl(value: string) {
-  try {
-    const { protocol } = new URL(value);
-    return protocol === "http:" || protocol === "https:";
-  } catch {
-    return false;
-  }
-}
 
 async function validateCoverUrl(_: unknown, value?: string) {
   const url = value?.trim();
