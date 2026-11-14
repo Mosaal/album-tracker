@@ -9,7 +9,7 @@ export interface Album {
 export type AlbumInput = Omit<Album, "id">;
 
 export type AlbumSortOrder =
-  "title-asc" | "title-desc" | "artist-asc" | "artist-desc";
+  "title-asc" | "title-desc" | "artist-asc" | "artist-desc" | "recent";
 
 export type AlbumStatusFilter = "all" | Album["status"];
 

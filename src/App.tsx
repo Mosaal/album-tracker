@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Button, Empty, Flex, Modal } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { createStyles } from "antd-style";
+import { selectAlbums } from "./albumList";
 import {
   AlbumCard,
   AlbumFilters,
@@ -35,14 +36,6 @@ const useAlbumGridStyles = createStyles(({ responsive }) => ({
   },
 }));
 
-const SORT_COMPARATORS: Record<AlbumSortOrder, (a: Album, b: Album) => number> =
-  {
-    "title-asc": (a, b) => a.title.localeCompare(b.title),
-    "title-desc": (a, b) => b.title.localeCompare(a.title),
-    "artist-asc": (a, b) => a.artist.localeCompare(b.artist),
-    "artist-desc": (a, b) => b.artist.localeCompare(a.artist),
-  };
-
 export default function App() {
   const { styles } = useAlbumGridStyles();
   const { albums, addAlbum, updateAlbum, setAlbumStatus, deleteAlbum } =
@@ -57,22 +50,10 @@ export default function App() {
   // Rendered inside Layout below, so confirm dialogs pick up the theme.
   const [modal, modalContextHolder] = Modal.useModal();
 
-  const visibleAlbums = useMemo(() => {
-    const query = search.trim().toLowerCase();
-
-    return albums
-      .filter((album) => {
-        const matchesStatus =
-          statusFilter === "all" || album.status === statusFilter;
-        const matchesQuery =
-          query === "" ||
-          album.title.toLowerCase().includes(query) ||
-          album.artist.toLowerCase().includes(query);
-
-        return matchesStatus && matchesQuery;
-      })
-      .sort(SORT_COMPARATORS[sortOrder]);
-  }, [albums, search, sortOrder, statusFilter]);
+  const { visible: visibleAlbums, counts: statusCounts } = useMemo(
+    () => selectAlbums(albums, { search, sortOrder, statusFilter }),
+    [albums, search, sortOrder, statusFilter],
+  );
 
   const openAddForm = () => {
     setEditingAlbum(undefined);
@@ -120,6 +101,7 @@ export default function App() {
             onSortOrderChange={setSortOrder}
             statusFilter={statusFilter}
             onStatusFilterChange={setStatusFilter}
+            statusCounts={statusCounts}
           />
           <Flex gap="16px" align="center">
             <AlbumViewToggle
