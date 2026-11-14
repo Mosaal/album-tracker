@@ -12,6 +12,9 @@ export default defineConfig(({ mode }) => ({
     // Makes the built app installable and usable offline. Off in dev.
     VitePWA({
       registerType: "autoUpdate",
+      // The registration script waits for the page to load anyway, so it
+      // shouldn't hold up the first paint.
+      injectRegister: "script-defer",
       manifest: {
         name: "Album Tracker",
         short_name: "Albums",
