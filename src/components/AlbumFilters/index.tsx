@@ -1,6 +1,6 @@
-import { Flex, Input, Select } from "antd";
+import { Flex, Input, Select, Typography } from "antd";
 
-import { StatusCounts } from "../../albumList";
+import { albumCount } from "../../albumFiles";
 import { AlbumSortOrder, AlbumStatusFilter } from "../../types";
 
 const SORT_OPTIONS: { value: AlbumSortOrder; label: string }[] = [
@@ -24,7 +24,8 @@ interface AlbumFiltersProps {
   onSortOrderChange: (sortOrder: AlbumSortOrder) => void;
   statusFilter: AlbumStatusFilter;
   onStatusFilterChange: (statusFilter: AlbumStatusFilter) => void;
-  statusCounts: StatusCounts;
+  /** How many albums match the search and status filter. */
+  count: number;
 }
 
 export function AlbumFilters({
@@ -34,7 +35,7 @@ export function AlbumFilters({
   onSortOrderChange,
   statusFilter,
   onStatusFilterChange,
-  statusCounts,
+  count,
 }: AlbumFiltersProps) {
   return (
     <Flex gap="16px" wrap>
@@ -53,16 +54,20 @@ export function AlbumFilters({
         aria-label="Sort order"
         style={{ width: 180 }}
       />
-      <Select
-        value={statusFilter}
-        onChange={onStatusFilterChange}
-        options={STATUS_OPTIONS.map((option) => ({
-          ...option,
-          label: `${option.label} (${statusCounts[option.value]})`,
-        }))}
-        aria-label="Filter by status"
-        style={{ width: 160 }}
-      />
+      {/* Grouped so the count never wraps onto a line of its own. */}
+      <Flex gap="small" align="center">
+        <Select
+          value={statusFilter}
+          onChange={onStatusFilterChange}
+          options={STATUS_OPTIONS}
+          aria-label="Filter by status"
+          style={{ width: 160 }}
+        />
+        {/* A status role, so screen readers announce the count as it changes. */}
+        <Typography.Text type="secondary" role="status">
+          {albumCount(count)}
+        </Typography.Text>
+      </Flex>
     </Flex>
   );
 }

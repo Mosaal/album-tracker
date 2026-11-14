@@ -28,7 +28,7 @@ const select = (options: Partial<Parameters<typeof selectAlbums>[1]>) =>
 
 describe("selectAlbums", () => {
   it("lists the most recently added albums first", () => {
-    expect(titles(select({ sortOrder: "recent" }).visible)).toEqual([
+    expect(titles(select({ sortOrder: "recent" }))).toEqual([
       "In Rainbows",
       "Mezzanine",
       "Blue Lines",
@@ -37,7 +37,7 @@ describe("selectAlbums", () => {
   });
 
   it("keeps the newest-first order within a search and status filter", () => {
-    const { visible } = select({
+    const visible = select({
       search: "massive",
       sortOrder: "recent",
       statusFilter: "all",
@@ -46,18 +46,10 @@ describe("selectAlbums", () => {
     expect(titles(visible)).toEqual(["Mezzanine", "Blue Lines"]);
   });
 
-  it("counts every status in the whole collection", () => {
-    expect(select({}).counts).toEqual({ all: 4, owned: 2, wishlisted: 2 });
-  });
-
-  it("counts statuses among the search results, whatever the status filter", () => {
-    const { visible, counts } = select({
-      search: "MASSIVE",
-      statusFilter: "owned",
-    });
+  it("shows albums that match both the search, in any case, and the status", () => {
+    const visible = select({ search: "MASSIVE", statusFilter: "owned" });
 
     expect(titles(visible)).toEqual(["Mezzanine"]);
-    expect(counts).toEqual({ all: 2, owned: 1, wishlisted: 1 });
   });
 
   it("leaves the stored order alone when sorting", () => {
