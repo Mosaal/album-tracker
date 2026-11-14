@@ -40,7 +40,8 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const isFilled = (value: unknown): value is string =>
   typeof value === "string" && value.trim() !== "";
 
-function toAlbum(value: unknown): Album | undefined {
+/** Checks and tidies up an album read from a file; undefined if it's unusable. */
+export function toAlbum(value: unknown): Album | undefined {
   if (
     !isRecord(value) ||
     !isFilled(value.title) ||

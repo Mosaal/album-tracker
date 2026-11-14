@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import App from "../../App";
 import { createBackup, readBackup } from "../../backup";
+import { createCsv, readCsv } from "../../csv";
 import { NoMotion } from "../../test/NoMotion";
 import { Album } from "../../types";
 
@@ -33,24 +34,31 @@ const chooseFile = (file: File) =>
     target: { files: [file] },
   });
 
+/** Catches downloads, returning the spy on the link that's clicked. */
+function mockDownloads() {
+  URL.createObjectURL = vi.fn(() => "blob:download");
+  URL.revokeObjectURL = vi.fn();
+  return vi
+    .spyOn(HTMLAnchorElement.prototype, "click")
+    .mockImplementation(() => {});
+}
+
+const downloadedText = () =>
+  (vi.mocked(URL.createObjectURL).mock.calls[0][0] as Blob).text();
+
 describe("backup menu", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
   it("exports the collection to a backup file", async () => {
-    URL.createObjectURL = vi.fn(() => "blob:backup");
-    URL.revokeObjectURL = vi.fn();
-    const click = vi
-      .spyOn(HTMLAnchorElement.prototype, "click")
-      .mockImplementation(() => {});
+    const click = mockDownloads();
     const user = renderApp(ALBUMS);
 
     await user.click(screen.getByRole("button", { name: "More actions" }));
     await user.click(await screen.findByText("Export backup"));
 
-    const blob = vi.mocked(URL.createObjectURL).mock.calls[0][0] as Blob;
-    expect(readBackup(await blob.text()).albums).toEqual(ALBUMS);
+    expect(readBackup(await downloadedText()).albums).toEqual(ALBUMS);
     expect(click.mock.contexts[0]).toMatchObject({
       download: expect.stringMatching(
         /^album-tracker-backup-\d{4}-\d{2}-\d{2}\.json$/,
@@ -59,11 +67,27 @@ describe("backup menu", () => {
     expect(await screen.findByText("Exported 3 albums.")).toBeVisible();
   });
 
+  it("exports the collection as a CSV file", async () => {
+    const click = mockDownloads();
+    const user = renderApp(ALBUMS);
+
+    await user.click(screen.getByRole("button", { name: "More actions" }));
+    await user.click(await screen.findByText("Export as CSV"));
+
+    expect(readCsv(await downloadedText()).albums).toEqual(
+      ALBUMS.map((album) => ({ ...album, id: expect.any(String) })),
+    );
+    expect(click.mock.contexts[0]).toMatchObject({
+      download: expect.stringMatching(/^album-tracker-\d{4}-\d{2}-\d{2}\.csv$/),
+    });
+    expect(await screen.findByText("Exported 3 albums.")).toBeVisible();
+  });
+
   it("imports albums from a backup, skipping ones already in the collection", async () => {
     const user = renderApp([ALBUMS[0]]);
 
     await user.click(screen.getByRole("button", { name: "More actions" }));
-    await user.click(await screen.findByText("Import backup"));
+    await user.click(await screen.findByText("Import backup or CSV"));
     chooseFile(new File([createBackup(ALBUMS)], "backup.json"));
 
     expect(
@@ -75,14 +99,32 @@ describe("backup menu", () => {
     expect(saved()).toEqual(ALBUMS);
   });
 
-  it("refuses files that aren't backups", async () => {
-    renderApp(ALBUMS);
+  it("imports albums from a CSV file, skipping ones already in the collection", async () => {
+    renderApp([ALBUMS[0]]);
 
-    chooseFile(new File(["{}"], "notes.json"));
+    chooseFile(new File([createCsv(ALBUMS)], "albums.csv"));
 
     expect(
-      await screen.findByText("That file isn't an Album Tracker backup."),
+      await screen.findByText(
+        "Imported 2 albums. Skipped 1 already in your collection.",
+      ),
     ).toBeVisible();
+    expect(cardTitles()).toEqual(["Blue Lines", "In Rainbows", "Kind of Blue"]);
+  });
+
+  it.each([
+    ["notes.json", "{}", "That file isn't an Album Tracker backup."],
+    [
+      "notes.csv",
+      "Name,Year\nKind of Blue,1959",
+      "That CSV file needs Title and Artist columns.",
+    ],
+  ])("refuses %s, which it can't import", async (name, contents, error) => {
+    renderApp(ALBUMS);
+
+    chooseFile(new File([contents], name));
+
+    expect(await screen.findByText(error)).toBeVisible();
     expect(saved()).toEqual(ALBUMS);
   });
 });
