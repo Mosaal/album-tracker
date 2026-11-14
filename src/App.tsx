@@ -8,6 +8,7 @@ import {
   AlbumFormModal,
   AlbumRow,
   AlbumViewToggle,
+  BackupMenu,
   Layout,
 } from "./components";
 import { useAlbums } from "./hooks";
@@ -45,8 +46,14 @@ const SORT_COMPARATORS: Record<AlbumSortOrder, (a: Album, b: Album) => number> =
 
 export default function App() {
   const { styles } = useAlbumGridStyles();
-  const { albums, addAlbum, updateAlbum, setAlbumStatus, deleteAlbum } =
-    useAlbums();
+  const {
+    albums,
+    addAlbum,
+    updateAlbum,
+    setAlbumStatus,
+    deleteAlbum,
+    importAlbums,
+  } = useAlbums();
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<AlbumSortOrder>("title-asc");
   const [statusFilter, setStatusFilter] = useState<AlbumStatusFilter>("all");
@@ -133,6 +140,7 @@ export default function App() {
             >
               Add album
             </Button>
+            <BackupMenu albums={albums} onImport={importAlbums} />
           </Flex>
         </Flex>
         {visibleAlbums.length === 0 ? (

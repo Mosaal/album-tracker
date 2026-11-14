@@ -1,8 +1,9 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import App from "./App";
+import { createBackup, readBackup } from "./backup";
 import { NoMotion } from "./test/NoMotion";
 import { Album } from "./types";
 
@@ -148,5 +149,59 @@ describe("App", () => {
     await user.clear(screen.getByLabelText("Search albums"));
     await choose(user, "Filter by status", "Wishlisted");
     expect(cardTitles()).toEqual(["In Rainbows"]);
+  });
+
+  it("exports the collection to a backup file", async () => {
+    URL.createObjectURL = vi.fn(() => "blob:backup");
+    URL.revokeObjectURL = vi.fn();
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => {});
+    const user = renderApp(ALBUMS);
+
+    await user.click(screen.getByRole("button", { name: "More actions" }));
+    await user.click(await screen.findByText("Export backup"));
+
+    const blob = vi.mocked(URL.createObjectURL).mock.calls[0][0] as Blob;
+    expect(readBackup(await blob.text()).albums).toEqual(ALBUMS);
+    expect(click.mock.contexts[0]).toMatchObject({
+      download: expect.stringMatching(
+        /^album-tracker-backup-\d{4}-\d{2}-\d{2}\.json$/,
+      ),
+    });
+    expect(await screen.findByText("Exported 3 albums.")).toBeVisible();
+    click.mockRestore();
+  });
+
+  it("imports albums from a backup, skipping ones already in the collection", async () => {
+    const user = renderApp([ALBUMS[0]]);
+    const backup = new File([createBackup(ALBUMS)], "backup.json");
+
+    await user.click(screen.getByRole("button", { name: "More actions" }));
+    await user.click(await screen.findByText("Import backup"));
+    fireEvent.change(document.querySelector('input[type="file"]')!, {
+      target: { files: [backup] },
+    });
+
+    expect(
+      await screen.findByText(
+        "Imported 2 albums. Skipped 1 already in your collection.",
+      ),
+    ).toBeVisible();
+    expect(cardTitles()).toEqual(["Blue Lines", "In Rainbows", "Kind of Blue"]);
+    expect(saved()).toEqual([ALBUMS[0], ALBUMS[1], ALBUMS[2]]);
+  });
+
+  it("refuses files that aren't backups", async () => {
+    renderApp(ALBUMS);
+
+    fireEvent.change(document.querySelector('input[type="file"]')!, {
+      target: { files: [new File(["{}"], "notes.json")] },
+    });
+
+    expect(
+      await screen.findByText("That file isn't an Album Tracker backup."),
+    ).toBeVisible();
+    expect(saved()).toEqual(ALBUMS);
   });
 });
