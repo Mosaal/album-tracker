@@ -27,13 +27,13 @@ const gridColumns = (count: number) => `repeat(${count}, minmax(0, 1fr))`;
 const useAlbumGridStyles = createStyles(({ responsive }) => ({
   grid: {
     display: "grid",
-    gridTemplateColumns: gridColumns(6),
+    gridTemplateColumns: gridColumns(5),
     gap: 16,
     // Max-width queries overlap: keep them widest first so the narrowest wins.
-    [responsive.lg]: { gridTemplateColumns: gridColumns(5) },
-    [responsive.md]: { gridTemplateColumns: gridColumns(4) },
-    [responsive.sm]: { gridTemplateColumns: gridColumns(3) },
-    [responsive.xs]: { gridTemplateColumns: gridColumns(2) },
+    [responsive.lg]: { gridTemplateColumns: gridColumns(4) },
+    [responsive.md]: { gridTemplateColumns: gridColumns(3) },
+    [responsive.sm]: { gridTemplateColumns: gridColumns(2) },
+    [responsive.xs]: { gridTemplateColumns: gridColumns(1) },
   },
 }));
 
