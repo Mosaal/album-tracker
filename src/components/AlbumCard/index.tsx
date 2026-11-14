@@ -1,13 +1,10 @@
 import { useState } from "react";
-import { Button, Card } from "antd";
-import {
-  DeleteOutlined,
-  EditOutlined,
-  PictureOutlined,
-} from "@ant-design/icons";
+import { Card } from "antd";
+import { PictureOutlined } from "@ant-design/icons";
 import { createStyles } from "antd-style";
 
 import { Album } from "../../types";
+import { DeleteAlbumButton, EditAlbumButton } from "../AlbumActionButtons";
 import { AlbumStatusSwitch } from "../AlbumStatusSwitch";
 
 const useCoverStyles = createStyles(({ token }) => ({
@@ -25,7 +22,7 @@ const useCoverStyles = createStyles(({ token }) => ({
   },
 }));
 
-const useCardStyles = createStyles(() => ({
+const useCardStyles = createStyles(({ token }) => ({
   // One line, like the title, so a long artist name can't push this card's
   // switch and buttons out of line with its neighbours.
   artist: {
@@ -33,6 +30,15 @@ const useCardStyles = createStyles(() => ({
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
   },
+  // The buttons fill the action bar edge to edge, at the bar's usual height.
+  // The tripled class outweighs antd's ".ant-card .ant-card-actions > li".
+  actions: { "&&& > li": { margin: 0 } },
+  action: { height: 48, borderRadius: 0 },
+  // Rounded to follow the card's bottom corners, just inside its border.
+  firstAction: {
+    borderEndStartRadius: token.borderRadiusLG - token.lineWidth,
+  },
+  lastAction: { borderEndEndRadius: token.borderRadiusLG - token.lineWidth },
 }));
 
 function AlbumCover({ album }: { album: Album }) {
@@ -71,27 +77,26 @@ export function AlbumCard({
   onDelete,
   onStatusChange,
 }: AlbumCardProps) {
-  const { styles } = useCardStyles();
+  const { styles, cx } = useCardStyles();
 
   return (
     <Card
       cover={<AlbumCover album={album} />}
+      classNames={{ actions: styles.actions }}
       actions={[
-        <Button
+        <EditAlbumButton
           key="edit"
-          type="text"
-          size="small"
-          icon={<EditOutlined />}
-          aria-label={`Edit ${album.title}`}
-          onClick={() => onEdit(album)}
+          album={album}
+          onClick={onEdit}
+          block
+          className={cx(styles.action, styles.firstAction)}
         />,
-        <Button
+        <DeleteAlbumButton
           key="delete"
-          type="text"
-          size="small"
-          icon={<DeleteOutlined />}
-          aria-label={`Delete ${album.title}`}
-          onClick={() => onDelete(album)}
+          album={album}
+          onClick={onDelete}
+          block
+          className={cx(styles.action, styles.lastAction)}
         />,
       ]}
     >
