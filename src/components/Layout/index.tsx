@@ -10,13 +10,14 @@ import {
 } from "antd";
 import { createStyles } from "antd-style";
 
-import { useThemeMode } from "../../hooks";
+import { useMediaQuery, useThemeMode } from "../../hooks";
 import { getThemeConfig } from "../../theme";
 
 export function Layout({ children }: { children?: React.ReactNode }) {
   const { isDark, setIsDark } = useThemeMode();
+  const isTouch = useMediaQuery("(pointer: coarse)");
   return (
-    <ConfigProvider theme={getThemeConfig(isDark)}>
+    <ConfigProvider theme={getThemeConfig(isDark, isTouch)}>
       <PageBackground isDark={isDark} />
       <AntdApp>
         <AntdLayout style={{ minHeight: "100vh" }}>
