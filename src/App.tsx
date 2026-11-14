@@ -57,7 +57,7 @@ export default function App() {
   // Rendered inside Layout below, so confirm dialogs pick up the theme.
   const [modal, modalContextHolder] = Modal.useModal();
 
-  const { visible: visibleAlbums, counts: statusCounts } = useMemo(
+  const visibleAlbums = useMemo(
     () => selectAlbums(albums, { search, sortOrder, statusFilter }),
     [albums, search, sortOrder, statusFilter],
   );
@@ -108,7 +108,7 @@ export default function App() {
             onSortOrderChange={setSortOrder}
             statusFilter={statusFilter}
             onStatusFilterChange={setStatusFilter}
-            statusCounts={statusCounts}
+            count={visibleAlbums.length}
           />
           <Flex gap="16px" align="center">
             <AlbumViewToggle

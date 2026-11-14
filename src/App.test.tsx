@@ -146,11 +146,11 @@ describe("App", () => {
     expect(cardTitles()).toEqual(["Kind of Blue", "Blue Lines"]);
 
     await user.clear(screen.getByLabelText("Search albums"));
-    await choose(user, "Filter by status", "Wishlisted (1)");
+    await choose(user, "Filter by status", "Wishlisted");
     expect(cardTitles()).toEqual(["In Rainbows"]);
   });
 
-  it("sorts by recently added and counts albums by status", async () => {
+  it("sorts by recently added and counts the albums shown", async () => {
     const user = renderApp([
       {
         id: "1",
@@ -165,14 +165,15 @@ describe("App", () => {
         status: "wishlisted",
       },
     ]);
-    expect(screen.getByTitle("All albums (2)")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(/^2 albums$/);
 
     await choose(user, "Sort order", "Recently added");
     expect(cardTitles()).toEqual(["Kind of Blue", "Blue Lines"]);
 
     await user.type(screen.getByLabelText("Search albums"), "kind");
-    expect(screen.getByTitle("All albums (1)")).toBeInTheDocument();
-    await choose(user, "Filter by status", "Owned (0)");
+    expect(screen.getByRole("status")).toHaveTextContent(/^1 album$/);
+    await choose(user, "Filter by status", "Owned");
+    expect(screen.getByRole("status")).toHaveTextContent(/^0 albums$/);
     expect(
       screen.getByText("No albums match your search or filter"),
     ).toBeVisible();
