@@ -146,7 +146,35 @@ describe("App", () => {
     expect(cardTitles()).toEqual(["Kind of Blue", "Blue Lines"]);
 
     await user.clear(screen.getByLabelText("Search albums"));
-    await choose(user, "Filter by status", "Wishlisted");
+    await choose(user, "Filter by status", "Wishlisted (1)");
     expect(cardTitles()).toEqual(["In Rainbows"]);
+  });
+
+  it("sorts by recently added and counts albums by status", async () => {
+    const user = renderApp([
+      {
+        id: "1",
+        title: "Blue Lines",
+        artist: "Massive Attack",
+        status: "owned",
+      },
+      {
+        id: "2",
+        title: "Kind of Blue",
+        artist: "Miles Davis",
+        status: "wishlisted",
+      },
+    ]);
+    expect(screen.getByTitle("All albums (2)")).toBeInTheDocument();
+
+    await choose(user, "Sort order", "Recently added");
+    expect(cardTitles()).toEqual(["Kind of Blue", "Blue Lines"]);
+
+    await user.type(screen.getByLabelText("Search albums"), "kind");
+    expect(screen.getByTitle("All albums (1)")).toBeInTheDocument();
+    await choose(user, "Filter by status", "Owned (0)");
+    expect(
+      screen.getByText("No albums match your search or filter"),
+    ).toBeVisible();
   });
 });

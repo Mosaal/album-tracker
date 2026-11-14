@@ -1,5 +1,6 @@
 import { Flex, Input, Select } from "antd";
 
+import { StatusCounts } from "../../albumList";
 import { AlbumSortOrder, AlbumStatusFilter } from "../../types";
 
 const SORT_OPTIONS: { value: AlbumSortOrder; label: string }[] = [
@@ -7,6 +8,7 @@ const SORT_OPTIONS: { value: AlbumSortOrder; label: string }[] = [
   { value: "title-desc", label: "Title (Z-A)" },
   { value: "artist-asc", label: "Artist (A-Z)" },
   { value: "artist-desc", label: "Artist (Z-A)" },
+  { value: "recent", label: "Recently added" },
 ];
 
 const STATUS_OPTIONS: { value: AlbumStatusFilter; label: string }[] = [
@@ -22,6 +24,7 @@ interface AlbumFiltersProps {
   onSortOrderChange: (sortOrder: AlbumSortOrder) => void;
   statusFilter: AlbumStatusFilter;
   onStatusFilterChange: (statusFilter: AlbumStatusFilter) => void;
+  statusCounts: StatusCounts;
 }
 
 export function AlbumFilters({
@@ -31,6 +34,7 @@ export function AlbumFilters({
   onSortOrderChange,
   statusFilter,
   onStatusFilterChange,
+  statusCounts,
 }: AlbumFiltersProps) {
   return (
     <Flex gap="16px" wrap>
@@ -52,7 +56,10 @@ export function AlbumFilters({
       <Select
         value={statusFilter}
         onChange={onStatusFilterChange}
-        options={STATUS_OPTIONS}
+        options={STATUS_OPTIONS.map((option) => ({
+          ...option,
+          label: `${option.label} (${statusCounts[option.value]})`,
+        }))}
         aria-label="Filter by status"
         style={{ width: 160 }}
       />
