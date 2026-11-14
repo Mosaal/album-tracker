@@ -1,4 +1,4 @@
-import { toAlbum } from "./backup";
+import { toAlbum } from "./albumFiles";
 import { Album } from "./types";
 
 const HEADER = ["Title", "Artist", "Status", "Cover URL"];

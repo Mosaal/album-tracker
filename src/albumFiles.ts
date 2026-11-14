@@ -1,14 +1,6 @@
 import { Album } from "./types";
 import { isHttpUrl } from "./urls";
 
-const FORMAT = "album-tracker";
-
-export class InvalidBackupError extends Error {
-  constructor() {
-    super("That file isn't an Album Tracker backup.");
-  }
-}
-
 export interface ImportSummary {
   added: number;
   /** Albums already in the collection. */
@@ -20,21 +12,7 @@ export interface ImportSummary {
 export const albumCount = (count: number) =>
   `${count} album${count === 1 ? "" : "s"}`;
 
-/** The contents of a backup file holding the whole collection. */
-export function createBackup(albums: Album[], exportedAt = new Date()) {
-  return JSON.stringify(
-    {
-      format: FORMAT,
-      version: 1,
-      exportedAt: exportedAt.toISOString(),
-      albums,
-    },
-    null,
-    2,
-  );
-}
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
+export const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
 const isFilled = (value: unknown): value is string =>
@@ -61,28 +39,6 @@ export function toAlbum(value: unknown): Album | undefined {
     album.coverUrl = value.coverUrl.trim();
   }
   return album;
-}
-
-/** Reads a backup file. Throws InvalidBackupError for anything else. */
-export function readBackup(text: string) {
-  let data: unknown;
-  try {
-    data = JSON.parse(text);
-  } catch {
-    throw new InvalidBackupError();
-  }
-  if (
-    !isRecord(data) ||
-    data.format !== FORMAT ||
-    !Array.isArray(data.albums)
-  ) {
-    throw new InvalidBackupError();
-  }
-
-  const albums = data.albums
-    .map(toAlbum)
-    .filter((album) => album !== undefined);
-  return { albums, unreadable: data.albums.length - albums.length };
 }
 
 const sameAlbumKey = (album: Album) =>

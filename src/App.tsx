@@ -9,7 +9,7 @@ import {
   AlbumFormModal,
   AlbumRow,
   AlbumViewToggle,
-  BackupMenu,
+  ImportExportMenu,
   Layout,
 } from "./components";
 import { useAlbums } from "./hooks";
@@ -122,7 +122,7 @@ export default function App() {
             >
               Add album
             </Button>
-            <BackupMenu albums={albums} onImport={importAlbums} />
+            <ImportExportMenu albums={albums} onImport={importAlbums} />
           </Flex>
         </Flex>
         {visibleAlbums.length === 0 ? (

@@ -6,17 +6,12 @@ import {
   UploadOutlined,
 } from "@ant-design/icons";
 
-import {
-  albumCount,
-  createBackup,
-  describeImport,
-  InvalidBackupError,
-  readBackup,
-} from "../../backup";
+import { albumCount, describeImport } from "../../albumFiles";
 import { createCsv, InvalidCsvError, readCsv } from "../../csv";
+import { createJson, InvalidJsonError, readJson } from "../../json";
 import { Album } from "../../types";
 
-interface BackupMenuProps {
+interface ImportExportMenuProps {
   albums: Album[];
   onImport: (albums: Album[]) => { added: number; skipped: number };
 }
@@ -38,14 +33,14 @@ const isCsv = (file: File) =>
   file.type === "text/csv" || file.name.toLowerCase().endsWith(".csv");
 
 /** Saves the collection to a file, or adds the albums from one. */
-export function BackupMenu({ albums, onImport }: BackupMenuProps) {
+export function ImportExportMenu({ albums, onImport }: ImportExportMenuProps) {
   const [messageApi, messageContextHolder] = message.useMessage();
   const fileInput = useRef<HTMLInputElement>(null);
 
-  const exportBackup = () => {
+  const exportJson = () => {
     download(
-      `album-tracker-backup-${today()}.json`,
-      createBackup(albums),
+      `album-tracker-${today()}.json`,
+      createJson(albums),
       "application/json",
     );
     messageApi.success(`Exported ${albumCount(albums.length)}.`);
@@ -64,13 +59,13 @@ export function BackupMenu({ albums, onImport }: BackupMenuProps) {
       return;
     }
 
-    let contents: ReturnType<typeof readBackup>;
+    let contents: ReturnType<typeof readJson>;
     try {
       const text = await file.text();
-      contents = isCsv(file) ? readCsv(text) : readBackup(text);
+      contents = isCsv(file) ? readCsv(text) : readJson(text);
     } catch (error) {
       messageApi.error(
-        error instanceof InvalidBackupError || error instanceof InvalidCsvError
+        error instanceof InvalidJsonError || error instanceof InvalidCsvError
           ? error.message
           : "Couldn't read that file.",
       );
@@ -97,9 +92,9 @@ export function BackupMenu({ albums, onImport }: BackupMenuProps) {
         menu={{
           items: [
             {
-              key: "export-backup",
+              key: "export-json",
               icon: <DownloadOutlined />,
-              label: "Export backup",
+              label: "Export as JSON",
               disabled: albums.length === 0,
             },
             {
@@ -111,12 +106,12 @@ export function BackupMenu({ albums, onImport }: BackupMenuProps) {
             {
               key: "import",
               icon: <UploadOutlined />,
-              label: "Import backup or CSV",
+              label: "Import JSON or CSV",
             },
           ],
           onClick: ({ key }) => {
-            if (key === "export-backup") {
-              exportBackup();
+            if (key === "export-json") {
+              exportJson();
             } else if (key === "export-csv") {
               exportCsv();
             } else {
