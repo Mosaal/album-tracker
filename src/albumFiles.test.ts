@@ -1,19 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  createBackup,
-  describeImport,
-  InvalidBackupError,
-  mergeAlbums,
-  readBackup,
-} from "./backup";
+import { describeImport, mergeAlbums } from "./albumFiles";
 import { Album } from "./types";
 
 const KIND_OF_BLUE: Album = {
   id: "1",
   title: "Kind of Blue",
   artist: "Miles Davis",
-  coverUrl: "https://coverartarchive.org/release-group/rg-1/front-500",
   status: "owned",
 };
 const IN_RAINBOWS: Album = {
@@ -22,65 +15,6 @@ const IN_RAINBOWS: Album = {
   artist: "Radiohead",
   status: "wishlisted",
 };
-
-const backupOf = (albums: unknown[]) =>
-  JSON.stringify({ format: "album-tracker", version: 1, albums });
-
-describe("readBackup", () => {
-  it("reads back what createBackup writes", () => {
-    expect(readBackup(createBackup([KIND_OF_BLUE, IN_RAINBOWS]))).toEqual({
-      albums: [KIND_OF_BLUE, IN_RAINBOWS],
-      unreadable: 0,
-    });
-  });
-
-  it.each([
-    ["text that isn't JSON", "not json"],
-    ["JSON from something else", JSON.stringify({ albums: [] })],
-    [
-      "a backup without an album list",
-      JSON.stringify({ format: "album-tracker" }),
-    ],
-  ])("rejects %s", (_, text) => {
-    expect(() => readBackup(text)).toThrow(InvalidBackupError);
-  });
-
-  it("skips entries it can't use and counts them", () => {
-    const { albums, unreadable } = readBackup(
-      backupOf([
-        IN_RAINBOWS,
-        { ...IN_RAINBOWS, id: "3", title: "  " },
-        { ...IN_RAINBOWS, id: "4", status: "borrowed" },
-        "not an album",
-      ]),
-    );
-
-    expect(albums).toEqual([IN_RAINBOWS]);
-    expect(unreadable).toBe(3);
-  });
-
-  it("tidies up albums: trims text, drops bad cover URLs and adds missing ids", () => {
-    const { albums } = readBackup(
-      backupOf([
-        {
-          title: " Kind of Blue ",
-          artist: "Miles Davis",
-          status: "owned",
-          coverUrl: "javascript:alert(1)",
-        },
-      ]),
-    );
-
-    expect(albums).toEqual([
-      {
-        id: expect.any(String),
-        title: "Kind of Blue",
-        artist: "Miles Davis",
-        status: "owned",
-      },
-    ]);
-  });
-});
 
 describe("mergeAlbums", () => {
   it("adds new albums after the existing ones", () => {

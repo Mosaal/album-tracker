@@ -3,8 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import App from "../../App";
-import { createBackup, readBackup } from "../../backup";
 import { createCsv, readCsv } from "../../csv";
+import { createJson, readJson } from "../../json";
 import { NoMotion } from "../../test/NoMotion";
 import { Album } from "../../types";
 
@@ -46,22 +46,22 @@ function mockDownloads() {
 const downloadedText = () =>
   (vi.mocked(URL.createObjectURL).mock.calls[0][0] as Blob).text();
 
-describe("backup menu", () => {
+describe("import/export menu", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it("exports the collection to a backup file", async () => {
+  it("exports the collection as a JSON file", async () => {
     const click = mockDownloads();
     const user = renderApp(ALBUMS);
 
     await user.click(screen.getByRole("button", { name: "More actions" }));
-    await user.click(await screen.findByText("Export backup"));
+    await user.click(await screen.findByText("Export as JSON"));
 
-    expect(readBackup(await downloadedText()).albums).toEqual(ALBUMS);
+    expect(readJson(await downloadedText()).albums).toEqual(ALBUMS);
     expect(click.mock.contexts[0]).toMatchObject({
       download: expect.stringMatching(
-        /^album-tracker-backup-\d{4}-\d{2}-\d{2}\.json$/,
+        /^album-tracker-\d{4}-\d{2}-\d{2}\.json$/,
       ),
     });
     expect(await screen.findByText("Exported 3 albums.")).toBeVisible();
@@ -83,12 +83,12 @@ describe("backup menu", () => {
     expect(await screen.findByText("Exported 3 albums.")).toBeVisible();
   });
 
-  it("imports albums from a backup, skipping ones already in the collection", async () => {
+  it("imports albums from a JSON file, skipping ones already in the collection", async () => {
     const user = renderApp([ALBUMS[0]]);
 
     await user.click(screen.getByRole("button", { name: "More actions" }));
-    await user.click(await screen.findByText("Import backup or CSV"));
-    chooseFile(new File([createBackup(ALBUMS)], "backup.json"));
+    await user.click(await screen.findByText("Import JSON or CSV"));
+    chooseFile(new File([createJson(ALBUMS)], "albums.json"));
 
     expect(
       await screen.findByText(
@@ -113,7 +113,7 @@ describe("backup menu", () => {
   });
 
   it.each([
-    ["notes.json", "{}", "That file isn't an Album Tracker backup."],
+    ["notes.json", "{}", "That isn't a JSON file from Album Tracker."],
     [
       "notes.csv",
       "Name,Year\nKind of Blue,1959",
