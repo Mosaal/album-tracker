@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.1](https://github.com/Mosaal/album-tracker/compare/v0.3.0...v0.3.1) (2026-11-14)
+
+
+### Bug Fixes
+
+* add a meta description for search results ([#16](https://github.com/Mosaal/album-tracker/issues/16)) ([fe749de](https://github.com/Mosaal/album-tracker/commit/fe749de8432c01b958c7861bd2ebadbcb6fc11e3))
+* raise text contrast to WCAG AA in both themes ([#15](https://github.com/Mosaal/album-tracker/issues/15)) ([fc3e95a](https://github.com/Mosaal/album-tracker/commit/fc3e95ab6ab3131ac89c4a254f28838c95114302))
+
+
+### Performance Improvements
+
+* show the header before the app's JavaScript loads ([#18](https://github.com/Mosaal/album-tracker/issues/18)) ([f849c65](https://github.com/Mosaal/album-tracker/commit/f849c6549e5fe15a55368e25b97917039dda46f8))
+* stop the service worker script from blocking the first paint ([#17](https://github.com/Mosaal/album-tracker/issues/17)) ([5fdd1f6](https://github.com/Mosaal/album-tracker/commit/5fdd1f650aef9c5080ed38b79eb067f626dd385f))
+
 ## [0.3.0](https://github.com/Mosaal/album-tracker/compare/v0.2.0...v0.3.0) (2026-11-14)
 
 
