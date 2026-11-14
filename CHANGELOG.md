@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.6.0](https://github.com/Mosaal/album-tracker/compare/v0.5.0...v0.6.0) (2026-11-14)
+
+
+### Features
+
+* colour the edit and delete buttons and let them fill the card's bar ([#29](https://github.com/Mosaal/album-tracker/issues/29)) ([0c6fa7f](https://github.com/Mosaal/album-tracker/commit/0c6fa7f1ce873442af597c54812a947ec68ed4c4))
+* make each toolbar row full width on phones ([#28](https://github.com/Mosaal/album-tracker/issues/28)) ([c91c4b2](https://github.com/Mosaal/album-tracker/commit/c91c4b244b51fd7797d91993a8442d710443263f))
+* rename the backup export to JSON, alongside CSV ([#25](https://github.com/Mosaal/album-tracker/issues/25)) ([cf12439](https://github.com/Mosaal/album-tracker/commit/cf1243982b0e045690727376163afc8b9d446d14))
+* show the album count next to the status filter ([#27](https://github.com/Mosaal/album-tracker/issues/27)) ([cf93e66](https://github.com/Mosaal/album-tracker/commit/cf93e664a2acaaa1c751d9692957c81c1d08afb9))
+
 ## [0.5.0](https://github.com/Mosaal/album-tracker/compare/v0.4.0...v0.5.0) (2026-11-14)
 
 
