@@ -42,8 +42,8 @@ export function AlbumRow({
           />
         </Flex>
         <Flex gap="small">
-          <EditAlbumButton album={album} onClick={onEdit} />
-          <DeleteAlbumButton album={album} onClick={onDelete} />
+          <EditAlbumButton album={album} onClick={onEdit} size="large" />
+          <DeleteAlbumButton album={album} onClick={onDelete} size="large" />
         </Flex>
       </Flex>
     </Card>

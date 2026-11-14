@@ -1,4 +1,4 @@
-import { Button, theme } from "antd";
+import { Button, theme, type ButtonProps } from "antd";
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 
 import { Album } from "../../types";
@@ -8,6 +8,7 @@ interface AlbumActionButtonProps {
   onClick: (album: Album) => void;
   /** Fills the width it's given. */
   block?: boolean;
+  size?: ButtonProps["size"];
   className?: string;
 }
 
@@ -19,6 +20,7 @@ export function EditAlbumButton({
   album,
   onClick,
   block,
+  size,
   className,
 }: AlbumActionButtonProps) {
   const { token } = theme.useToken();
@@ -28,6 +30,7 @@ export function EditAlbumButton({
       color="primary"
       variant="filled"
       block={block}
+      size={size}
       icon={<EditOutlined />}
       aria-label={`Edit ${album.title}`}
       className={className}
@@ -41,6 +44,7 @@ export function DeleteAlbumButton({
   album,
   onClick,
   block,
+  size,
   className,
 }: AlbumActionButtonProps) {
   const { token } = theme.useToken();
@@ -50,6 +54,7 @@ export function DeleteAlbumButton({
       color="danger"
       variant="filled"
       block={block}
+      size={size}
       icon={<DeleteOutlined />}
       aria-label={`Delete ${album.title}`}
       className={className}
