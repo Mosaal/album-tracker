@@ -24,7 +24,7 @@ import {
 // minmax(0, 1fr) rather than 1fr so wide covers shrink instead of overflowing.
 const gridColumns = (count: number) => `repeat(${count}, minmax(0, 1fr))`;
 
-const useAlbumGridStyles = createStyles(({ responsive }) => ({
+const useStyles = createStyles(({ responsive }) => ({
   grid: {
     display: "grid",
     gridTemplateColumns: gridColumns(5),
@@ -35,10 +35,12 @@ const useAlbumGridStyles = createStyles(({ responsive }) => ({
     [responsive.sm]: { gridTemplateColumns: gridColumns(2) },
     [responsive.xs]: { gridTemplateColumns: gridColumns(1) },
   },
+  // On phones the view toggle and the buttons sit at either end of the row.
+  actions: { [responsive.xs]: { width: "100%" } },
 }));
 
 export default function App() {
-  const { styles } = useAlbumGridStyles();
+  const { styles } = useStyles();
   const {
     albums,
     addAlbum,
@@ -110,19 +112,26 @@ export default function App() {
             onStatusFilterChange={setStatusFilter}
             count={visibleAlbums.length}
           />
-          <Flex gap="16px" align="center">
+          <Flex
+            gap="16px"
+            align="center"
+            justify="space-between"
+            className={styles.actions}
+          >
             <AlbumViewToggle
               viewMode={viewMode}
               onViewModeChange={setViewMode}
             />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={openAddForm}
-            >
-              Add album
-            </Button>
-            <ImportExportMenu albums={albums} onImport={importAlbums} />
+            <Flex gap="16px">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={openAddForm}
+              >
+                Add album
+              </Button>
+              <ImportExportMenu albums={albums} onImport={importAlbums} />
+            </Flex>
           </Flex>
         </Flex>
         {visibleAlbums.length === 0 ? (
