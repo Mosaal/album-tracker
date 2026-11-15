@@ -6,48 +6,34 @@ import {
   UploadOutlined,
 } from "@ant-design/icons";
 
+import { exportAlbums, ExportFormat } from "../../albumExport";
 import { albumCount, describeImport } from "../../albumFiles";
-import { createCsv, InvalidCsvError, readCsv } from "../../csv";
-import { createJson, InvalidJsonError, readJson } from "../../json";
+import { InvalidCsvError, readCsv } from "../../csv";
+import { InvalidJsonError, readJson } from "../../json";
 import { Album } from "../../types";
 
 interface ImportExportMenuProps {
   albums: Album[];
   onImport: (albums: Album[]) => { added: number; skipped: number };
+  /** Called after the collection is saved to a file. */
+  onExport: () => void;
 }
-
-function download(fileName: string, contents: string, type: string) {
-  const url = URL.createObjectURL(new Blob([contents], { type }));
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = fileName;
-  link.click();
-  // Safari can still be reading the file just after the click.
-  setTimeout(() => URL.revokeObjectURL(url), 40_000);
-}
-
-// en-CA writes dates as YYYY-MM-DD, in local time.
-const today = () => new Date().toLocaleDateString("en-CA");
 
 const isCsv = (file: File) =>
   file.type === "text/csv" || file.name.toLowerCase().endsWith(".csv");
 
 /** Saves the collection to a file, or adds the albums from one. */
-export function ImportExportMenu({ albums, onImport }: ImportExportMenuProps) {
+export function ImportExportMenu({
+  albums,
+  onImport,
+  onExport,
+}: ImportExportMenuProps) {
   const [messageApi, messageContextHolder] = message.useMessage();
   const fileInput = useRef<HTMLInputElement>(null);
 
-  const exportJson = () => {
-    download(
-      `album-tracker-${today()}.json`,
-      createJson(albums),
-      "application/json",
-    );
-    messageApi.success(`Exported ${albumCount(albums.length)}.`);
-  };
-
-  const exportCsv = () => {
-    download(`album-tracker-${today()}.csv`, createCsv(albums), "text/csv");
+  const exportAs = (format: ExportFormat) => {
+    exportAlbums(albums, format);
+    onExport();
     messageApi.success(`Exported ${albumCount(albums.length)}.`);
   };
 
@@ -111,9 +97,9 @@ export function ImportExportMenu({ albums, onImport }: ImportExportMenuProps) {
           ],
           onClick: ({ key }) => {
             if (key === "export-json") {
-              exportJson();
+              exportAs("json");
             } else if (key === "export-csv") {
-              exportCsv();
+              exportAs("csv");
             } else {
               fileInput.current?.click();
             }

@@ -4,4 +4,5 @@ export * from "./AlbumRow";
 export * from "./AlbumFilters";
 export * from "./AlbumFormModal";
 export * from "./AlbumViewToggle";
+export * from "./DataSafetyNotice";
 export * from "./ImportExportMenu";

@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import App from "../../App";
 import { createCsv, readCsv } from "../../csv";
 import { createJson, readJson } from "../../json";
+import { downloadedText, mockDownloads } from "../../test/downloads";
 import { NoMotion } from "../../test/NoMotion";
 import { Album } from "../../types";
 
@@ -33,18 +34,6 @@ const chooseFile = (file: File) =>
   fireEvent.change(document.querySelector('input[type="file"]')!, {
     target: { files: [file] },
   });
-
-/** Catches downloads, returning the spy on the link that's clicked. */
-function mockDownloads() {
-  URL.createObjectURL = vi.fn(() => "blob:download");
-  URL.revokeObjectURL = vi.fn();
-  return vi
-    .spyOn(HTMLAnchorElement.prototype, "click")
-    .mockImplementation(() => {});
-}
-
-const downloadedText = () =>
-  (vi.mocked(URL.createObjectURL).mock.calls[0][0] as Blob).text();
 
 describe("import/export menu", () => {
   afterEach(() => {

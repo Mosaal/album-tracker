@@ -9,10 +9,11 @@ import {
   AlbumFormModal,
   AlbumRow,
   AlbumViewToggle,
+  DataSafetyNotice,
   ImportExportMenu,
   Layout,
 } from "./components";
-import { useAlbums } from "./hooks";
+import { useAlbums, useDataSafety } from "./hooks";
 import {
   Album,
   AlbumInput,
@@ -49,6 +50,8 @@ export default function App() {
     deleteAlbum,
     importAlbums,
   } = useAlbums();
+  const { notice, daysSinceExport, recordExport, dismissNotice } =
+    useDataSafety(albums.length > 0);
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<AlbumSortOrder>("title-asc");
   const [statusFilter, setStatusFilter] = useState<AlbumStatusFilter>("all");
@@ -102,6 +105,15 @@ export default function App() {
   return (
     <Layout>
       <Flex vertical gap="16px">
+        {notice && (
+          <DataSafetyNotice
+            kind={notice}
+            albums={albums}
+            daysSinceExport={daysSinceExport}
+            onExport={recordExport}
+            onDismiss={dismissNotice}
+          />
+        )}
         <Flex justify="space-between" align="center" gap="16px" wrap>
           <AlbumFilters
             search={search}
@@ -130,7 +142,11 @@ export default function App() {
               >
                 Add album
               </Button>
-              <ImportExportMenu albums={albums} onImport={importAlbums} />
+              <ImportExportMenu
+                albums={albums}
+                onImport={importAlbums}
+                onExport={recordExport}
+              />
             </Flex>
           </Flex>
         </Flex>
