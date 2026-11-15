@@ -47,12 +47,32 @@ export function toAlbum(value: unknown): Album | undefined {
 }
 
 /** Title and artist, ignoring case and surrounding spaces. */
-export const titleAndArtist = (album: AlbumInput) =>
+const titleAndArtist = (album: Pick<AlbumInput, "title" | "artist">) =>
   `${album.title.trim().toLowerCase()}\n${album.artist.trim().toLowerCase()}`;
 
 /** Formats only tell two copies of an album apart when both are known. */
-export const formatsMatch = (a?: AlbumFormat, b?: AlbumFormat) =>
-  !a || !b || a === b;
+const formatsMatch = (a?: AlbumFormat, b?: AlbumFormat) => !a || !b || a === b;
+
+/**
+ * The album in the collection that this one would duplicate, if any: same
+ * title, artist and format. The album being edited, by id, doesn't count.
+ */
+export function findDuplicate(
+  albums: Album[],
+  input: Pick<AlbumInput, "title" | "artist" | "format">,
+  editingId?: string,
+) {
+  if (!input.title.trim() || !input.artist.trim()) {
+    return undefined;
+  }
+  const key = titleAndArtist(input);
+  return albums.find(
+    (album) =>
+      album.id !== editingId &&
+      titleAndArtist(album) === key &&
+      formatsMatch(album.format, input.format),
+  );
+}
 
 /**
  * Adds the imported albums that aren't in the collection yet, matching on id
