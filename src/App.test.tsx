@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
@@ -116,12 +116,30 @@ describe("App", () => {
       screen.getByRole("button", { name: "Delete In Rainbows" }),
     );
     const confirm = await findDialog(
-      '"In Rainbows" by Radiohead will be permanently removed.',
+      '"In Rainbows" by Radiohead will be removed from your collection.',
     );
     await user.click(within(confirm).getByRole("button", { name: "Delete" }));
 
     expect(cardTitles()).toEqual(["Blue Lines", "Kind of Blue"]);
     expect(saved().map((album) => album.id)).toEqual(["1", "3"]);
+  });
+
+  it("puts a deleted album back where it was with Undo", async () => {
+    const user = renderApp(ALBUMS);
+    await user.click(
+      screen.getByRole("button", { name: "Delete In Rainbows" }),
+    );
+    const confirm = await findDialog("Delete this album?");
+    await user.click(within(confirm).getByRole("button", { name: "Delete" }));
+    expect(await screen.findByText('Deleted "In Rainbows".')).toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: "Undo" }));
+
+    expect(cardTitles()).toEqual(["Blue Lines", "In Rainbows", "Kind of Blue"]);
+    expect(saved()).toEqual(ALBUMS);
+    await waitFor(() =>
+      expect(screen.queryByText('Deleted "In Rainbows".')).toBeNull(),
+    );
   });
 
   it("toggles ownership from the card", async () => {
