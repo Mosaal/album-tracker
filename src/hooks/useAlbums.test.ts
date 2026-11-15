@@ -72,17 +72,19 @@ describe("useAlbums", () => {
     ]);
   });
 
-  it("changes only the status when toggling ownership", () => {
+  it("changes only the status of the albums given", () => {
     localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify([{ ...KIND_OF_BLUE, id: "1" }]),
+      JSON.stringify(["1", "2", "3"].map((id) => ({ ...KIND_OF_BLUE, id }))),
     );
     const { result } = renderHook(() => useAlbums());
 
-    act(() => result.current.setAlbumStatus("1", "wishlisted"));
+    act(() => result.current.setAlbumsStatus(["1", "3"], "wishlisted"));
 
     expect(saved()).toEqual([
       { ...KIND_OF_BLUE, id: "1", status: "wishlisted" },
+      { ...KIND_OF_BLUE, id: "2" },
+      { ...KIND_OF_BLUE, id: "3", status: "wishlisted" },
     ]);
   });
 
