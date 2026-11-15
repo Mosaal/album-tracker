@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button, Empty, Flex, message, Modal } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { createStyles } from "antd-style";
+import { albumCount } from "./albumFiles";
 import { selectAlbums } from "./albumList";
 import {
   AlbumCard,
@@ -11,6 +12,7 @@ import {
   AlbumViewToggle,
   ImportExportMenu,
   Layout,
+  SelectionBar,
 } from "./components";
 import { useAlbums } from "./hooks";
 import {
@@ -46,7 +48,7 @@ export default function App() {
     albums,
     addAlbum,
     updateAlbum,
-    setAlbumStatus,
+    setAlbumsStatus,
     deleteAlbums,
     importAlbums,
   } = useAlbums();
@@ -61,12 +63,34 @@ export default function App() {
   // Rendered inside Layout below, so dialogs and messages pick up the theme.
   const [modal, modalContextHolder] = Modal.useModal();
   const [messageApi, messageContextHolder] = message.useMessage();
+  // The albums picked in selection mode, or undefined outside it.
+  const [selectedIds, setSelectedIds] = useState<Set<string>>();
+  const isSelecting = selectedIds !== undefined;
 
   const visibleAlbums = useMemo(
     () =>
       selectAlbums(albums, { search, sortOrder, statusFilter, formatFilter }),
     [albums, search, sortOrder, statusFilter, formatFilter],
   );
+  // Only albums still shown count, so a filter can't hide what gets changed.
+  const selectedAlbums = selectedIds
+    ? visibleAlbums.filter((album) => selectedIds.has(album.id))
+    : [];
+
+  useEffect(() => {
+    if (!isSelecting) {
+      return;
+    }
+    const stopOnEscape = (event: KeyboardEvent) => {
+      // Escape in a dialog only closes the dialog.
+      const target = event.target as Element | null;
+      if (event.key === "Escape" && !target?.closest?.('[role="dialog"]')) {
+        setSelectedIds(undefined);
+      }
+    };
+    document.addEventListener("keydown", stopOnEscape);
+    return () => document.removeEventListener("keydown", stopOnEscape);
+  }, [isSelecting]);
 
   const openAddForm = () => {
     setEditingAlbum(undefined);
@@ -88,7 +112,32 @@ export default function App() {
   };
 
   const changeStatus = (album: Album, status: Album["status"]) => {
-    setAlbumStatus(album.id, status);
+    setAlbumsStatus([album.id], status);
+  };
+
+  /** Says what was deleted, with an Undo that brings it back. */
+  const showDeleted = (content: string, restore: () => void) => {
+    const key = crypto.randomUUID();
+    messageApi.success({
+      key,
+      content: (
+        <>
+          {content}
+          <Button
+            type="link"
+            size="small"
+            onClick={() => {
+              restore();
+              messageApi.destroy(key);
+            }}
+          >
+            Undo
+          </Button>
+        </>
+      ),
+      // Long enough to notice the message and reach Undo.
+      duration: 8,
+    });
   };
 
   const confirmDelete = (album: Album) => {
@@ -100,28 +149,50 @@ export default function App() {
       // Start on Cancel so pressing Enter can't delete by accident.
       focusable: { autoFocusButton: "cancel" },
       onOk: () => {
-        const restore = deleteAlbums([album.id]);
-        const key = `deleted-${album.id}`;
-        messageApi.success({
-          key,
-          content: (
-            <>
-              Deleted "{album.title}".
-              <Button
-                type="link"
-                size="small"
-                onClick={() => {
-                  restore();
-                  messageApi.destroy(key);
-                }}
-              >
-                Undo
-              </Button>
-            </>
-          ),
-          // Long enough to notice the message and reach Undo.
-          duration: 8,
-        });
+        showDeleted(`Deleted "${album.title}".`, deleteAlbums([album.id]));
+      },
+    });
+  };
+
+  const toggleSelected = (album: Album) => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (!next.delete(album.id)) {
+        next.add(album.id);
+      }
+      return next;
+    });
+  };
+
+  const selectionOf = (album: Album) =>
+    selectedIds && {
+      selected: selectedIds.has(album.id),
+      onToggle: toggleSelected,
+    };
+
+  const markSelected = (status: Album["status"]) => {
+    setAlbumsStatus(
+      selectedAlbums.map((album) => album.id),
+      status,
+    );
+    messageApi.success(
+      `Marked ${albumCount(selectedAlbums.length)} as ${status}.`,
+    );
+    setSelectedIds(undefined);
+  };
+
+  const confirmDeleteSelected = () => {
+    const count = albumCount(selectedAlbums.length);
+    const ids = selectedAlbums.map((album) => album.id);
+    modal.confirm({
+      title: `Delete ${count}?`,
+      content: "They'll be removed from your collection.",
+      okText: "Delete",
+      okButtonProps: { danger: true },
+      focusable: { autoFocusButton: "cancel" },
+      onOk: () => {
+        showDeleted(`Deleted ${count}.`, deleteAlbums(ids));
+        setSelectedIds(undefined);
       },
     });
   };
@@ -159,10 +230,31 @@ export default function App() {
               >
                 Add album
               </Button>
-              <ImportExportMenu albums={albums} onImport={importAlbums} />
+              <ImportExportMenu
+                albums={albums}
+                onImport={importAlbums}
+                onSelectAlbums={() => setSelectedIds(new Set())}
+              />
             </Flex>
           </Flex>
         </Flex>
+        {isSelecting && (
+          <SelectionBar
+            count={selectedAlbums.length}
+            allSelected={
+              visibleAlbums.length > 0 &&
+              selectedAlbums.length === visibleAlbums.length
+            }
+            onSelectAll={() =>
+              setSelectedIds(new Set(visibleAlbums.map((album) => album.id)))
+            }
+            onDeselectAll={() => setSelectedIds(new Set())}
+            onMarkOwned={() => markSelected("owned")}
+            onMarkWishlisted={() => markSelected("wishlisted")}
+            onDelete={confirmDeleteSelected}
+            onClose={() => setSelectedIds(undefined)}
+          />
+        )}
         {visibleAlbums.length === 0 ? (
           <Empty
             description={
@@ -190,6 +282,7 @@ export default function App() {
                 onEdit={openEditForm}
                 onDelete={confirmDelete}
                 onStatusChange={changeStatus}
+                selection={selectionOf(album)}
               />
             ))}
           </div>
@@ -202,6 +295,7 @@ export default function App() {
                 onEdit={openEditForm}
                 onDelete={confirmDelete}
                 onStatusChange={changeStatus}
+                selection={selectionOf(album)}
               />
             ))}
           </Flex>

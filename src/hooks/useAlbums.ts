@@ -35,11 +35,16 @@ export function useAlbums() {
     );
   }, []);
 
-  const setAlbumStatus = useCallback((id: string, status: Album["status"]) => {
-    setAlbums((current) =>
-      current.map((album) => (album.id === id ? { ...album, status } : album)),
-    );
-  }, []);
+  const setAlbumsStatus = useCallback(
+    (ids: string[], status: Album["status"]) => {
+      setAlbums((current) =>
+        current.map((album) =>
+          ids.includes(album.id) ? { ...album, status } : album,
+        ),
+      );
+    },
+    [],
+  );
 
   /**
    * Removes albums, returning a function that puts them back where they were,
@@ -82,7 +87,7 @@ export function useAlbums() {
     albums,
     addAlbum,
     updateAlbum,
-    setAlbumStatus,
+    setAlbumsStatus,
     deleteAlbums,
     importAlbums,
   };

@@ -5,3 +5,4 @@ export * from "./AlbumFilters";
 export * from "./AlbumFormModal";
 export * from "./AlbumViewToggle";
 export * from "./ImportExportMenu";
+export * from "./SelectionBar";

@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { Button, Dropdown, message } from "antd";
 import {
+  CheckSquareOutlined,
   DownloadOutlined,
   EllipsisOutlined,
   UploadOutlined,
@@ -12,6 +13,8 @@ import { createJson, InvalidJsonError, readJson } from "../../json";
 import { Album } from "../../types";
 
 interface ImportExportMenuProps {
+  /** Starts picking albums to change or delete together. */
+  onSelectAlbums: () => void;
   albums: Album[];
   onImport: (albums: Album[]) => { added: number; skipped: number };
 }
@@ -32,8 +35,12 @@ const today = () => new Date().toLocaleDateString("en-CA");
 const isCsv = (file: File) =>
   file.type === "text/csv" || file.name.toLowerCase().endsWith(".csv");
 
-/** Saves the collection to a file, or adds the albums from one. */
-export function ImportExportMenu({ albums, onImport }: ImportExportMenuProps) {
+/** The ⋯ menu: select albums, save the collection to a file, or add from one. */
+export function ImportExportMenu({
+  albums,
+  onImport,
+  onSelectAlbums,
+}: ImportExportMenuProps) {
   const [messageApi, messageContextHolder] = message.useMessage();
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -92,6 +99,13 @@ export function ImportExportMenu({ albums, onImport }: ImportExportMenuProps) {
         menu={{
           items: [
             {
+              key: "select",
+              icon: <CheckSquareOutlined />,
+              label: "Select albums",
+              disabled: albums.length === 0,
+            },
+            { type: "divider" },
+            {
               key: "export-json",
               icon: <DownloadOutlined />,
               label: "Export as JSON",
@@ -110,6 +124,10 @@ export function ImportExportMenu({ albums, onImport }: ImportExportMenuProps) {
             },
           ],
           onClick: ({ key }) => {
+            if (key === "select") {
+              onSelectAlbums();
+              return;
+            }
             if (key === "export-json") {
               exportJson();
             } else if (key === "export-csv") {

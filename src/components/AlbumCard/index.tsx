@@ -6,6 +6,7 @@ import { createStyles } from "antd-style";
 import { FORMAT_LABELS } from "../../albumFormats";
 import { Album } from "../../types";
 import { DeleteAlbumButton, EditAlbumButton } from "../AlbumActionButtons";
+import { AlbumCheckbox, AlbumSelection } from "../AlbumCheckbox";
 import { AlbumStatusSwitch } from "../AlbumStatusSwitch";
 
 const useCoverStyles = createStyles(({ token }) => ({
@@ -72,6 +73,8 @@ interface AlbumCardProps {
   onEdit: (album: Album) => void;
   onDelete: (album: Album) => void;
   onStatusChange: (album: Album, status: Album["status"]) => void;
+  /** Set in selection mode, which swaps the card's buttons for a checkbox. */
+  selection?: AlbumSelection;
 }
 
 export function AlbumCard({
@@ -79,6 +82,7 @@ export function AlbumCard({
   onEdit,
   onDelete,
   onStatusChange,
+  selection,
 }: AlbumCardProps) {
   const { styles, cx } = useCardStyles();
 
@@ -86,28 +90,39 @@ export function AlbumCard({
     <Card
       cover={<AlbumCover album={album} />}
       classNames={{ actions: styles.actions }}
-      actions={[
-        <EditAlbumButton
-          key="edit"
-          album={album}
-          onClick={onEdit}
-          block
-          className={cx(styles.action, styles.firstAction)}
-        />,
-        <DeleteAlbumButton
-          key="delete"
-          album={album}
-          onClick={onDelete}
-          block
-          className={cx(styles.action, styles.lastAction)}
-        />,
-      ]}
+      actions={
+        selection
+          ? undefined
+          : [
+              <EditAlbumButton
+                key="edit"
+                album={album}
+                onClick={onEdit}
+                block
+                className={cx(styles.action, styles.firstAction)}
+              />,
+              <DeleteAlbumButton
+                key="delete"
+                album={album}
+                onClick={onDelete}
+                block
+                className={cx(styles.action, styles.lastAction)}
+              />,
+            ]
+      }
     >
+      {selection && <AlbumCheckbox album={album} selection={selection} />}
       <Card.Meta
         title={album.title}
         description={<div className={styles.artist}>{album.artist}</div>}
       />
-      <Flex gap="small" align="center" wrap className={styles.statusLine}>
+      <Flex
+        gap="small"
+        align="center"
+        wrap
+        className={styles.statusLine}
+        inert={Boolean(selection)}
+      >
         <AlbumStatusSwitch album={album} onChange={onStatusChange} />
         {album.format && <Tag>{FORMAT_LABELS[album.format]}</Tag>}
       </Flex>
