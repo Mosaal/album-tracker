@@ -46,6 +46,18 @@ describe("mergeAlbums", () => {
     expect(result.albums).toEqual([IN_RAINBOWS]);
     expect(result).toMatchObject({ added: 1, skipped: 1 });
   });
+
+  it("tells copies of an album apart by format, unless one has no format", () => {
+    const vinyl: Album = { ...KIND_OF_BLUE, format: "vinyl" };
+    const cd: Album = { ...KIND_OF_BLUE, id: "3", format: "cd" };
+    const noFormat: Album = { ...KIND_OF_BLUE, id: "4" };
+
+    const result = mergeAlbums([vinyl], [cd, noFormat]);
+
+    expect(result.albums).toEqual([vinyl, cd]);
+    expect(result.skipped).toBe(1);
+    expect(mergeAlbums([noFormat], [cd]).skipped).toBe(1);
+  });
 });
 
 describe("describeImport", () => {

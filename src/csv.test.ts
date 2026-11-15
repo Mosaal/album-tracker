@@ -9,6 +9,7 @@ const ALBUMS: Album[] = [
     title: 'Hello, "World"',
     artist: "Björk",
     coverUrl: "https://coverartarchive.org/release-group/rg-1/front-500",
+    format: "vinyl",
     status: "owned",
   },
   { id: "2", title: "=", artist: "Ed Sheeran", status: "wishlisted" },
@@ -21,9 +22,9 @@ describe("createCsv", () => {
   it("writes a header row, quotes cells that need it and keeps formulas as text", () => {
     expect(createCsv(ALBUMS)).toBe(
       "\uFEFF" +
-        "Title,Artist,Status,Cover URL\r\n" +
-        '"Hello, ""World""",Björk,Owned,https://coverartarchive.org/release-group/rg-1/front-500\r\n' +
-        "'=,Ed Sheeran,Wishlisted,\r\n",
+        "Title,Artist,Format,Status,Cover URL\r\n" +
+        '"Hello, ""World""",Björk,Vinyl,Owned,https://coverartarchive.org/release-group/rg-1/front-500\r\n' +
+        "'=,Ed Sheeran,,Wishlisted,\r\n",
     );
   });
 });
@@ -76,6 +77,21 @@ describe("readCsv", () => {
       { ...newId, title: "In Rainbows", artist: "Radiohead", status: "owned" },
     ]);
     expect(unreadable).toBe(2);
+  });
+
+  it.each([
+    ["CD", "cd"],
+    ["2xLP, Album, RE", "vinyl"],
+    ["Cass, Album", "cassette"],
+    ["File, FLAC", "digital"],
+    ["Betamax", "other"],
+    ["", undefined],
+  ])("reads the format %j as %s, by name or synonym", (format, expected) => {
+    const [album] = readCsv(
+      `Title,Artist,Format\nKind of Blue,Miles Davis,"${format}"\n`,
+    ).albums;
+
+    expect(album.format).toBe(expected);
   });
 
   it.each([

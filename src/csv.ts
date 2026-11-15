@@ -1,14 +1,15 @@
 import { toAlbum } from "./albumFiles";
+import { FORMAT_LABELS } from "./albumFormats";
 import { Album } from "./types";
 
-const HEADER = ["Title", "Artist", "Status", "Cover URL"];
+const HEADER = ["Title", "Artist", "Format", "Status", "Cover URL"];
 
 const STATUS_LABELS: Record<Album["status"], string> = {
   owned: "Owned",
   wishlisted: "Wishlisted",
 };
 
-type Column = "title" | "artist" | "status" | "coverUrl";
+type Column = "title" | "artist" | "format" | "status" | "coverUrl";
 
 // Header names are compared as lowercase letters only, so "Cover URL",
 // "cover_url" and "coverUrl" all match.
@@ -16,6 +17,10 @@ const COLUMNS: Record<string, Column> = {
   title: "title",
   album: "title",
   artist: "artist",
+  format: "format",
+  media: "format",
+  mediatype: "format",
+  medium: "format",
   status: "status",
   coverurl: "coverUrl",
   coverimageurl: "coverUrl",
@@ -44,6 +49,7 @@ export function createCsv(albums: Album[]) {
     ...albums.map((album) => [
       album.title,
       album.artist,
+      album.format ? FORMAT_LABELS[album.format] : "",
       STATUS_LABELS[album.status],
       album.coverUrl ?? "",
     ]),
@@ -145,6 +151,7 @@ export function readCsv(text: string) {
       toAlbum({
         title: read(record, "title"),
         artist: read(record, "artist"),
+        format: read(record, "format"),
         // Rows without a status are albums you have.
         status: read(record, "status").trim().toLowerCase() || "owned",
         coverUrl: read(record, "coverUrl"),

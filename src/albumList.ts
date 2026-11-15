@@ -1,4 +1,9 @@
-import { Album, AlbumSortOrder, AlbumStatusFilter } from "./types";
+import {
+  Album,
+  AlbumFormatFilter,
+  AlbumSortOrder,
+  AlbumStatusFilter,
+} from "./types";
 
 const SORT_COMPARATORS: Record<
   Exclude<AlbumSortOrder, "recent">,
@@ -14,17 +19,19 @@ interface AlbumListOptions {
   search: string;
   sortOrder: AlbumSortOrder;
   statusFilter: AlbumStatusFilter;
+  formatFilter: AlbumFormatFilter;
 }
 
-/** Picks the albums that match the search and status filter, in order. */
+/** Picks the albums that match the search and filters, in order. */
 export function selectAlbums(
   albums: Album[],
-  { search, sortOrder, statusFilter }: AlbumListOptions,
+  { search, sortOrder, statusFilter, formatFilter }: AlbumListOptions,
 ) {
   const query = search.trim().toLowerCase();
   const visible = albums.filter(
     (album) =>
       (statusFilter === "all" || album.status === statusFilter) &&
+      (formatFilter === "all" || album.format === formatFilter) &&
       (query === "" ||
         album.title.toLowerCase().includes(query) ||
         album.artist.toLowerCase().includes(query)),

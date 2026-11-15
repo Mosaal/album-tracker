@@ -5,15 +5,10 @@ import { Album } from "../../types";
 interface AlbumStatusSwitchProps {
   album: Album;
   onChange: (album: Album, status: Album["status"]) => void;
-  style?: React.CSSProperties;
 }
 
 /** Shows whether an album is owned or wishlisted, and flips it in one click. */
-export function AlbumStatusSwitch({
-  album,
-  onChange,
-  style,
-}: AlbumStatusSwitchProps) {
+export function AlbumStatusSwitch({ album, onChange }: AlbumStatusSwitchProps) {
   return (
     <Switch
       size="small"
@@ -21,7 +16,6 @@ export function AlbumStatusSwitch({
       checkedChildren="Owned"
       unCheckedChildren="Wishlisted"
       aria-label={`Owned: ${album.title}`}
-      style={style}
       onChange={(owned) => onChange(album, owned ? "owned" : "wishlisted")}
     />
   );

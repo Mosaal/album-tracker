@@ -15,6 +15,7 @@ import {
 import { useAlbums } from "./hooks";
 import {
   Album,
+  AlbumFormatFilter,
   AlbumInput,
   AlbumSortOrder,
   AlbumStatusFilter,
@@ -52,6 +53,7 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<AlbumSortOrder>("title-asc");
   const [statusFilter, setStatusFilter] = useState<AlbumStatusFilter>("all");
+  const [formatFilter, setFormatFilter] = useState<AlbumFormatFilter>("all");
   const [viewMode, setViewMode] = useState<AlbumViewMode>("grid");
   const [isFormOpen, setIsFormOpen] = useState(false);
   // Not cleared on close, so the modal keeps its title while it animates out.
@@ -61,8 +63,9 @@ export default function App() {
   const [messageApi, messageContextHolder] = message.useMessage();
 
   const visibleAlbums = useMemo(
-    () => selectAlbums(albums, { search, sortOrder, statusFilter }),
-    [albums, search, sortOrder, statusFilter],
+    () =>
+      selectAlbums(albums, { search, sortOrder, statusFilter, formatFilter }),
+    [albums, search, sortOrder, statusFilter, formatFilter],
   );
 
   const openAddForm = () => {
@@ -134,6 +137,8 @@ export default function App() {
             onSortOrderChange={setSortOrder}
             statusFilter={statusFilter}
             onStatusFilterChange={setStatusFilter}
+            formatFilter={formatFilter}
+            onFormatFilterChange={setFormatFilter}
             count={visibleAlbums.length}
           />
           <Flex

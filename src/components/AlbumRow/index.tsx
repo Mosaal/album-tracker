@@ -1,6 +1,7 @@
-import { Avatar, Card, Flex, Typography } from "antd";
+import { Avatar, Card, Flex, Tag, theme, Typography } from "antd";
 import { PictureOutlined } from "@ant-design/icons";
 
+import { FORMAT_LABELS } from "../../albumFormats";
 import { Album } from "../../types";
 import { DeleteAlbumButton, EditAlbumButton } from "../AlbumActionButtons";
 import { AlbumStatusSwitch } from "../AlbumStatusSwitch";
@@ -18,6 +19,8 @@ export function AlbumRow({
   onDelete,
   onStatusChange,
 }: AlbumRowProps) {
+  const { token } = theme.useToken();
+
   return (
     <Card size="small">
       <Flex gap="16px" align="center">
@@ -35,11 +38,17 @@ export function AlbumRow({
           <Typography.Text type="secondary" ellipsis>
             {album.artist}
           </Typography.Text>
-          <AlbumStatusSwitch
-            album={album}
-            onChange={onStatusChange}
-            style={{ alignSelf: "flex-start", marginTop: 4 }}
-          />
+          {/* As tall as a format tag even without one, so rows match. The
+              tag wraps below the switch when a phone has no room for both. */}
+          <Flex
+            gap="small"
+            align="center"
+            wrap
+            style={{ marginTop: 4, minHeight: token.controlHeightSM }}
+          >
+            <AlbumStatusSwitch album={album} onChange={onStatusChange} />
+            {album.format && <Tag>{FORMAT_LABELS[album.format]}</Tag>}
+          </Flex>
         </Flex>
         <Flex gap="small">
           <EditAlbumButton album={album} onClick={onEdit} size="large" />

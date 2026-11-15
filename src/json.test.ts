@@ -8,6 +8,7 @@ const KIND_OF_BLUE: Album = {
   title: "Kind of Blue",
   artist: "Miles Davis",
   coverUrl: "https://coverartarchive.org/release-group/rg-1/front-500",
+  format: "vinyl",
   status: "owned",
 };
 const IN_RAINBOWS: Album = {
@@ -53,7 +54,7 @@ describe("readJson", () => {
     expect(unreadable).toBe(3);
   });
 
-  it("tidies up albums: trims text, drops bad cover URLs and adds missing ids", () => {
+  it("tidies up albums: trims text, drops bad cover URLs, adds missing ids and reads unknown formats as other", () => {
     const { albums } = readJson(
       exportOf([
         {
@@ -61,6 +62,7 @@ describe("readJson", () => {
           artist: "Miles Davis",
           status: "owned",
           coverUrl: "javascript:alert(1)",
+          format: "MiniDisc",
         },
       ]),
     );
@@ -70,6 +72,7 @@ describe("readJson", () => {
         id: expect.any(String),
         title: "Kind of Blue",
         artist: "Miles Davis",
+        format: "other",
         status: "owned",
       },
     ]);

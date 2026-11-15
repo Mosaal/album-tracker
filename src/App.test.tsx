@@ -102,6 +102,40 @@ describe("App", () => {
     });
   });
 
+  it("sets an album's format, shows it and filters by it", async () => {
+    const user = renderApp(ALBUMS);
+
+    await user.click(screen.getByRole("button", { name: "Edit Kind of Blue" }));
+    const dialog = await findDialog("Edit album");
+    await user.click(within(dialog).getByRole("combobox", { name: /format/i }));
+    await user.click(
+      document.querySelector('.ant-select-item-option[title="Vinyl"]')!,
+    );
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    expect(saved()[0]).toEqual({ ...ALBUMS[0], format: "vinyl" });
+    expect(
+      await screen.findByText("Vinyl", { selector: ".ant-tag" }),
+    ).toBeVisible();
+
+    await choose(user, "Filter by format", "CD");
+    expect(cardTitles()).toEqual([]);
+    await choose(user, "Filter by format", "Vinyl");
+    expect(cardTitles()).toEqual(["Kind of Blue"]);
+  });
+
+  it("clears an album's format", async () => {
+    const user = renderApp([{ ...ALBUMS[0], format: "cd" }]);
+
+    await user.click(screen.getByRole("button", { name: "Edit Kind of Blue" }));
+    const dialog = await findDialog("Edit album");
+    await user.click(dialog.querySelector(".ant-select-clear")!);
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(saved()).toEqual([ALBUMS[0]]));
+    expect(screen.queryByText("CD", { selector: ".ant-tag" })).toBeNull();
+  });
+
   it("deletes an album only after confirming", async () => {
     const user = renderApp(ALBUMS);
 

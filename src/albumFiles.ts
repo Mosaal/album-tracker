@@ -1,4 +1,5 @@
-import { Album } from "./types";
+import { toFormat } from "./albumFormats";
+import { Album, AlbumFormat, AlbumInput } from "./types";
 import { isHttpUrl } from "./urls";
 
 export interface ImportSummary {
@@ -38,26 +39,44 @@ export function toAlbum(value: unknown): Album | undefined {
   if (isFilled(value.coverUrl) && isHttpUrl(value.coverUrl.trim())) {
     album.coverUrl = value.coverUrl.trim();
   }
+  const format = toFormat(value.format);
+  if (format) {
+    album.format = format;
+  }
   return album;
 }
 
-const sameAlbumKey = (album: Album) =>
+/** Title and artist, ignoring case and surrounding spaces. */
+export const titleAndArtist = (album: AlbumInput) =>
   `${album.title.trim().toLowerCase()}\n${album.artist.trim().toLowerCase()}`;
+
+/** Formats only tell two copies of an album apart when both are known. */
+export const formatsMatch = (a?: AlbumFormat, b?: AlbumFormat) =>
+  !a || !b || a === b;
 
 /**
  * Adds the imported albums that aren't in the collection yet, matching on id
- * or on title and artist. Existing albums are never removed or changed.
+ * or on title, artist and format. Existing albums are never removed or changed.
  */
 export function mergeAlbums(existing: Album[], imported: Album[]) {
   const ids = new Set(existing.map((album) => album.id));
-  const keys = new Set(existing.map(sameAlbumKey));
+  const formats = new Map<string, (AlbumFormat | undefined)[]>();
+  const remember = (album: Album) => {
+    const key = titleAndArtist(album);
+    formats.set(key, [...(formats.get(key) ?? []), album.format]);
+  };
+  existing.forEach(remember);
   const added: Album[] = [];
 
   for (const album of imported) {
-    const key = sameAlbumKey(album);
-    if (!ids.has(album.id) && !keys.has(key)) {
+    const isKnown =
+      ids.has(album.id) ||
+      (formats.get(titleAndArtist(album)) ?? []).some((format) =>
+        formatsMatch(format, album.format),
+      );
+    if (!isKnown) {
       ids.add(album.id);
-      keys.add(key);
+      remember(album);
       added.push(album);
     }
   }
