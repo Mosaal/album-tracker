@@ -3,12 +3,17 @@ import { Button, Form, Input, Space, Typography } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { createStyles } from "antd-style";
 
-import { CoverResult, searchCovers } from "../../api/coverArt";
+import {
+  CoverResult,
+  CoverSearchError,
+  searchCovers,
+} from "../../api/coverArt";
 import { AlbumInput } from "../../types";
 import { isHttpUrl } from "../../urls";
 
 type CoverSearch =
-  | { status: "idle" | "loading" | "error" }
+  | { status: "idle" | "loading" }
+  | { status: "error"; reason: CoverSearchError["reason"] }
   | { status: "done"; covers: CoverResult[] };
 
 const useStyles = createStyles(({ token }) => ({
@@ -92,9 +97,13 @@ export function AlbumCoverField() {
     try {
       const covers = await searchCovers(title, artist, controller.signal);
       setSearch({ status: "done", covers });
-    } catch {
+    } catch (error) {
       if (!controller.signal.aborted) {
-        setSearch({ status: "error" });
+        setSearch({
+          status: "error",
+          reason:
+            error instanceof CoverSearchError ? error.reason : "unavailable",
+        });
       }
     }
   };
@@ -114,13 +123,24 @@ export function AlbumCoverField() {
   if (search.status === "error") {
     results = (
       <Typography.Text type="danger">
-        Couldn't reach MusicBrainz. Try again in a moment.
+        {search.reason === "offline"
+          ? "You're offline. Search again once you're connected, or paste a URL."
+          : "Couldn't reach MusicBrainz. Try again in a moment, or paste a URL."}
+      </Typography.Text>
+    );
+  } else if (search.status === "done" && search.covers.length === 0) {
+    results = (
+      <Typography.Text type="secondary">
+        No albums found. Check the title and artist, or paste a URL.
       </Typography.Text>
     );
   } else if (search.status === "done" && covers.length === 0) {
+    // Every thumbnail failed: albums without art and a Cover Art Archive
+    // outage look the same from here.
     results = (
       <Typography.Text type="secondary">
-        No covers found. Check the title and artist, or paste a URL.
+        Couldn't load any covers from the Cover Art Archive. It may not have
+        them, or it may be down. Try again later, or paste a URL.
       </Typography.Text>
     );
   } else if (search.status === "done") {

@@ -47,9 +47,17 @@ export default defineConfig(({ mode }) => ({
         runtimeCaching: [
           {
             // Covers come from other sites, so they're cached as they're
-            // shown and stay visible offline.
-            urlPattern: ({ request, sameOrigin }) =>
-              request.destination === "image" && !sameOrigin,
+            // shown and stay visible offline. The cover picker's thumbnails
+            // are left out: searching needs a connection anyway, and the
+            // worker can't see the status of another site's image, so a
+            // thumbnail that failed during an outage would stay broken.
+            urlPattern: ({ request, sameOrigin, url }) =>
+              request.destination === "image" &&
+              !sameOrigin &&
+              !(
+                url.hostname === "coverartarchive.org" &&
+                url.pathname.endsWith("/front-250")
+              ),
             handler: "CacheFirst",
             options: {
               cacheName: "album-covers",

@@ -6,7 +6,8 @@ const fetchMock = vi.fn<typeof fetch>();
 
 const found = (groups: object[]) =>
   new Response(JSON.stringify({ "release-groups": groups }));
-const busy = () => new Response("", { status: 503 });
+const busy = (status = 503) => new Response("", { status });
+const dropped = () => new TypeError("Failed to fetch");
 
 const searchedQuery = (call = 0) =>
   new URL(String(fetchMock.mock.calls[call][0])).searchParams.get("query");
@@ -19,6 +20,7 @@ describe("searchCovers", () => {
   afterEach(() => {
     fetchMock.mockReset();
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
     vi.useRealTimers();
   });
 
@@ -83,18 +85,19 @@ describe("searchCovers", () => {
     ]);
   });
 
-  it("retries while MusicBrainz is busy", async () => {
+  it("retries while MusicBrainz is busy or the connection drops", async () => {
     vi.useFakeTimers();
     fetchMock
       .mockResolvedValueOnce(busy())
-      .mockResolvedValueOnce(busy())
+      .mockRejectedValueOnce(dropped())
+      .mockResolvedValueOnce(busy(504))
       .mockResolvedValueOnce(found([]));
 
     const search = searchCovers("In Rainbows", "Radiohead");
-    await vi.advanceTimersByTimeAsync(3000);
+    await vi.advanceTimersByTimeAsync(7000);
 
     await expect(search).resolves.toEqual([]);
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
   });
 
   it("gives up once the retries run out", async () => {
@@ -103,11 +106,21 @@ describe("searchCovers", () => {
 
     const search = expect(
       searchCovers("In Rainbows", "Radiohead"),
-    ).rejects.toThrow("503");
+    ).rejects.toMatchObject({ reason: "unavailable" });
     await vi.advanceTimersByTimeAsync(7000);
 
     await search;
     expect(fetchMock).toHaveBeenCalledTimes(4);
+  });
+
+  it("doesn't retry while the browser is offline", async () => {
+    vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
+    fetchMock.mockRejectedValue(dropped());
+
+    await expect(
+      searchCovers("In Rainbows", "Radiohead"),
+    ).rejects.toMatchObject({ reason: "offline" });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("stops retrying once the search is cancelled", async () => {

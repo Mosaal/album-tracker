@@ -1,12 +1,19 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { CoverResult, searchCovers } from "../../api/coverArt";
+import {
+  CoverResult,
+  CoverSearchError,
+  searchCovers,
+} from "../../api/coverArt";
 import { NoMotion } from "../../test/NoMotion";
 import { AlbumFormModal } from "../AlbumFormModal";
 
-vi.mock("../../api/coverArt", () => ({ searchCovers: vi.fn() }));
+vi.mock("../../api/coverArt", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../api/coverArt")>()),
+  searchCovers: vi.fn(),
+}));
 
 const KIND_OF_BLUE: CoverResult = {
   id: "rg-1",
@@ -82,7 +89,40 @@ describe("cover search in the album form", () => {
       within(dialog).getByRole("button", { name: /find covers/i }),
     );
 
-    expect(await within(dialog).findByText(/no covers found/i)).toBeVisible();
+    expect(await within(dialog).findByText(/no albums found/i)).toBeVisible();
+  });
+
+  it("says when none of the covers load", async () => {
+    vi.mocked(searchCovers).mockResolvedValue([KIND_OF_BLUE]);
+    const { user, dialog } = await renderForm();
+    await user.type(within(dialog).getByLabelText("Title"), "Kind of Blue");
+
+    await user.click(
+      within(dialog).getByRole("button", { name: /find covers/i }),
+    );
+    const cover = await within(dialog).findByRole("button", {
+      name: "Kind of Blue 1959 · Miles Davis",
+    });
+    fireEvent.error(within(cover).getByRole("presentation"));
+
+    expect(
+      await within(dialog).findByText(/couldn't load any covers/i),
+    ).toBeVisible();
+    expect(cover).not.toBeInTheDocument();
+  });
+
+  it("says when you're offline", async () => {
+    vi.mocked(searchCovers).mockRejectedValue(
+      new CoverSearchError("offline", "The browser is offline"),
+    );
+    const { user, dialog } = await renderForm();
+    await user.type(within(dialog).getByLabelText("Title"), "Kind of Blue");
+
+    await user.click(
+      within(dialog).getByRole("button", { name: /find covers/i }),
+    );
+
+    expect(await within(dialog).findByText(/you're offline/i)).toBeVisible();
   });
 
   it("says when MusicBrainz can't be reached", async () => {
