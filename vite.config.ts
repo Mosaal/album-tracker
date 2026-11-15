@@ -42,6 +42,8 @@ export default defineConfig(({ mode }) => ({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,ico}"],
+        // Only link previews use the share image, so it isn't cached offline.
+        globIgnores: ["**/og-image.png"],
         runtimeCaching: [
           {
             // Covers come from other sites, so they're cached as they're
