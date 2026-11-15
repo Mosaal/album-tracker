@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.7.0](https://github.com/Mosaal/album-tracker/compare/v0.6.0...v0.7.0) (2026-11-15)
+
+
+### Features
+
+* record each album's format, and filter by it ([#35](https://github.com/Mosaal/album-tracker/issues/35)) ([c2225f5](https://github.com/Mosaal/album-tracker/commit/c2225f597284ffae84284afbb5453c7a8564bbec))
+* select several albums to mark owned, wishlisted or delete at once ([#37](https://github.com/Mosaal/album-tracker/issues/37)) ([0bc03ff](https://github.com/Mosaal/album-tracker/commit/0bc03ff0be829e5fb5dd6bb4ca28b9a070e544c6))
+* show a proper preview when a link to the app is shared ([#30](https://github.com/Mosaal/album-tracker/issues/30)) ([58c3847](https://github.com/Mosaal/album-tracker/commit/58c3847c571a2f724a7c487538096c691ddb6783))
+* undo deleting an album ([#34](https://github.com/Mosaal/album-tracker/issues/34)) ([89fe83e](https://github.com/Mosaal/album-tracker/commit/89fe83e2e13403369541958862797e63d8bf88aa))
+* warn before adding an album that's already in the collection ([#36](https://github.com/Mosaal/album-tracker/issues/36)) ([e9fcbf5](https://github.com/Mosaal/album-tracker/commit/e9fcbf5b1586cc5ff1825a86461745c5d3de07e1))
+
+
+### Bug Fixes
+
+* retry cover searches through dropped connections and say why they fail ([#32](https://github.com/Mosaal/album-tracker/issues/32)) ([6587c63](https://github.com/Mosaal/album-tracker/commit/6587c635101d5501b6affd7b714e10996008a01c))
+
 ## [0.6.0](https://github.com/Mosaal/album-tracker/compare/v0.5.0...v0.6.0) (2026-11-14)
 
 
