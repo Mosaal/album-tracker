@@ -1,6 +1,7 @@
-import { Form, Input, Modal, Radio, Select } from "antd";
+import { Alert, Button, Form, Input, Modal, Radio, Select } from "antd";
 
-import { FORMAT_OPTIONS } from "../../albumFormats";
+import { findDuplicate } from "../../albumFiles";
+import { FORMAT_LABELS, FORMAT_OPTIONS } from "../../albumFormats";
 import { Album, AlbumInput } from "../../types";
 import { AlbumCoverField } from "../AlbumCoverField";
 
@@ -15,13 +16,61 @@ interface AlbumFormModalProps {
   open: boolean;
   /** The album to edit. Leave undefined to add a new one. */
   album?: Album;
+  /** The collection, to warn before adding an album that's already in it. */
+  albums: Album[];
   onSubmit: (input: AlbumInput) => void;
   onCancel: () => void;
+}
+
+interface DuplicateCheckProps {
+  albums: Album[];
+  album?: Album;
+}
+
+/** The album already in the collection that the form, as filled in, repeats. */
+function useDuplicate({ albums, album }: DuplicateCheckProps) {
+  const form = Form.useFormInstance<AlbumInput>();
+  const title = Form.useWatch("title", form) ?? "";
+  const artist = Form.useWatch("artist", form) ?? "";
+  const format = Form.useWatch("format", form);
+  return findDuplicate(albums, { title, artist, format }, album?.id);
+}
+
+function DuplicateWarning(props: DuplicateCheckProps) {
+  const duplicate = useDuplicate(props);
+  if (!duplicate) {
+    return null;
+  }
+
+  const format = duplicate.format
+    ? ` (${FORMAT_LABELS[duplicate.format]})`
+    : "";
+  const place =
+    duplicate.status === "owned" ? "in your collection" : "on your wishlist";
+  return (
+    <Alert
+      type="warning"
+      showIcon
+      title={`"${duplicate.title}" by ${duplicate.artist}${format} is already ${place}.`}
+    />
+  );
+}
+
+/** Asks to add or save "anyway" while the form repeats an album. */
+function SubmitButton(props: DuplicateCheckProps) {
+  const duplicate = useDuplicate(props);
+  const action = props.album ? "Save" : "Add";
+  return (
+    <Button type="primary" htmlType="submit">
+      {duplicate ? `${action} anyway` : action}
+    </Button>
+  );
 }
 
 export function AlbumFormModal({
   open,
   album,
+  albums,
   onSubmit,
   onCancel,
 }: AlbumFormModalProps) {
@@ -45,13 +94,18 @@ export function AlbumFormModal({
     <Modal
       open={open}
       title={album ? "Edit album" : "Add album"}
-      okText={album ? "Save" : "Add"}
-      okButtonProps={{ htmlType: "submit" }}
       onCancel={onCancel}
       // A stray click outside shouldn't throw away a half-filled form.
       mask={{ closable: false }}
       destroyOnHidden
-      // Wrap the whole dialog so the OK button (and Enter) submits the form.
+      footer={(_, { CancelBtn }) => (
+        <>
+          <CancelBtn />
+          <SubmitButton albums={albums} album={album} />
+        </>
+      )}
+      // Wrap the whole dialog so the submit button (and Enter) submits the
+      // form, and the footer can see what's been filled in.
       modalRender={(dialog) => (
         <Form<AlbumInput>
           name="album"
@@ -91,6 +145,7 @@ export function AlbumFormModal({
       <Form.Item name="status" label="Status" rules={[{ required: true }]}>
         <Radio.Group options={STATUS_OPTIONS} optionType="button" />
       </Form.Item>
+      <DuplicateWarning albums={albums} album={album} />
     </Modal>
   );
 }

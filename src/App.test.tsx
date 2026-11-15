@@ -82,6 +82,48 @@ describe("App", () => {
     expect(saved()).toEqual([]);
   });
 
+  it("warns before adding an album that's already there, but adds it anyway", async () => {
+    const user = renderApp([ALBUMS[0]]);
+
+    await user.click(screen.getByRole("button", { name: /add album/i }));
+    const dialog = await findDialog("Add album");
+    await user.type(within(dialog).getByLabelText("Title"), "kind of blue ");
+    await user.type(within(dialog).getByLabelText("Artist"), "Miles Davis");
+
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+      '"Kind of Blue" by Miles Davis is already in your collection.',
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: "Add anyway" }),
+    );
+
+    expect(saved()).toHaveLength(2);
+  });
+
+  it("doesn't warn about another format, or about the album being edited", async () => {
+    const user = renderApp([{ ...ALBUMS[0], format: "vinyl" }]);
+
+    await user.click(screen.getByRole("button", { name: "Edit Kind of Blue" }));
+    const editing = await findDialog("Edit album");
+    expect(within(editing).queryByRole("alert")).toBeNull();
+    await user.click(within(editing).getByRole("button", { name: "Cancel" }));
+
+    await user.click(screen.getByRole("button", { name: /add album/i }));
+    const adding = await findDialog("Add album");
+    await user.type(within(adding).getByLabelText("Title"), "Kind of Blue");
+    await user.type(within(adding).getByLabelText("Artist"), "Miles Davis");
+    expect(await within(adding).findByRole("alert")).toHaveTextContent(
+      "(Vinyl)",
+    );
+    await user.click(within(adding).getByRole("combobox", { name: /format/i }));
+    await user.click(
+      document.querySelector('.ant-select-item-option[title="CD"]')!,
+    );
+
+    await waitFor(() => expect(within(adding).queryByRole("alert")).toBeNull());
+    expect(within(adding).getByRole("button", { name: "Add" })).toBeVisible();
+  });
+
   it("edits an album", async () => {
     const user = renderApp(ALBUMS);
 

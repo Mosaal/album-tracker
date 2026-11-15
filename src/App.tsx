@@ -210,6 +210,7 @@ export default function App() {
       <AlbumFormModal
         open={isFormOpen}
         album={editingAlbum}
+        albums={albums}
         onSubmit={handleFormSubmit}
         onCancel={() => setIsFormOpen(false)}
       />

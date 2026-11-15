@@ -26,9 +26,10 @@ const KIND_OF_BLUE: CoverResult = {
 
 async function renderForm() {
   const onSubmit = vi.fn();
-  render(<AlbumFormModal open onSubmit={onSubmit} onCancel={vi.fn()} />, {
-    wrapper: NoMotion,
-  });
+  render(
+    <AlbumFormModal open albums={[]} onSubmit={onSubmit} onCancel={vi.fn()} />,
+    { wrapper: NoMotion },
+  );
   const dialog = await screen.findByRole("dialog");
   return { user: userEvent.setup(), dialog, onSubmit };
 }
