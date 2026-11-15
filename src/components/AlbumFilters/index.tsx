@@ -2,16 +2,21 @@ import { Flex, Input, Select, Typography } from "antd";
 import { createStyles } from "antd-style";
 
 import { albumCount } from "../../albumFiles";
-import { AlbumSortOrder, AlbumStatusFilter } from "../../types";
+import { FORMAT_OPTIONS } from "../../albumFormats";
+import {
+  AlbumFormatFilter,
+  AlbumSortOrder,
+  AlbumStatusFilter,
+} from "../../types";
 
 // On phones, each filter gets a full-width row of its own.
 const useStyles = createStyles(({ responsive }) => ({
   filters: { [responsive.xs]: { width: "100%" } },
   search: { width: 280, [responsive.xs]: { width: "100%" } },
   sort: { width: 180, [responsive.xs]: { width: "100%" } },
-  statusRow: { [responsive.xs]: { width: "100%" } },
-  // Grows to fill the row up to the count.
-  status: { width: 160, [responsive.xs]: { flex: 1 } },
+  filterRow: { [responsive.xs]: { width: "100%" } },
+  // The status and format filters share the row up to the count.
+  filter: { width: 160, [responsive.xs]: { flex: 1, minWidth: 0 } },
 }));
 
 const SORT_OPTIONS: { value: AlbumSortOrder; label: string }[] = [
@@ -28,6 +33,11 @@ const STATUS_OPTIONS: { value: AlbumStatusFilter; label: string }[] = [
   { value: "wishlisted", label: "Wishlisted" },
 ];
 
+const FORMAT_FILTER_OPTIONS: { value: AlbumFormatFilter; label: string }[] = [
+  { value: "all", label: "All formats" },
+  ...FORMAT_OPTIONS,
+];
+
 interface AlbumFiltersProps {
   search: string;
   onSearchChange: (search: string) => void;
@@ -35,7 +45,9 @@ interface AlbumFiltersProps {
   onSortOrderChange: (sortOrder: AlbumSortOrder) => void;
   statusFilter: AlbumStatusFilter;
   onStatusFilterChange: (statusFilter: AlbumStatusFilter) => void;
-  /** How many albums match the search and status filter. */
+  formatFilter: AlbumFormatFilter;
+  onFormatFilterChange: (formatFilter: AlbumFormatFilter) => void;
+  /** How many albums match the search and filters. */
   count: number;
 }
 
@@ -46,6 +58,8 @@ export function AlbumFilters({
   onSortOrderChange,
   statusFilter,
   onStatusFilterChange,
+  formatFilter,
+  onFormatFilterChange,
   count,
 }: AlbumFiltersProps) {
   const { styles } = useStyles();
@@ -68,13 +82,20 @@ export function AlbumFilters({
         className={styles.sort}
       />
       {/* Grouped so the count never wraps onto a line of its own. */}
-      <Flex gap="small" align="center" className={styles.statusRow}>
+      <Flex gap="small" align="center" className={styles.filterRow}>
         <Select
           value={statusFilter}
           onChange={onStatusFilterChange}
           options={STATUS_OPTIONS}
           aria-label="Filter by status"
-          className={styles.status}
+          className={styles.filter}
+        />
+        <Select
+          value={formatFilter}
+          onChange={onFormatFilterChange}
+          options={FORMAT_FILTER_OPTIONS}
+          aria-label="Filter by format"
+          className={styles.filter}
         />
         {/* A status role, so screen readers announce the count as it changes. */}
         <Typography.Text type="secondary" role="status">

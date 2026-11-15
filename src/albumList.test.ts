@@ -5,14 +5,27 @@ import { Album } from "./types";
 
 // Stored oldest first, in the order they were added.
 const ALBUMS: Album[] = [
-  { id: "1", title: "Kind of Blue", artist: "Miles Davis", status: "owned" },
+  {
+    id: "1",
+    title: "Kind of Blue",
+    artist: "Miles Davis",
+    format: "vinyl",
+    status: "owned",
+  },
   {
     id: "2",
     title: "Blue Lines",
     artist: "Massive Attack",
+    format: "vinyl",
     status: "wishlisted",
   },
-  { id: "3", title: "Mezzanine", artist: "Massive Attack", status: "owned" },
+  {
+    id: "3",
+    title: "Mezzanine",
+    artist: "Massive Attack",
+    format: "cd",
+    status: "owned",
+  },
   { id: "4", title: "In Rainbows", artist: "Radiohead", status: "wishlisted" },
 ];
 
@@ -23,6 +36,7 @@ const select = (options: Partial<Parameters<typeof selectAlbums>[1]>) =>
     search: "",
     sortOrder: "title-asc",
     statusFilter: "all",
+    formatFilter: "all",
     ...options,
   });
 
@@ -50,6 +64,13 @@ describe("selectAlbums", () => {
     const visible = select({ search: "MASSIVE", statusFilter: "owned" });
 
     expect(titles(visible)).toEqual(["Mezzanine"]);
+  });
+
+  it("shows only albums in the chosen format", () => {
+    expect(titles(select({ formatFilter: "vinyl" }))).toEqual([
+      "Blue Lines",
+      "Kind of Blue",
+    ]);
   });
 
   it("leaves the stored order alone when sorting", () => {

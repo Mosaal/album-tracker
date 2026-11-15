@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Card } from "antd";
+import { Card, Flex, Tag } from "antd";
 import { PictureOutlined } from "@ant-design/icons";
 import { createStyles } from "antd-style";
 
+import { FORMAT_LABELS } from "../../albumFormats";
 import { Album } from "../../types";
 import { DeleteAlbumButton, EditAlbumButton } from "../AlbumActionButtons";
 import { AlbumStatusSwitch } from "../AlbumStatusSwitch";
@@ -30,6 +31,8 @@ const useCardStyles = createStyles(({ token }) => ({
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
   },
+  // As tall as a format tag even without one, for the same reason.
+  statusLine: { marginTop: 12, minHeight: token.controlHeightSM },
   // The buttons fill the action bar edge to edge, at the bar's usual height.
   // The tripled class outweighs antd's ".ant-card .ant-card-actions > li".
   actions: { "&&& > li": { margin: 0 } },
@@ -104,11 +107,10 @@ export function AlbumCard({
         title={album.title}
         description={<div className={styles.artist}>{album.artist}</div>}
       />
-      <AlbumStatusSwitch
-        album={album}
-        onChange={onStatusChange}
-        style={{ marginTop: 12 }}
-      />
+      <Flex gap="small" align="center" wrap className={styles.statusLine}>
+        <AlbumStatusSwitch album={album} onChange={onStatusChange} />
+        {album.format && <Tag>{FORMAT_LABELS[album.format]}</Tag>}
+      </Flex>
     </Card>
   );
 }

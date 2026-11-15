@@ -1,5 +1,6 @@
-import { Form, Input, Modal, Radio } from "antd";
+import { Form, Input, Modal, Radio, Select } from "antd";
 
+import { FORMAT_OPTIONS } from "../../albumFormats";
 import { Album, AlbumInput } from "../../types";
 import { AlbumCoverField } from "../AlbumCoverField";
 
@@ -24,11 +25,18 @@ export function AlbumFormModal({
   onSubmit,
   onCancel,
 }: AlbumFormModalProps) {
-  const handleFinish = ({ title, artist, coverUrl, status }: AlbumInput) => {
+  const handleFinish = ({
+    title,
+    artist,
+    coverUrl,
+    format,
+    status,
+  }: AlbumInput) => {
     onSubmit({
       title: title.trim(),
       artist: artist.trim(),
       coverUrl: coverUrl?.trim() || undefined,
+      format,
       status,
     });
   };
@@ -73,6 +81,13 @@ export function AlbumFormModal({
         <Input />
       </Form.Item>
       <AlbumCoverField />
+      <Form.Item name="format" label="Format">
+        <Select
+          options={FORMAT_OPTIONS}
+          placeholder="Choose a format"
+          allowClear
+        />
+      </Form.Item>
       <Form.Item name="status" label="Status" rules={[{ required: true }]}>
         <Radio.Group options={STATUS_OPTIONS} optionType="button" />
       </Form.Item>
