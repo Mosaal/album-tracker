@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Button, Empty, Flex, Modal } from "antd";
+import { Button, Empty, Flex, message, Modal } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { createStyles } from "antd-style";
 import { selectAlbums } from "./albumList";
@@ -46,7 +46,7 @@ export default function App() {
     addAlbum,
     updateAlbum,
     setAlbumStatus,
-    deleteAlbum,
+    deleteAlbums,
     importAlbums,
   } = useAlbums();
   const [search, setSearch] = useState("");
@@ -56,8 +56,9 @@ export default function App() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   // Not cleared on close, so the modal keeps its title while it animates out.
   const [editingAlbum, setEditingAlbum] = useState<Album>();
-  // Rendered inside Layout below, so confirm dialogs pick up the theme.
+  // Rendered inside Layout below, so dialogs and messages pick up the theme.
   const [modal, modalContextHolder] = Modal.useModal();
+  const [messageApi, messageContextHolder] = message.useMessage();
 
   const visibleAlbums = useMemo(
     () => selectAlbums(albums, { search, sortOrder, statusFilter }),
@@ -90,12 +91,35 @@ export default function App() {
   const confirmDelete = (album: Album) => {
     modal.confirm({
       title: "Delete this album?",
-      content: `"${album.title}" by ${album.artist} will be permanently removed.`,
+      content: `"${album.title}" by ${album.artist} will be removed from your collection.`,
       okText: "Delete",
       okButtonProps: { danger: true },
       // Start on Cancel so pressing Enter can't delete by accident.
       focusable: { autoFocusButton: "cancel" },
-      onOk: () => deleteAlbum(album.id),
+      onOk: () => {
+        const restore = deleteAlbums([album.id]);
+        const key = `deleted-${album.id}`;
+        messageApi.success({
+          key,
+          content: (
+            <>
+              Deleted "{album.title}".
+              <Button
+                type="link"
+                size="small"
+                onClick={() => {
+                  restore();
+                  messageApi.destroy(key);
+                }}
+              >
+                Undo
+              </Button>
+            </>
+          ),
+          // Long enough to notice the message and reach Undo.
+          duration: 8,
+        });
+      },
     });
   };
 
@@ -185,6 +209,7 @@ export default function App() {
         onCancel={() => setIsFormOpen(false)}
       />
       {modalContextHolder}
+      {messageContextHolder}
     </Layout>
   );
 }

@@ -41,9 +41,32 @@ export function useAlbums() {
     );
   }, []);
 
-  const deleteAlbum = useCallback((id: string) => {
-    setAlbums((current) => current.filter((album) => album.id !== id));
-  }, []);
+  /**
+   * Removes albums, returning a function that puts them back where they were,
+   * which matters when they're sorted by when they were added.
+   */
+  const deleteAlbums = useCallback(
+    (ids: string[]) => {
+      const removed = albums.flatMap((album, index) =>
+        ids.includes(album.id) ? [{ album, index }] : [],
+      );
+      setAlbums((current) =>
+        current.filter((album) => !ids.includes(album.id)),
+      );
+      return () =>
+        setAlbums((current) => {
+          const restored = [...current];
+          // In their original order, so each index counts the ones before it.
+          for (const { album, index } of removed) {
+            if (!restored.some(({ id }) => id === album.id)) {
+              restored.splice(index, 0, album);
+            }
+          }
+          return restored;
+        });
+    },
+    [albums],
+  );
 
   /** Adds albums from an imported file, skipping any already in the collection. */
   const importAlbums = useCallback(
@@ -60,7 +83,7 @@ export function useAlbums() {
     addAlbum,
     updateAlbum,
     setAlbumStatus,
-    deleteAlbum,
+    deleteAlbums,
     importAlbums,
   };
 }

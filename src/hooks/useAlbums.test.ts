@@ -86,20 +86,23 @@ describe("useAlbums", () => {
     ]);
   });
 
-  it("deletes an album", () => {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify([
-        { ...KIND_OF_BLUE, id: "1" },
-        { ...KIND_OF_BLUE, id: "2", title: "Milestones" },
-      ]),
-    );
+  it("deletes albums, and can put them back where they were", () => {
+    const albums = ["1", "2", "3", "4"].map((id) => ({
+      ...KIND_OF_BLUE,
+      id,
+      title: `Album ${id}`,
+    }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(albums));
     const { result } = renderHook(() => useAlbums());
 
-    act(() => result.current.deleteAlbum("1"));
+    let restore = () => {};
+    act(() => {
+      restore = result.current.deleteAlbums(["2", "4"]);
+    });
+    expect(saved()).toEqual([albums[0], albums[2]]);
 
-    expect(saved()).toEqual([
-      { ...KIND_OF_BLUE, id: "2", title: "Milestones" },
-    ]);
+    act(() => restore());
+    act(() => restore());
+    expect(saved()).toEqual(albums);
   });
 });
