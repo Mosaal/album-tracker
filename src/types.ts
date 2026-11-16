@@ -36,3 +36,13 @@ export type AlbumStatusFilter = "all" | Album["status"];
 export type AlbumFormatFilter = "all" | AlbumFormat;
 
 export type AlbumViewMode = "grid" | "list";
+
+/** How many albums fit in each row of the grid. */
+export type GridDensity = "normal" | "compact";
+
+/** Choices saved on this device. */
+export interface Settings {
+  gridDensity: GridDensity;
+  /** Filled in when adding an album. */
+  defaultFormat?: AlbumFormat;
+}
