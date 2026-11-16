@@ -46,7 +46,7 @@ function mockDownloads() {
 const downloadedText = () =>
   (vi.mocked(URL.createObjectURL).mock.calls[0][0] as Blob).text();
 
-describe("import/export menu", () => {
+describe("more actions menu", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
