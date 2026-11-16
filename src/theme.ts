@@ -44,9 +44,12 @@ const darkTheme: ThemeConfig = {
 };
 
 // iOS zooms in on a text field when it's focused if its text is smaller than
-// 16px. antd keeps the field the same height at that size.
+// 16px. antd keeps the field the same height at that size. A select counts
+// too, as it's an input underneath. antd sizes it for the 22px line of 14px
+// text, so its 16px text keeps that line to keep its height.
 const touchComponents: ThemeConfig["components"] = {
   Input: { inputFontSize: 16 },
+  Select: { fontSize: 16, lineHeight: 22 / 16 },
 };
 
 const withTouch = (config: ThemeConfig): ThemeConfig => ({
