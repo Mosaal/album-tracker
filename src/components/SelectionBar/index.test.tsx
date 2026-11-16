@@ -73,7 +73,13 @@ describe("selecting albums", () => {
     expect(saved().map((album) => album.id)).toEqual(["1"]);
 
     await user.click(await screen.findByRole("button", { name: "Undo" }));
-    expect(saved()).toEqual(ALBUMS);
+    expect(saved()).toEqual([
+      ALBUMS[0],
+      ...ALBUMS.slice(1).map((album) => ({
+        ...album,
+        updatedAt: expect.any(String),
+      })),
+    ]);
   });
 
   it("selects only the albums shown, acts only on those, and stops on Escape", async () => {

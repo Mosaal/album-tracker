@@ -1,86 +1,170 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 
 import { mergeAlbums } from "../albumFiles";
-import { Album, AlbumInput } from "../types";
+import { CollectionStore } from "../albumStore";
+import { nextTimestamp } from "../timestamps";
+import { Album, AlbumInput, DeletedAlbum } from "../types";
 
-const STORAGE_KEY = "album-tracker:albums";
+const sameDetails = (album: Album, input: AlbumInput) =>
+  album.title === input.title &&
+  album.artist === input.artist &&
+  album.coverUrl === input.coverUrl &&
+  album.format === input.format &&
+  album.status === input.status;
 
-function readStoredAlbums(): Album[] {
-  try {
-    const stored: unknown = JSON.parse(
-      localStorage.getItem(STORAGE_KEY) ?? "[]",
-    );
-    return Array.isArray(stored) ? stored : [];
-  } catch {
-    return [];
-  }
-}
+/** Drops the deletion records of albums that are back in the collection. */
+const forgetDeleted = (deleted: DeletedAlbum[], ids: string[]) =>
+  deleted.some(({ id }) => ids.includes(id))
+    ? deleted.filter(({ id }) => !ids.includes(id))
+    : deleted;
 
-/** The album collection, saved in this browser's localStorage. */
-export function useAlbums() {
-  const [albums, setAlbums] = useState<Album[]>(readStoredAlbums);
+/**
+ * The album collection, and the ways to change it. Each change records when
+ * it happened, and deleted albums are remembered.
+ */
+export function useAlbums(store: CollectionStore) {
+  const { albums } = useSyncExternalStore(store.subscribe, store.get);
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(albums));
-  }, [albums]);
+  const addAlbum = useCallback(
+    (input: AlbumInput) => {
+      store.update((current) => {
+        const now = nextTimestamp(current);
+        const album: Album = {
+          ...input,
+          id: crypto.randomUUID(),
+          addedAt: now,
+          updatedAt: now,
+        };
+        return { ...current, albums: [...current.albums, album] };
+      });
+    },
+    [store],
+  );
 
-  const addAlbum = useCallback((input: AlbumInput) => {
-    const album: Album = { ...input, id: crypto.randomUUID() };
-    setAlbums((current) => [...current, album]);
-  }, []);
-
-  const updateAlbum = useCallback((id: string, input: AlbumInput) => {
-    setAlbums((current) =>
-      current.map((album) => (album.id === id ? { ...input, id } : album)),
-    );
-  }, []);
+  const updateAlbum = useCallback(
+    (id: string, input: AlbumInput) => {
+      store.update((current) => {
+        const album = current.albums.find((album) => album.id === id);
+        if (!album || sameDetails(album, input)) {
+          return current;
+        }
+        const updated: Album = {
+          ...input,
+          id,
+          ...(album.addedAt ? { addedAt: album.addedAt } : {}),
+          updatedAt: nextTimestamp(current),
+        };
+        return {
+          ...current,
+          albums: current.albums.map((album) =>
+            album.id === id ? updated : album,
+          ),
+        };
+      });
+    },
+    [store],
+  );
 
   const setAlbumsStatus = useCallback(
     (ids: string[], status: Album["status"]) => {
-      setAlbums((current) =>
-        current.map((album) =>
-          ids.includes(album.id) ? { ...album, status } : album,
-        ),
-      );
+      store.update((current) => {
+        const changes = (album: Album) =>
+          ids.includes(album.id) && album.status !== status;
+        if (!current.albums.some(changes)) {
+          return current;
+        }
+        const now = nextTimestamp(current);
+        return {
+          ...current,
+          albums: current.albums.map((album) =>
+            changes(album) ? { ...album, status, updatedAt: now } : album,
+          ),
+        };
+      });
     },
-    [],
+    [store],
   );
 
   /**
    * Removes albums, returning a function that puts them back where they were,
-   * which matters when they're sorted by when they were added.
+   * which matters for albums older than the dates that sort Recently added.
    */
   const deleteAlbums = useCallback(
     (ids: string[]) => {
-      const removed = albums.flatMap((album, index) =>
-        ids.includes(album.id) ? [{ album, index }] : [],
-      );
-      setAlbums((current) =>
-        current.filter((album) => !ids.includes(album.id)),
-      );
+      const removed = store
+        .get()
+        .albums.flatMap((album, index) =>
+          ids.includes(album.id) ? [{ album, index }] : [],
+        );
+      if (removed.length === 0) {
+        return () => {};
+      }
+      store.update((current) => {
+        const now = nextTimestamp(current);
+        return {
+          albums: current.albums.filter((album) => !ids.includes(album.id)),
+          deleted: [
+            ...forgetDeleted(current.deleted, ids),
+            ...removed.map(({ album }) => ({ id: album.id, deletedAt: now })),
+          ],
+        };
+      });
       return () =>
-        setAlbums((current) => {
-          const restored = [...current];
-          // In their original order, so each index counts the ones before it.
-          for (const { album, index } of removed) {
-            if (!restored.some(({ id }) => id === album.id)) {
-              restored.splice(index, 0, album);
-            }
+        store.update((current) => {
+          const missing = removed.filter(
+            ({ album }) => !current.albums.some(({ id }) => id === album.id),
+          );
+          if (missing.length === 0) {
+            return current;
           }
-          return restored;
+          const now = nextTimestamp(current);
+          const albums = [...current.albums];
+          // In their original order, so each index counts the ones before it.
+          for (const { album, index } of missing) {
+            albums.splice(index, 0, { ...album, updatedAt: now });
+          }
+          return {
+            albums,
+            deleted: forgetDeleted(
+              current.deleted,
+              missing.map(({ album }) => album.id),
+            ),
+          };
         });
     },
-    [albums],
+    [store],
   );
 
   /** Adds albums from an imported file, skipping any already in the collection. */
   const importAlbums = useCallback(
     (imported: Album[]) => {
-      const result = mergeAlbums(albums, imported);
-      setAlbums(result.albums);
-      return result;
+      let summary = { added: 0, skipped: 0 };
+      store.update((current) => {
+        const { albums, added, skipped } = mergeAlbums(
+          current.albums,
+          imported,
+        );
+        summary = { added, skipped };
+        if (added === 0) {
+          return current;
+        }
+        const now = nextTimestamp(current);
+        const newAlbums = albums.slice(current.albums.length).map((album) => ({
+          ...album,
+          addedAt: album.addedAt ?? now,
+          updatedAt: now,
+        }));
+        return {
+          albums: [...current.albums, ...newAlbums],
+          deleted: forgetDeleted(
+            current.deleted,
+            newAlbums.map(({ id }) => id),
+          ),
+        };
+      });
+      return summary;
     },
-    [albums],
+    [store],
   );
 
   return {

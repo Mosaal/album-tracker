@@ -10,6 +10,8 @@ const KIND_OF_BLUE: Album = {
   coverUrl: "https://coverartarchive.org/release-group/rg-1/front-500",
   format: "vinyl",
   status: "owned",
+  addedAt: "2026-01-01T09:00:00.000Z",
+  updatedAt: "2026-03-01T10:00:00.000Z",
 };
 const IN_RAINBOWS: Album = {
   id: "2",
@@ -75,6 +77,33 @@ describe("readJson", () => {
         format: "other",
         status: "owned",
       },
+    ]);
+  });
+
+  it("reads when albums were added and changed in UTC, dropping dates it can't read", () => {
+    const { albums } = readJson(
+      exportOf([
+        {
+          ...IN_RAINBOWS,
+          addedAt: "2026-01-01T09:00Z",
+          updatedAt: "2026-03-01T10:00:00.5+01:00",
+        },
+        {
+          ...IN_RAINBOWS,
+          id: "3",
+          addedAt: "yesterday",
+          updatedAt: "2026-13-01T00:00:00Z",
+        },
+      ]),
+    );
+
+    expect(albums).toEqual([
+      {
+        ...IN_RAINBOWS,
+        addedAt: "2026-01-01T09:00:00.000Z",
+        updatedAt: "2026-03-01T09:00:00.500Z",
+      },
+      { ...IN_RAINBOWS, id: "3" },
     ]);
   });
 });

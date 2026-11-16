@@ -4,6 +4,7 @@ import { PlusOutlined } from "@ant-design/icons";
 import { createStyles } from "antd-style";
 import { albumCount } from "./albumFiles";
 import { selectAlbums } from "./albumList";
+import { createCollectionStore } from "./albumStore";
 import {
   AlbumCard,
   AlbumFilters,
@@ -44,6 +45,7 @@ const useStyles = createStyles(({ responsive }) => ({
 
 export default function App() {
   const { styles } = useStyles();
+  const [store] = useState(createCollectionStore);
   const {
     albums,
     addAlbum,
@@ -51,7 +53,7 @@ export default function App() {
     setAlbumsStatus,
     deleteAlbums,
     importAlbums,
-  } = useAlbums();
+  } = useAlbums(store);
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<AlbumSortOrder>("title-asc");
   const [statusFilter, setStatusFilter] = useState<AlbumStatusFilter>("all");

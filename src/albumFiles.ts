@@ -1,4 +1,5 @@
 import { toFormat } from "./albumFormats";
+import { toTimestamp } from "./timestamps";
 import { Album, AlbumFormat, AlbumInput } from "./types";
 import { isHttpUrl } from "./urls";
 
@@ -42,6 +43,14 @@ export function toAlbum(value: unknown): Album | undefined {
   const format = toFormat(value.format);
   if (format) {
     album.format = format;
+  }
+  const addedAt = toTimestamp(value.addedAt);
+  if (addedAt) {
+    album.addedAt = addedAt;
+  }
+  const updatedAt = toTimestamp(value.updatedAt);
+  if (updatedAt) {
+    album.updatedAt = updatedAt;
   }
   return album;
 }

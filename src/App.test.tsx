@@ -65,6 +65,8 @@ describe("App", () => {
         title: "Kind of Blue",
         artist: "Miles Davis",
         status: "owned",
+        addedAt: expect.any(String),
+        updatedAt: expect.any(String),
       },
     ]);
   });
@@ -141,6 +143,7 @@ describe("App", () => {
       title: "In Rainbows (Disk 2)",
       artist: "Radiohead",
       status: "owned",
+      updatedAt: expect.any(String),
     });
   });
 
@@ -155,7 +158,11 @@ describe("App", () => {
     );
     await user.click(within(dialog).getByRole("button", { name: "Save" }));
 
-    expect(saved()[0]).toEqual({ ...ALBUMS[0], format: "vinyl" });
+    expect(saved()[0]).toEqual({
+      ...ALBUMS[0],
+      format: "vinyl",
+      updatedAt: expect.any(String),
+    });
     expect(
       await screen.findByText("Vinyl", { selector: ".ant-tag" }),
     ).toBeVisible();
@@ -174,7 +181,11 @@ describe("App", () => {
     await user.click(dialog.querySelector(".ant-select-clear")!);
     await user.click(within(dialog).getByRole("button", { name: "Save" }));
 
-    await waitFor(() => expect(saved()).toEqual([ALBUMS[0]]));
+    await waitFor(() =>
+      expect(saved()).toEqual([
+        { ...ALBUMS[0], updatedAt: expect.any(String) },
+      ]),
+    );
     expect(screen.queryByText("CD", { selector: ".ant-tag" })).toBeNull();
   });
 
@@ -212,7 +223,11 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "Undo" }));
 
     expect(cardTitles()).toEqual(["Blue Lines", "In Rainbows", "Kind of Blue"]);
-    expect(saved()).toEqual(ALBUMS);
+    expect(saved()).toEqual([
+      ALBUMS[0],
+      { ...ALBUMS[1], updatedAt: expect.any(String) },
+      ALBUMS[2],
+    ]);
     await waitFor(() =>
       expect(screen.queryByText('Deleted "In Rainbows".')).toBeNull(),
     );
