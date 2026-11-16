@@ -5,6 +5,7 @@ import {
   DownloadOutlined,
   EllipsisOutlined,
   GithubOutlined,
+  SettingOutlined,
   UploadOutlined,
 } from "@ant-design/icons";
 
@@ -21,6 +22,7 @@ interface MoreActionsMenuProps {
   isSyncConnected: boolean;
   /** Opens the sync setup, or its settings once connected. */
   onOpenSync: () => void;
+  onOpenSettings: () => void;
   albums: Album[];
   onImport: (albums: Album[]) => { added: number; skipped: number };
 }
@@ -30,7 +32,7 @@ const isCsv = (file: File) =>
 
 /**
  * The ⋯ menu: select albums, sync with GitHub, save the collection to a file,
- * or add albums from one.
+ * add albums from one, or change settings.
  */
 export function MoreActionsMenu({
   albums,
@@ -38,6 +40,7 @@ export function MoreActionsMenu({
   onSelectAlbums,
   isSyncConnected,
   onOpenSync,
+  onOpenSettings,
 }: MoreActionsMenuProps) {
   const [messageApi, messageContextHolder] = message.useMessage();
   const fileInput = useRef<HTMLInputElement>(null);
@@ -121,12 +124,20 @@ export function MoreActionsMenu({
               icon: <UploadOutlined />,
               label: "Import JSON or CSV",
             },
+            { type: "divider" },
+            {
+              key: "settings",
+              icon: <SettingOutlined />,
+              label: "Settings…",
+            },
           ],
           onClick: ({ key }) => {
             if (key === "select") {
               onSelectAlbums();
             } else if (key === "sync") {
               onOpenSync();
+            } else if (key === "settings") {
+              onOpenSettings();
             } else if (key === "export-json") {
               exportJson();
             } else if (key === "export-csv") {

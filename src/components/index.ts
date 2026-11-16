@@ -6,6 +6,7 @@ export * from "./AlbumFormModal";
 export * from "./AlbumViewToggle";
 export * from "./MoreActionsMenu";
 export * from "./SelectionBar";
+export * from "./SettingsDialog";
 export * from "./SyncSettingsDialog";
 export * from "./SyncSetupDialog";
 export * from "./SyncStatusButton";

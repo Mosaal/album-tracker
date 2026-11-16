@@ -25,6 +25,10 @@ const useCoverStyles = createStyles(({ token }) => ({
 }));
 
 const useCardStyles = createStyles(({ token }) => ({
+  // Fills its grid row with the buttons along the bottom, so a card whose
+  // status line wraps can't leave its neighbours' buttons out of line.
+  card: { display: "flex", flexDirection: "column" },
+  body: { flex: 1 },
   // One line, like the title, so a long artist name can't push this card's
   // switch and buttons out of line with its neighbours.
   artist: {
@@ -89,7 +93,8 @@ export function AlbumCard({
   return (
     <Card
       cover={<AlbumCover album={album} />}
-      classNames={{ actions: styles.actions }}
+      className={styles.card}
+      classNames={{ body: styles.body, actions: styles.actions }}
       actions={
         selection
           ? undefined

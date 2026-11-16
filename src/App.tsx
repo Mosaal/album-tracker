@@ -14,11 +14,12 @@ import {
   Layout,
   MoreActionsMenu,
   SelectionBar,
+  SettingsDialog,
   SyncSettingsDialog,
   SyncSetupDialog,
   SyncStatusButton,
 } from "./components";
-import { useAlbums, useGitHubSync } from "./hooks";
+import { useAlbums, useGitHubSync, useSettings } from "./hooks";
 import {
   Album,
   AlbumFormatFilter,
@@ -26,28 +27,40 @@ import {
   AlbumSortOrder,
   AlbumStatusFilter,
   AlbumViewMode,
+  GridDensity,
 } from "./types";
 
 // minmax(0, 1fr) rather than 1fr so wide covers shrink instead of overflowing.
 const gridColumns = (count: number) => `repeat(${count}, minmax(0, 1fr))`;
 
-const useStyles = createStyles(({ responsive }) => ({
-  grid: {
-    display: "grid",
-    gridTemplateColumns: gridColumns(5),
-    gap: 16,
-    // Max-width queries overlap: keep them widest first so the narrowest wins.
-    [responsive.lg]: { gridTemplateColumns: gridColumns(4) },
-    [responsive.md]: { gridTemplateColumns: gridColumns(3) },
-    [responsive.sm]: { gridTemplateColumns: gridColumns(2) },
-    [responsive.xs]: { gridTemplateColumns: gridColumns(1) },
-  },
-  // On phones the view toggle and the buttons sit at either end of the row.
-  actions: { [responsive.xs]: { width: "100%" } },
-}));
+// Albums in each row, from the widest screens down to phones.
+const GRID_COLUMNS: Record<GridDensity, number[]> = {
+  normal: [5, 4, 3, 2, 1],
+  compact: [6, 5, 4, 3, 2],
+};
+
+const useStyles = createStyles(({ responsive }, density: GridDensity) => {
+  const [widest, lg, md, sm, xs] = GRID_COLUMNS[density];
+  return {
+    grid: {
+      display: "grid",
+      gridTemplateColumns: gridColumns(widest),
+      gap: 16,
+      // Max-width queries overlap: keep them widest first so the narrowest wins.
+      [responsive.lg]: { gridTemplateColumns: gridColumns(lg) },
+      [responsive.md]: { gridTemplateColumns: gridColumns(md) },
+      [responsive.sm]: { gridTemplateColumns: gridColumns(sm) },
+      [responsive.xs]: { gridTemplateColumns: gridColumns(xs) },
+    },
+    // On phones the view toggle and the buttons sit at either end of the row.
+    actions: { [responsive.xs]: { width: "100%" } },
+  };
+});
 
 export default function App() {
-  const { styles } = useStyles();
+  const { settings, updateSettings } = useSettings();
+  const { styles } = useStyles(settings.gridDensity);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [store] = useState(createCollectionStore);
   const {
     albums,
@@ -253,6 +266,7 @@ export default function App() {
                 onOpenSync={() =>
                   setSyncDialog(isSyncConnected ? "settings" : "setup")
                 }
+                onOpenSettings={() => setIsSettingsOpen(true)}
               />
             </Flex>
           </Flex>
@@ -324,6 +338,7 @@ export default function App() {
         open={isFormOpen}
         album={editingAlbum}
         albums={albums}
+        defaultFormat={settings.defaultFormat}
         onSubmit={handleFormSubmit}
         onCancel={() => setIsFormOpen(false)}
       />
@@ -342,6 +357,12 @@ export default function App() {
         engine={sync.engine}
         state={sync.state}
         onClose={() => setSyncDialog(undefined)}
+      />
+      <SettingsDialog
+        open={isSettingsOpen}
+        settings={settings}
+        onChange={updateSettings}
+        onClose={() => setIsSettingsOpen(false)}
       />
       {modalContextHolder}
       {messageContextHolder}

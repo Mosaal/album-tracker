@@ -2,7 +2,7 @@ import { Alert, Button, Form, Input, Modal, Radio, Select } from "antd";
 
 import { findDuplicate } from "../../albumFiles";
 import { FORMAT_LABELS, FORMAT_OPTIONS } from "../../albumFormats";
-import { Album, AlbumInput } from "../../types";
+import { Album, AlbumFormat, AlbumInput } from "../../types";
 import { AlbumCoverField } from "../AlbumCoverField";
 
 const STATUS_OPTIONS: { value: Album["status"]; label: string }[] = [
@@ -18,6 +18,8 @@ interface AlbumFormModalProps {
   album?: Album;
   /** The collection, to warn before adding an album that's already in it. */
   albums: Album[];
+  /** The format a new album starts with. */
+  defaultFormat?: AlbumFormat;
   onSubmit: (input: AlbumInput) => void;
   onCancel: () => void;
 }
@@ -71,6 +73,7 @@ export function AlbumFormModal({
   open,
   album,
   albums,
+  defaultFormat,
   onSubmit,
   onCancel,
 }: AlbumFormModalProps) {
@@ -111,7 +114,7 @@ export function AlbumFormModal({
           name="album"
           layout="vertical"
           requiredMark="optional"
-          initialValues={album ?? NEW_ALBUM}
+          initialValues={album ?? { ...NEW_ALBUM, format: defaultFormat }}
           onFinish={handleFinish}
         >
           {dialog}
