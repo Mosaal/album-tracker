@@ -244,6 +244,29 @@ describe("App", () => {
     expect(saved()[1].status).toBe("owned");
   });
 
+  it("filters by artist, found by typing part of their name", async () => {
+    const user = renderApp(ALBUMS);
+    const artistFilter = screen.getByRole("combobox", {
+      name: "Filter by artist",
+    });
+
+    await user.type(artistFilter, "radio");
+    expect(
+      [...document.querySelectorAll(".ant-select-item-option")].map(
+        (option) => option.textContent,
+      ),
+    ).toEqual(["Radiohead"]);
+    await user.click(
+      document.querySelector('.ant-select-item-option[title="Radiohead"]')!,
+    );
+
+    expect(cardTitles()).toEqual(["In Rainbows"]);
+    expect(screen.getByRole("status")).toHaveTextContent(/^1 album$/);
+
+    await choose(user, "Filter by artist", "All artists");
+    expect(cardTitles()).toEqual(["Blue Lines", "In Rainbows", "Kind of Blue"]);
+  });
+
   it("searches, filters by status and sorts", async () => {
     const user = renderApp(ALBUMS);
     expect(cardTitles()).toEqual(["Blue Lines", "In Rainbows", "Kind of Blue"]);

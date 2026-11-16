@@ -3,7 +3,7 @@ import { Button, Empty, Flex, message, Modal } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { createStyles } from "antd-style";
 import { albumCount } from "./albumFiles";
-import { selectAlbums } from "./albumList";
+import { listArtists, selectAlbums } from "./albumList";
 import { createCollectionStore } from "./albumStore";
 import {
   AlbumCard,
@@ -77,6 +77,7 @@ export default function App() {
   const [sortOrder, setSortOrder] = useState<AlbumSortOrder>("title-asc");
   const [statusFilter, setStatusFilter] = useState<AlbumStatusFilter>("all");
   const [formatFilter, setFormatFilter] = useState<AlbumFormatFilter>("all");
+  const [artistFilter, setArtistFilter] = useState<string>();
   const [viewMode, setViewMode] = useState<AlbumViewMode>("grid");
   const [isFormOpen, setIsFormOpen] = useState(false);
   // Not cleared on close, so the modal keeps its title while it animates out.
@@ -88,10 +89,17 @@ export default function App() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>();
   const isSelecting = selectedIds !== undefined;
 
+  const artists = useMemo(() => listArtists(albums), [albums]);
   const visibleAlbums = useMemo(
     () =>
-      selectAlbums(albums, { search, sortOrder, statusFilter, formatFilter }),
-    [albums, search, sortOrder, statusFilter, formatFilter],
+      selectAlbums(albums, {
+        search,
+        sortOrder,
+        statusFilter,
+        formatFilter,
+        artistFilter,
+      }),
+    [albums, search, sortOrder, statusFilter, formatFilter, artistFilter],
   );
   // Only albums still shown count, so a filter can't hide what gets changed.
   const selectedAlbums = selectedIds
@@ -238,6 +246,9 @@ export default function App() {
             onStatusFilterChange={setStatusFilter}
             formatFilter={formatFilter}
             onFormatFilterChange={setFormatFilter}
+            artists={artists}
+            artistFilter={artistFilter}
+            onArtistFilterChange={setArtistFilter}
             count={visibleAlbums.length}
           />
           <Flex
