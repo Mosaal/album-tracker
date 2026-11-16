@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.8.0](https://github.com/Mosaal/album-tracker/compare/v0.7.0...v0.8.0) (2026-11-16)
+
+
+### Features
+
+* add settings for a compact grid and a format for new albums ([#42](https://github.com/Mosaal/album-tracker/issues/42)) ([2c07b73](https://github.com/Mosaal/album-tracker/commit/2c07b737cf209dd7ad81c43d71601854bb950f47))
+* filter albums by artist ([#44](https://github.com/Mosaal/album-tracker/issues/44)) ([bd572d0](https://github.com/Mosaal/album-tracker/commit/bd572d011b6b6b3eafb6452faf1520d61923f09b))
+* record when albums are added and changed, and keep open tabs in step ([#39](https://github.com/Mosaal/album-tracker/issues/39)) ([8cb5a6f](https://github.com/Mosaal/album-tracker/commit/8cb5a6fe028312ba5f54da8513b9553000221d85))
+* sync your collection through your own GitHub repository ([#40](https://github.com/Mosaal/album-tracker/issues/40)) ([cb21ce9](https://github.com/Mosaal/album-tracker/commit/cb21ce942b6bf659ab918b3d554f4cbc286daebe))
+
+
+### Bug Fixes
+
+* stop iOS zooming in when you tap a dropdown ([#43](https://github.com/Mosaal/album-tracker/issues/43)) ([7e9f9a1](https://github.com/Mosaal/album-tracker/commit/7e9f9a12756e9f267e05ab12e2a96256ba93455a))
+
 ## [0.7.0](https://github.com/Mosaal/album-tracker/compare/v0.6.0...v0.7.0) (2026-11-15)
 
 
