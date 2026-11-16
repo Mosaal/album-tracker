@@ -11,11 +11,14 @@ import {
   AlbumFormModal,
   AlbumRow,
   AlbumViewToggle,
-  ImportExportMenu,
   Layout,
+  MoreActionsMenu,
   SelectionBar,
+  SyncSettingsDialog,
+  SyncSetupDialog,
+  SyncStatusButton,
 } from "./components";
-import { useAlbums } from "./hooks";
+import { useAlbums, useGitHubSync } from "./hooks";
 import {
   Album,
   AlbumFormatFilter,
@@ -54,6 +57,9 @@ export default function App() {
     deleteAlbums,
     importAlbums,
   } = useAlbums(store);
+  const sync = useGitHubSync(store);
+  const isSyncConnected = sync.state.status !== "disconnected";
+  const [syncDialog, setSyncDialog] = useState<"setup" | "settings">();
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<AlbumSortOrder>("title-asc");
   const [statusFilter, setStatusFilter] = useState<AlbumStatusFilter>("all");
@@ -200,7 +206,14 @@ export default function App() {
   };
 
   return (
-    <Layout>
+    <Layout
+      headerExtra={
+        <SyncStatusButton
+          state={sync.state}
+          onClick={() => setSyncDialog("settings")}
+        />
+      }
+    >
       <Flex vertical gap="16px">
         <Flex justify="space-between" align="center" gap="16px" wrap>
           <AlbumFilters
@@ -232,10 +245,14 @@ export default function App() {
               >
                 Add album
               </Button>
-              <ImportExportMenu
+              <MoreActionsMenu
                 albums={albums}
                 onImport={importAlbums}
                 onSelectAlbums={() => setSelectedIds(new Set())}
+                isSyncConnected={isSyncConnected}
+                onOpenSync={() =>
+                  setSyncDialog(isSyncConnected ? "settings" : "setup")
+                }
               />
             </Flex>
           </Flex>
@@ -309,6 +326,22 @@ export default function App() {
         albums={albums}
         onSubmit={handleFormSubmit}
         onCancel={() => setIsFormOpen(false)}
+      />
+      <SyncSetupDialog
+        open={syncDialog === "setup" && !isSyncConnected}
+        engine={sync.engine}
+        albums={albums}
+        onConnected={(repo) => {
+          setSyncDialog(undefined);
+          messageApi.success(`Syncing with ${repo}.`);
+        }}
+        onCancel={() => setSyncDialog(undefined)}
+      />
+      <SyncSettingsDialog
+        open={syncDialog === "settings" && isSyncConnected}
+        engine={sync.engine}
+        state={sync.state}
+        onClose={() => setSyncDialog(undefined)}
       />
       {modalContextHolder}
       {messageContextHolder}

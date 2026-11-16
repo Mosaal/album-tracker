@@ -4,57 +4,51 @@ import {
   CheckSquareOutlined,
   DownloadOutlined,
   EllipsisOutlined,
+  GithubOutlined,
   UploadOutlined,
 } from "@ant-design/icons";
 
 import { albumCount, describeImport } from "../../albumFiles";
-import { createCsv, InvalidCsvError, readCsv } from "../../csv";
-import { createJson, InvalidJsonError, readJson } from "../../json";
+import { InvalidCsvError, readCsv } from "../../csv";
+import { downloadCsv, downloadJson } from "../../downloads";
+import { InvalidJsonError, readJson } from "../../json";
 import { Album } from "../../types";
 
-interface ImportExportMenuProps {
+interface MoreActionsMenuProps {
   /** Starts picking albums to change or delete together. */
   onSelectAlbums: () => void;
+  /** Whether this device syncs with GitHub, which changes the sync item. */
+  isSyncConnected: boolean;
+  /** Opens the sync setup, or its settings once connected. */
+  onOpenSync: () => void;
   albums: Album[];
   onImport: (albums: Album[]) => { added: number; skipped: number };
 }
 
-function download(fileName: string, contents: string, type: string) {
-  const url = URL.createObjectURL(new Blob([contents], { type }));
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = fileName;
-  link.click();
-  // Safari can still be reading the file just after the click.
-  setTimeout(() => URL.revokeObjectURL(url), 40_000);
-}
-
-// en-CA writes dates as YYYY-MM-DD, in local time.
-const today = () => new Date().toLocaleDateString("en-CA");
-
 const isCsv = (file: File) =>
   file.type === "text/csv" || file.name.toLowerCase().endsWith(".csv");
 
-/** The ⋯ menu: select albums, save the collection to a file, or add from one. */
-export function ImportExportMenu({
+/**
+ * The ⋯ menu: select albums, sync with GitHub, save the collection to a file,
+ * or add albums from one.
+ */
+export function MoreActionsMenu({
   albums,
   onImport,
   onSelectAlbums,
-}: ImportExportMenuProps) {
+  isSyncConnected,
+  onOpenSync,
+}: MoreActionsMenuProps) {
   const [messageApi, messageContextHolder] = message.useMessage();
   const fileInput = useRef<HTMLInputElement>(null);
 
   const exportJson = () => {
-    download(
-      `album-tracker-${today()}.json`,
-      createJson(albums),
-      "application/json",
-    );
+    downloadJson(albums);
     messageApi.success(`Exported ${albumCount(albums.length)}.`);
   };
 
   const exportCsv = () => {
-    download(`album-tracker-${today()}.csv`, createCsv(albums), "text/csv");
+    downloadCsv(albums);
     messageApi.success(`Exported ${albumCount(albums.length)}.`);
   };
 
@@ -104,6 +98,11 @@ export function ImportExportMenu({
               label: "Select albums",
               disabled: albums.length === 0,
             },
+            {
+              key: "sync",
+              icon: <GithubOutlined />,
+              label: isSyncConnected ? "Sync settings…" : "Sync with GitHub…",
+            },
             { type: "divider" },
             {
               key: "export-json",
@@ -126,9 +125,9 @@ export function ImportExportMenu({
           onClick: ({ key }) => {
             if (key === "select") {
               onSelectAlbums();
-              return;
-            }
-            if (key === "export-json") {
+            } else if (key === "sync") {
+              onOpenSync();
+            } else if (key === "export-json") {
               exportJson();
             } else if (key === "export-csv") {
               exportCsv();

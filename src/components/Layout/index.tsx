@@ -13,7 +13,13 @@ import { createStyles } from "antd-style";
 import { useMediaQuery, useThemeMode } from "../../hooks";
 import { getThemeConfig } from "../../theme";
 
-export function Layout({ children }: { children?: React.ReactNode }) {
+interface LayoutProps {
+  children?: React.ReactNode;
+  /** Shown in the header, just before the theme switch. */
+  headerExtra?: React.ReactNode;
+}
+
+export function Layout({ children, headerExtra }: LayoutProps) {
   const { isDark, setIsDark } = useThemeMode();
   const isTouch = useMediaQuery("(pointer: coarse)");
   return (
@@ -21,7 +27,11 @@ export function Layout({ children }: { children?: React.ReactNode }) {
       <PageBackground isDark={isDark} />
       <AntdApp>
         <AntdLayout style={{ minHeight: "100vh" }}>
-          <Header isDark={isDark} onThemeChange={setIsDark} />
+          <Header
+            isDark={isDark}
+            onThemeChange={setIsDark}
+            extra={headerExtra}
+          />
           <AntdLayout.Content style={{ padding: 24 }}>
             {children}
           </AntdLayout.Content>
@@ -62,9 +72,10 @@ const useHeaderStyles = createStyles(({ token }) => ({
 interface HeaderProps {
   isDark: boolean;
   onThemeChange: (isDark: boolean) => void;
+  extra?: React.ReactNode;
 }
 
-function Header({ isDark, onThemeChange }: HeaderProps) {
+function Header({ isDark, onThemeChange, extra }: HeaderProps) {
   const { token } = theme.useToken();
   const { styles } = useHeaderStyles();
 
@@ -81,13 +92,16 @@ function Header({ isDark, onThemeChange }: HeaderProps) {
           v{__APP_VERSION__}
         </Typography.Text>
       </Space>
-      <Switch
-        checked={isDark}
-        onChange={onThemeChange}
-        checkedChildren="Dark"
-        unCheckedChildren="Light"
-        aria-label="Toggle dark theme"
-      />
+      <Space size="small">
+        {extra}
+        <Switch
+          checked={isDark}
+          onChange={onThemeChange}
+          checkedChildren="Dark"
+          unCheckedChildren="Light"
+          aria-label="Toggle dark theme"
+        />
+      </Space>
     </AntdLayout.Header>
   );
 }
