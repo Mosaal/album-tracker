@@ -96,7 +96,14 @@ describe("import/export menu", () => {
       ),
     ).toBeVisible();
     expect(cardTitles()).toEqual(["Blue Lines", "In Rainbows", "Kind of Blue"]);
-    expect(saved()).toEqual(ALBUMS);
+    expect(saved()).toEqual([
+      ALBUMS[0],
+      ...ALBUMS.slice(1).map((album) => ({
+        ...album,
+        addedAt: expect.any(String),
+        updatedAt: expect.any(String),
+      })),
+    ]);
   });
 
   it("imports albums from a CSV file, skipping ones already in the collection", async () => {

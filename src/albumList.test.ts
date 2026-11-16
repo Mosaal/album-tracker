@@ -60,6 +60,31 @@ describe("selectAlbums", () => {
     expect(titles(visible)).toEqual(["Mezzanine", "Blue Lines"]);
   });
 
+  it("goes by when albums were added when it knows, then lists the rest newest first", () => {
+    // A synced album can be stored after one added later on this device.
+    const [kindOfBlue, blueLines, mezzanine, inRainbows] = ALBUMS;
+    const albums = [
+      kindOfBlue,
+      blueLines,
+      { ...mezzanine, addedAt: "2026-03-05T12:00:00.000Z" },
+      { ...inRainbows, addedAt: "2026-03-01T12:00:00.000Z" },
+    ];
+
+    const visible = selectAlbums(albums, {
+      search: "",
+      sortOrder: "recent",
+      statusFilter: "all",
+      formatFilter: "all",
+    });
+
+    expect(titles(visible)).toEqual([
+      "Mezzanine",
+      "In Rainbows",
+      "Blue Lines",
+      "Kind of Blue",
+    ]);
+  });
+
   it("shows albums that match both the search, in any case, and the status", () => {
     const visible = select({ search: "MASSIVE", statusFilter: "owned" });
 
