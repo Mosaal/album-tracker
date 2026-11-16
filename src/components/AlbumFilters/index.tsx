@@ -9,15 +9,20 @@ import {
   AlbumStatusFilter,
 } from "../../types";
 
-// On phones, each filter gets a full-width row of its own.
+// Sized so the toolbar fits on one line on a 1280px screen. On phones, each
+// group gets a full-width row of its own, which its controls share.
 const useStyles = createStyles(({ responsive }) => ({
   filters: { [responsive.xs]: { width: "100%" } },
-  search: { width: 280, [responsive.xs]: { width: "100%" } },
-  sort: { width: 180, [responsive.xs]: { width: "100%" } },
-  filterRow: { [responsive.xs]: { width: "100%" } },
-  // The status and format filters share the row up to the count.
-  filter: { width: 160, [responsive.xs]: { flex: 1, minWidth: 0 } },
+  search: { width: 220, [responsive.xs]: { width: "100%" } },
+  row: { [responsive.xs]: { width: "100%" } },
+  sort: { width: 160, [responsive.xs]: { flex: 1, minWidth: 0 } },
+  artist: { width: 150, [responsive.xs]: { flex: 1, minWidth: 0 } },
+  // The status and format filters share their row up to the count.
+  filter: { width: 130, [responsive.xs]: { flex: 1, minWidth: 0 } },
 }));
+
+// No artist goes by an empty name, so it stands for all of them.
+const ALL_ARTISTS = "";
 
 const SORT_OPTIONS: { value: AlbumSortOrder; label: string }[] = [
   { value: "title-asc", label: "Title (A-Z)" },
@@ -47,6 +52,11 @@ interface AlbumFiltersProps {
   onStatusFilterChange: (statusFilter: AlbumStatusFilter) => void;
   formatFilter: AlbumFormatFilter;
   onFormatFilterChange: (formatFilter: AlbumFormatFilter) => void;
+  /** Every artist in the collection, to pick from. */
+  artists: string[];
+  /** The artist whose albums are shown, or undefined for all of them. */
+  artistFilter?: string;
+  onArtistFilterChange: (artistFilter?: string) => void;
   /** How many albums match the search and filters. */
   count: number;
 }
@@ -60,9 +70,16 @@ export function AlbumFilters({
   onStatusFilterChange,
   formatFilter,
   onFormatFilterChange,
+  artists,
+  artistFilter,
+  onArtistFilterChange,
   count,
 }: AlbumFiltersProps) {
   const { styles } = useStyles();
+  const artistOptions = [
+    { value: ALL_ARTISTS, label: "All artists" },
+    ...artists.map((artist) => ({ value: artist, label: artist })),
+  ];
 
   return (
     <Flex gap="16px" wrap className={styles.filters}>
@@ -74,15 +91,27 @@ export function AlbumFilters({
         aria-label="Search albums"
         className={styles.search}
       />
-      <Select
-        value={sortOrder}
-        onChange={onSortOrderChange}
-        options={SORT_OPTIONS}
-        aria-label="Sort order"
-        className={styles.sort}
-      />
+      <Flex gap="small" className={styles.row}>
+        <Select
+          value={sortOrder}
+          onChange={onSortOrderChange}
+          options={SORT_OPTIONS}
+          aria-label="Sort order"
+          className={styles.sort}
+        />
+        <Select
+          value={artistFilter ?? ALL_ARTISTS}
+          onChange={(artist) => onArtistFilterChange(artist || undefined)}
+          options={artistOptions}
+          showSearch={{ optionFilterProp: "label" }}
+          // Wider than the filter, so long names fit.
+          popupMatchSelectWidth={240}
+          aria-label="Filter by artist"
+          className={styles.artist}
+        />
+      </Flex>
       {/* Grouped so the count never wraps onto a line of its own. */}
-      <Flex gap="small" align="center" className={styles.filterRow}>
+      <Flex gap="small" align="center" className={styles.row}>
         <Select
           value={statusFilter}
           onChange={onStatusFilterChange}

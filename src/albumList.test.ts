@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { selectAlbums } from "./albumList";
+import { listArtists, selectAlbums } from "./albumList";
 import { Album } from "./types";
 
 // Stored oldest first, in the order they were added.
@@ -91,6 +91,13 @@ describe("selectAlbums", () => {
     expect(titles(visible)).toEqual(["Mezzanine"]);
   });
 
+  it("shows only the chosen artist's albums, whatever the case", () => {
+    expect(titles(select({ artistFilter: "massive attack " }))).toEqual([
+      "Blue Lines",
+      "Mezzanine",
+    ]);
+  });
+
   it("shows only albums in the chosen format", () => {
     expect(titles(select({ formatFilter: "vinyl" }))).toEqual([
       "Blue Lines",
@@ -108,5 +115,17 @@ describe("selectAlbums", () => {
       "Mezzanine",
       "In Rainbows",
     ]);
+  });
+});
+
+describe("listArtists", () => {
+  it("lists each artist once, alphabetically, spelt as first added", () => {
+    expect(
+      listArtists([
+        ...ALBUMS,
+        { ...ALBUMS[1], id: "5", artist: "massive attack" },
+        { ...ALBUMS[0], id: "6", artist: " Björk " },
+      ]),
+    ).toEqual(["Björk", "Massive Attack", "Miles Davis", "Radiohead"]);
   });
 });
