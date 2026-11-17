@@ -7,17 +7,24 @@ import {
   Input,
   message,
   Modal,
+  QRCode,
   Space,
   Typography,
 } from "antd";
-import { CopyOutlined, SyncOutlined } from "@ant-design/icons";
+import { CopyOutlined, QrcodeOutlined, SyncOutlined } from "@ant-design/icons";
+import { createStyles } from "antd-style";
 
 import { describeSyncError, SyncEngine, SyncState } from "../../sync/engine";
 import { historyUrl, newTokenUrl, repoUrl } from "../../sync/githubLinks";
-import { createSetupCode } from "../../sync/setupCode";
+import { createSetupCode, createSetupLink } from "../../sync/setupCode";
 import { describeSyncStatus } from "../../sync/syncStatus";
 import { ExternalLink } from "../ExternalLink";
 import { tokenRules } from "../formRules";
+
+const useStyles = createStyles(({ token }) => ({
+  // Space between the buttons and the QR code or setup code they show.
+  shown: { marginTop: token.marginSM },
+}));
 
 interface TokenFormProps {
   engine: SyncEngine;
@@ -88,10 +95,16 @@ export function SyncSettingsDialog({
   state,
   onClose,
 }: SyncSettingsDialogProps) {
+  const { styles } = useStyles();
   const [modal, modalContextHolder] = Modal.useModal();
   const [messageApi, messageContextHolder] = message.useMessage();
   // Shown to copy by hand when the clipboard can't be used.
   const [setupCode, setSetupCode] = useState<string>();
+  const [isQrCodeShown, setIsQrCodeShown] = useState(false);
+  const config = engine.getConfig();
+  // The app's own address, wherever it's served from.
+  const setupLink =
+    config && createSetupLink(createSetupCode(config), window.location.href);
   const repo = state.repo ?? "";
 
   const copySetupCode = async () => {
@@ -129,7 +142,10 @@ export function SyncSettingsDialog({
         open={open}
         title="Sync settings"
         onCancel={onClose}
-        afterClose={() => setSetupCode(undefined)}
+        afterClose={() => {
+          setSetupCode(undefined);
+          setIsQrCodeShown(false);
+        }}
         destroyOnHidden
         footer={
           <Flex justify="space-between">
@@ -170,22 +186,60 @@ export function SyncSettingsDialog({
           <div>
             <Typography.Title level={5}>Other devices</Typography.Title>
             <Typography.Paragraph>
-              To sync another device, copy this setup code and paste it there,
-              in <em>Sync with GitHub</em> from the ⋯ menu. It includes the
-              token, so only paste it on your own devices.
+              To sync another device, scan a QR code with its camera, or copy
+              the setup code and paste it there, in <em>Sync with GitHub</em>{" "}
+              from the ⋯ menu. Both include the token, so only use them with
+              your own devices.
             </Typography.Paragraph>
-            {setupCode ? (
+            <Flex gap="small" wrap>
+              <Button
+                icon={<QrcodeOutlined />}
+                onClick={() => setIsQrCodeShown((shown) => !shown)}
+              >
+                {isQrCodeShown ? "Hide QR code" : "Show QR code"}
+              </Button>
+              {!setupCode && (
+                <Button icon={<CopyOutlined />} onClick={copySetupCode}>
+                  Copy setup code
+                </Button>
+              )}
+            </Flex>
+            {isQrCodeShown && setupLink && (
+              <Flex
+                vertical
+                align="center"
+                gap="small"
+                className={styles.shown}
+              >
+                <QRCode
+                  value={setupLink}
+                  type="svg"
+                  size={240}
+                  // Black on white whatever the theme, as cameras expect.
+                  color="#000"
+                  bgColor="#fff"
+                  // A margin of four modules, as the QR standard asks for.
+                  style={{ padding: 16 }}
+                  errorLevel="L"
+                  role="img"
+                  aria-label="QR code to set up another device"
+                />
+                <Typography.Text type="secondary">
+                  It opens Album Tracker with the setup code filled in. On an
+                  iPhone or iPad that's Safari, so for the app on the Home
+                  Screen, copy the setup code instead.
+                </Typography.Text>
+              </Flex>
+            )}
+            {setupCode && (
               <Input.TextArea
                 readOnly
                 value={setupCode}
                 aria-label="Setup code"
                 autoSize
                 onFocus={(event) => event.target.select()}
+                className={styles.shown}
               />
-            ) : (
-              <Button icon={<CopyOutlined />} onClick={copySetupCode}>
-                Copy setup code
-              </Button>
             )}
           </div>
 

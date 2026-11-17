@@ -47,3 +47,31 @@ export function readSetupCode(code: string): SyncConfig | undefined {
   const repo = parseRepo(data.repo);
   return repo ? { repo, token: data.token } : undefined;
 }
+
+const LINK_HASH = "#setup=";
+
+/**
+ * A link that opens the app with a setup code filled in, for a QR code that
+ * another device scans. The code goes after the #, which browsers never send
+ * to a server.
+ */
+export function createSetupLink(code: string, appUrl: string) {
+  const url = new URL(appUrl);
+  url.search = "";
+  url.hash = `${LINK_HASH.slice(1)}${code}`;
+  return url.href;
+}
+
+/** The setup code in a link's hash, if it's a setup link. */
+export function readSetupLink(hash: string) {
+  if (!hash.startsWith(LINK_HASH)) {
+    return undefined;
+  }
+  const code = hash.slice(LINK_HASH.length);
+  try {
+    return decodeURIComponent(code);
+  } catch {
+    // Garbled, so reading it as a setup code fails and says so.
+    return code;
+  }
+}

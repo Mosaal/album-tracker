@@ -28,7 +28,7 @@ through a GitHub repository of your own.
   export. Export your collection as either, for a backup or a spreadsheet.
 - **All your devices:** install it on your phone or computer, use it offline,
   and keep the same collection everywhere with
-  [sync](#sync-across-devices).
+  [sync](#sync-across-devices). A new device joins by scanning a QR code.
 - **Your way:** light and dark themes, a compact grid that fits more albums
   in, and a format that new albums start with.
 
@@ -91,16 +91,22 @@ in the repository.
 
 ### Add more devices
 
-On a device that's already syncing, open ⋯ → **Sync settings…** and copy the
-setup code. On the new device, open ⋯ → **Sync with GitHub…** → **Setup code**
-and paste it. The code includes the token, so only paste it on your own devices.
+On a device that's already syncing, open ⋯ → **Sync settings…**. Then either:
+
+- Select **Show QR code** and scan it with the new device's camera. It opens
+  Album Tracker with the setup code filled in, ready to **Connect**.
+- Or copy the setup code. On the new device, open ⋯ → **Sync with GitHub…** →
+  **Setup code** and paste it.
+
+Both include the token, so only use them with your own devices.
 
 When a device connects to a repository that already has albums, they replace
 the ones on that device. If it has albums the repository doesn't, the app offers
 to export them first.
 
 On iPhone and iPad, the app added to the Home Screen keeps its own data,
-separate from Safari, so connect it as a device of its own.
+separate from Safari, so connect it as a device of its own. The camera opens
+links in Safari, so for the Home Screen app, copy the setup code instead.
 
 ### How syncing works
 

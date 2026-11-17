@@ -131,6 +131,29 @@ describe("sync settings", () => {
     });
   });
 
+  it("shows a QR code for another device to scan, until it's hidden", async () => {
+    const user = renderSyncingApp();
+    const dialog = await openSettings(user);
+    const qrCode = () =>
+      within(dialog).queryByRole("img", {
+        name: "QR code to set up another device",
+      });
+    expect(qrCode()).toBeNull();
+
+    await user.click(
+      within(dialog).getByRole("button", { name: /Show QR code/ }),
+    );
+    expect(qrCode()).toBeVisible();
+    expect(dialog).toHaveTextContent(
+      "It opens Album Tracker with the setup code filled in.",
+    );
+
+    await user.click(
+      within(dialog).getByRole("button", { name: /Hide QR code/ }),
+    );
+    expect(qrCode()).toBeNull();
+  });
+
   it("shows the setup code to copy by hand when the clipboard can't be used", async () => {
     const user = renderSyncingApp();
     const dialog = await openSettings(user);
