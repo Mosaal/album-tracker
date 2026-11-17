@@ -4,9 +4,13 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Deploy runs these checks too, so nothing is published without them.
+  workflow_call:
 
+# Grouped by the workflow that started the run, so the checks inside a deploy
+# and CI's own run on the same commit can't cancel each other.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
