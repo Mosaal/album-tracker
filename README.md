@@ -1,8 +1,73 @@
 # Album Tracker
 
-A React + TypeScript web app built with Vite and Ant Design.
+![Album Tracker: keep track of the albums you own and the ones you want.](public/og-image.png)
 
-Live at <https://mosaal.github.io/album-tracker/>.
+Album Tracker keeps track of your music collection: the albums you own, and the
+ones you want. It's a web app that works on your phone and your computer,
+installs like a regular app and works offline.
+
+There are no accounts, and no Album Tracker server or database. Your
+collection is saved on your device, and if you want it on all of them, it syncs
+through a GitHub repository of your own.
+
+**Use it at <https://mosaal.github.io/album-tracker/>.**
+
+## Features
+
+- **Your albums:** each has a title, artist, cover, format (vinyl, CD,
+  cassette, digital or other) and whether you own it or want it. Find a cover
+  by searching [MusicBrainz](https://musicbrainz.org/), or paste a link to one.
+  You're warned before adding an album that's already in your collection.
+- **Finding them:** search by title or artist, filter by owned or wishlisted,
+  format and artist, and sort by title, artist or when you added them. Browse
+  them as a grid of covers or as a list.
+- **Quick changes:** switch an album between owned and wishlisted on its card,
+  or select several to mark or delete at once. Deleting can be undone.
+- **Bringing your list:** import a JSON or CSV file, such as a spreadsheet with
+  Title and Artist columns or a [Discogs](https://www.discogs.com/) collection
+  export. Export your collection as either, for a backup or a spreadsheet.
+- **All your devices:** install it on your phone or computer, use it offline,
+  and keep the same collection everywhere with
+  [sync](#sync-across-devices).
+- **Your way:** light and dark themes, a compact grid that fits more albums
+  in, and a format that new albums start with.
+
+## How it works
+
+- **It runs in your browser.** Album Tracker is a static web app (React,
+  TypeScript, Vite and Ant Design) hosted on GitHub Pages. It has no backend of
+  its own: your device does the work, and only contacts MusicBrainz to find
+  covers and, if you turn on sync, GitHub.
+- **Your collection is stored on your device,** in the browser's storage, so it
+  opens instantly and works offline. Open tabs stay in step with each other.
+- **The app is stored too.** Once you've opened it, a service worker keeps the
+  app and the covers you've seen on your device. New versions download in the
+  background and are used the next time you open it.
+- **Covers come from MusicBrainz.** Searching for a cover looks up matching
+  albums on MusicBrainz and shows their covers from the
+  [Cover Art Archive](https://coverartarchive.org/), straight from your
+  browser.
+- **Sync goes through your own GitHub repository.** If you turn it on, your
+  collection is kept in a file, `albums.json`, in a private repository you own,
+  and each device talks to GitHub directly. Changes are merged album by album,
+  and each sync is a commit, so the repository's history is a backup.
+
+## What you need
+
+- **To use it:** a recent browser on your phone, tablet or computer. Open
+  <https://mosaal.github.io/album-tracker/> and start adding albums. To install
+  it on an iPhone or iPad, open it in Safari and choose Share → **Add to Home
+  Screen**. In Chrome or Edge, use the install button in the address bar or the
+  browser's menu.
+- **To keep your collection safe:** it only lives in that browser until you
+  back it up or sync it. Clearing the browser's data deletes it, and Safari can
+  clear it if you don't open the site for a while, unless it's on your Home
+  Screen. Use ⋯ → **Export as JSON** now and then, or turn on sync.
+- **To sync across devices:** a free GitHub account. The app helps you create a
+  private repository and a token that can only reach it. See
+  [Sync across devices](#sync-across-devices).
+- **To run your own copy:** a GitHub account as well. See
+  [Run your own copy](#run-your-own-copy).
 
 ## Sync across devices
 
@@ -37,7 +102,7 @@ to export them first.
 On iPhone and iPad, the app added to the Home Screen keeps its own data,
 separate from Safari, so connect it as a device of its own.
 
-### How it works
+### How syncing works
 
 - Each device keeps its own copy, so the app works offline. It syncs when it
   opens, a couple of seconds after a change, when you come back to it, and when
@@ -60,7 +125,27 @@ separate from Safari, so connect it as a device of its own.
 - Deleted albums are remembered, so a device that still has one can't bring it
   back. The list only grows, but each entry is tiny.
 
+## Run your own copy
+
+You can host your own copy on GitHub Pages for free:
+
+1. Fork this repository.
+2. In the fork:
+   - On the **Actions** tab, enable workflows.
+   - In **Settings → Actions → General**, under **Workflow permissions**, tick
+     **Allow GitHub Actions to create and approve pull requests**, so Release
+     Please can open release pull requests.
+   - In **Settings → Pages**, set **Source** to **GitHub Actions**.
+3. If your repository isn't called `album-tracker`, change `base` in
+   `vite.config.ts` to `/your-repository-name/`.
+4. In `index.html`, replace `https://mosaal.github.io/album-tracker/` with your
+   site's address, so shared links show the right preview.
+5. Run the **Deploy** workflow from the **Actions** tab. After that, each
+   release deploys. See [Releases](#releases).
+
 ## Development
+
+You need [Node.js](https://nodejs.org/) 20.19 or newer. CI uses Node.js 22.
 
 ```
 npm install
