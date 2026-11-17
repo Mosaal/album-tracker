@@ -77,7 +77,8 @@ git checkout -b feat/my-change
 git push -u origin feat/my-change
 ```
 
-CI runs lint, format, tests and build on every pull request.
+CI runs lint, format, tests and build on every pull request, and they have to
+pass before it can be merged.
 
 ### Commit messages
 
@@ -101,6 +102,19 @@ Releases are automated by
 `main` and maintains an open release pull request that bumps the version in
 `package.json` and updates `CHANGELOG.md`. Merging that pull request tags the
 version and publishes a GitHub release.
+
+GitHub Actions opens the release pull request, so GitHub holds its CI run until
+you approve it on the pull request. It can be merged once the checks pass.
+
+### Deploys
+
+A release is what deploys the app. Once it's tagged, the Deploy workflow runs
+the same checks as pull requests, builds the app and publishes it to GitHub
+Pages, so the live site always shows a released version. Merging other pull
+requests doesn't change it.
+
+To publish again, run **Deploy** by hand from the Actions tab on `main`. To go
+back to an earlier version, run it on that version's tag, such as `v0.7.0`.
 
 ## Scripts
 
