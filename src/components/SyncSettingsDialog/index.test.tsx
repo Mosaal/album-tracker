@@ -1,5 +1,6 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { QRCode } from "antd";
 import {
   afterAll,
   afterEach,
@@ -11,7 +12,7 @@ import {
 } from "vitest";
 
 import App from "../../App";
-import { readSetupCode } from "../../sync/setupCode";
+import { createSetupCode, readSetupCode } from "../../sync/setupCode";
 import { createSyncFile } from "../../sync/syncFile";
 import { createFakeGitHub } from "../../test/fakeGitHub";
 import { NoMotion } from "../../test/NoMotion";
@@ -131,22 +132,29 @@ describe("sync settings", () => {
     });
   });
 
-  it("shows a QR code for another device to scan, until it's hidden", async () => {
+  it("shows the setup code as a QR code, until it's hidden", async () => {
     const user = renderSyncingApp();
     const dialog = await openSettings(user);
     const qrCode = () =>
-      within(dialog).queryByRole("img", {
-        name: "QR code to set up another device",
-      });
+      within(dialog).queryByRole("img", { name: "QR code of the setup code" });
     expect(qrCode()).toBeNull();
 
     await user.click(
       within(dialog).getByRole("button", { name: /Show QR code/ }),
     );
     expect(qrCode()).toBeVisible();
-    expect(dialog).toHaveTextContent(
-      "It opens Album Tracker with the setup code filled in.",
+    // It draws the same squares as a QR code of the setup code.
+    const { container: expected } = render(
+      <QRCode
+        value={createSetupCode({ repo: github.repo, token: github.token })}
+        type="svg"
+        errorLevel="L"
+      />,
     );
+    const squares = (element: Element) =>
+      element.querySelector("svg path:last-child")?.getAttribute("d");
+    expect(squares(qrCode()!)).toBeTruthy();
+    expect(squares(qrCode()!)).toBe(squares(expected));
 
     await user.click(
       within(dialog).getByRole("button", { name: /Hide QR code/ }),

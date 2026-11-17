@@ -90,8 +90,8 @@ function SetupCodeField() {
     <>
       <Typography.Paragraph>
         On a device that's already syncing, open <em>Sync settings</em> from the
-        ⋯ menu. Scan its QR code with this device's camera, or copy its setup
-        code and paste it here.
+        ⋯ menu and copy its setup code, or scan its QR code with this device.
+        Then paste it here.
       </Typography.Paragraph>
       <Form.Item
         name="code"
@@ -121,8 +121,6 @@ interface SyncSetupDialogProps {
   engine: SyncEngine;
   /** This device's albums, which a repository's albums replace. */
   albums: Album[];
-  /** A setup code to start with, from a link in another device's QR code. */
-  initialCode?: string;
   onConnected: (repo: string) => void;
   onCancel: () => void;
 }
@@ -132,12 +130,10 @@ export function SyncSetupDialog({
   open,
   engine,
   albums,
-  initialCode,
   onConnected,
   onCancel,
 }: SyncSetupDialogProps) {
-  const [chosenMethod, setChosenMethod] = useState<SetupMethod>();
-  const method = chosenMethod ?? (initialCode ? "code" : "new");
+  const [method, setMethod] = useState<SetupMethod>("new");
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string>();
   const [modal, modalContextHolder] = Modal.useModal();
@@ -225,7 +221,7 @@ export function SyncSetupDialog({
       title="Sync with GitHub"
       onCancel={onCancel}
       afterClose={() => {
-        setChosenMethod(undefined);
+        setMethod("new");
         setError(undefined);
       }}
       // Stray clicks or keys shouldn't throw away a half-filled form, or
@@ -249,7 +245,6 @@ export function SyncSetupDialog({
           name="sync-setup"
           layout="vertical"
           requiredMark={false}
-          initialValues={{ code: initialCode }}
           onFinish={handleFinish}
         >
           {dialog}
@@ -264,7 +259,7 @@ export function SyncSetupDialog({
       <Tabs
         activeKey={method}
         onChange={(key) => {
-          setChosenMethod(key as SetupMethod);
+          setMethod(key as SetupMethod);
           setError(undefined);
         }}
         items={[

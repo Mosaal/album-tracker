@@ -19,7 +19,7 @@ import {
   SyncSetupDialog,
   SyncStatusButton,
 } from "./components";
-import { useAlbums, useGitHubSync, useSettings, useSetupLink } from "./hooks";
+import { useAlbums, useGitHubSync, useSettings } from "./hooks";
 import {
   Album,
   AlbumFormatFilter,
@@ -70,18 +70,9 @@ export default function App() {
     deleteAlbums,
     importAlbums,
   } = useAlbums(store);
-  // Rendered inside Layout below, so dialogs and messages pick up the theme.
-  const [modal, modalContextHolder] = Modal.useModal();
-  const [messageApi, messageContextHolder] = message.useMessage();
   const sync = useGitHubSync(store);
   const isSyncConnected = sync.state.status !== "disconnected";
   const [syncDialog, setSyncDialog] = useState<"setup" | "settings">();
-  // From a link in another device's QR code, until setup is opened afresh.
-  const [linkedCode, setLinkedCode] = useState<string>();
-  useSetupLink(sync.engine, messageApi, (code) => {
-    setLinkedCode(code);
-    setSyncDialog("setup");
-  });
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState<AlbumSortOrder>("title-asc");
   const [statusFilter, setStatusFilter] = useState<AlbumStatusFilter>("all");
@@ -91,6 +82,9 @@ export default function App() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   // Not cleared on close, so the modal keeps its title while it animates out.
   const [editingAlbum, setEditingAlbum] = useState<Album>();
+  // Rendered inside Layout below, so dialogs and messages pick up the theme.
+  const [modal, modalContextHolder] = Modal.useModal();
+  const [messageApi, messageContextHolder] = message.useMessage();
   // The albums picked in selection mode, or undefined outside it.
   const [selectedIds, setSelectedIds] = useState<Set<string>>();
   const isSelecting = selectedIds !== undefined;
@@ -280,11 +274,9 @@ export default function App() {
                 onImport={importAlbums}
                 onSelectAlbums={() => setSelectedIds(new Set())}
                 isSyncConnected={isSyncConnected}
-                onOpenSync={() => {
-                  // Opened from the menu, setup starts afresh.
-                  setLinkedCode(undefined);
-                  setSyncDialog(isSyncConnected ? "settings" : "setup");
-                }}
+                onOpenSync={() =>
+                  setSyncDialog(isSyncConnected ? "settings" : "setup")
+                }
                 onOpenSettings={() => setIsSettingsOpen(true)}
               />
             </Flex>
@@ -362,12 +354,9 @@ export default function App() {
         onCancel={() => setIsFormOpen(false)}
       />
       <SyncSetupDialog
-        // Starts again with each new code, even when it's already open.
-        key={linkedCode}
         open={syncDialog === "setup" && !isSyncConnected}
         engine={sync.engine}
         albums={albums}
-        initialCode={linkedCode}
         onConnected={(repo) => {
           setSyncDialog(undefined);
           messageApi.success(`Syncing with ${repo}.`);

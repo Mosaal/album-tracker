@@ -16,7 +16,7 @@ import { createStyles } from "antd-style";
 
 import { describeSyncError, SyncEngine, SyncState } from "../../sync/engine";
 import { historyUrl, newTokenUrl, repoUrl } from "../../sync/githubLinks";
-import { createSetupCode, createSetupLink } from "../../sync/setupCode";
+import { createSetupCode } from "../../sync/setupCode";
 import { describeSyncStatus } from "../../sync/syncStatus";
 import { ExternalLink } from "../ExternalLink";
 import { tokenRules } from "../formRules";
@@ -101,18 +101,19 @@ export function SyncSettingsDialog({
   // Shown to copy by hand when the clipboard can't be used.
   const [setupCode, setSetupCode] = useState<string>();
   const [isQrCodeShown, setIsQrCodeShown] = useState(false);
-  const config = engine.getConfig();
-  // The app's own address, wherever it's served from.
-  const setupLink =
-    config && createSetupLink(createSetupCode(config), window.location.href);
   const repo = state.repo ?? "";
 
-  const copySetupCode = async () => {
+  const getSetupCode = () => {
     const config = engine.getConfig();
-    if (!config) {
+    return config && createSetupCode(config);
+  };
+  const qrCodeValue = isQrCodeShown ? getSetupCode() : undefined;
+
+  const copySetupCode = async () => {
+    const code = getSetupCode();
+    if (!code) {
       return;
     }
-    const code = createSetupCode(config);
     try {
       await navigator.clipboard.writeText(code);
       messageApi.success("Setup code copied. Paste it on your other device.");
@@ -186,25 +187,24 @@ export function SyncSettingsDialog({
           <div>
             <Typography.Title level={5}>Other devices</Typography.Title>
             <Typography.Paragraph>
-              To sync another device, scan a QR code with its camera, or copy
-              the setup code and paste it there, in <em>Sync with GitHub</em>{" "}
-              from the ⋯ menu. Both include the token, so only use them with
-              your own devices.
+              To sync another device, copy this setup code and paste it there,
+              in <em>Sync with GitHub</em> from the ⋯ menu. It includes the
+              token, so only paste it on your own devices.
             </Typography.Paragraph>
             <Flex gap="small" wrap>
+              {!setupCode && (
+                <Button icon={<CopyOutlined />} onClick={copySetupCode}>
+                  Copy setup code
+                </Button>
+              )}
               <Button
                 icon={<QrcodeOutlined />}
                 onClick={() => setIsQrCodeShown((shown) => !shown)}
               >
                 {isQrCodeShown ? "Hide QR code" : "Show QR code"}
               </Button>
-              {!setupCode && (
-                <Button icon={<CopyOutlined />} onClick={copySetupCode}>
-                  Copy setup code
-                </Button>
-              )}
             </Flex>
-            {isQrCodeShown && setupLink && (
+            {qrCodeValue && (
               <Flex
                 vertical
                 align="center"
@@ -212,22 +212,20 @@ export function SyncSettingsDialog({
                 className={styles.shown}
               >
                 <QRCode
-                  value={setupLink}
+                  value={qrCodeValue}
                   type="svg"
                   size={240}
                   // Black on white whatever the theme, as cameras expect.
                   color="#000"
                   bgColor="#fff"
-                  // A margin of four modules, as the QR standard asks for.
+                  // Cameras need a clear margin around the code.
                   style={{ padding: 16 }}
                   errorLevel="L"
                   role="img"
-                  aria-label="QR code to set up another device"
+                  aria-label="QR code of the setup code"
                 />
                 <Typography.Text type="secondary">
-                  It opens Album Tracker with the setup code filled in. On an
-                  iPhone or iPad that's Safari, so for the app on the Home
-                  Screen, copy the setup code instead.
+                  Scan it with the other device to copy the setup code there.
                 </Typography.Text>
               </Flex>
             )}

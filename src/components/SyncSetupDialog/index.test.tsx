@@ -87,7 +87,6 @@ describe("setting up sync", () => {
     // Anything still on its way fails, rather than reaching GitHub.
     github.online = false;
     vi.restoreAllMocks();
-    window.history.replaceState(null, "", "/");
   });
 
   afterAll(() => {
@@ -244,81 +243,5 @@ describe("setting up sync", () => {
       await screen.findByText("Syncing with Mosaal/album-collection."),
     ).toBeVisible();
     expect(cardTitles()).toEqual(["In Rainbows"]);
-  });
-
-  describe("from another device's QR code", () => {
-    const openLink = (code: string) =>
-      window.history.replaceState(null, "", `/album-tracker/#setup=${code}`);
-
-    it("opens with the setup code filled in, and takes it out of the address", async () => {
-      github.save(createSyncFile({ albums: [IN_RAINBOWS], deleted: [] }));
-      openLink(createSetupCode({ repo: github.repo, token: github.token }));
-      const user = renderApp();
-
-      const dialog = await findDialog(
-        "Keep your collection in a GitHub repository",
-      );
-      expect(
-        within(dialog).getByRole("tab", { name: "Setup code" }),
-      ).toHaveAttribute("aria-selected", "true");
-      expect(window.location.href).toBe("http://localhost:3000/album-tracker/");
-      await user.click(within(dialog).getByRole("button", { name: "Connect" }));
-
-      expect(
-        await screen.findByText("Syncing with Mosaal/album-collection."),
-      ).toBeVisible();
-      expect(cardTitles()).toEqual(["In Rainbows"]);
-    });
-
-    it("starts setup again when the link reaches the app while it's open", async () => {
-      github.save(createSyncFile({ albums: [IN_RAINBOWS], deleted: [] }));
-      const user = renderApp();
-      await openSetup(user);
-
-      window.location.hash = `#setup=${createSetupCode({ repo: github.repo, token: github.token })}`;
-
-      await waitFor(() =>
-        expect(screen.getByRole("tab", { name: "Setup code" })).toHaveAttribute(
-          "aria-selected",
-          "true",
-        ),
-      );
-      expect(window.location.hash).toBe("");
-      await user.click(screen.getByRole("button", { name: "Connect" }));
-
-      expect(
-        await screen.findByText("Syncing with Mosaal/album-collection."),
-      ).toBeVisible();
-      expect(cardTitles()).toEqual(["In Rainbows"]);
-    });
-
-    it("says so on a device that already syncs", async () => {
-      localStorage.setItem(
-        "album-tracker:github-sync",
-        JSON.stringify({ repo: github.repo, token: github.token }),
-      );
-      openLink(
-        createSetupCode({ repo: "Mosaal/old-albums", token: github.token }),
-      );
-      renderApp();
-
-      expect(
-        await screen.findByText(
-          "This device already syncs with Mosaal/album-collection. To use Mosaal/old-albums instead, disconnect it in Sync settings first.",
-        ),
-      ).toBeVisible();
-      expect(screen.queryByRole("dialog")).toBeNull();
-      expect(window.location.hash).toBe("");
-    });
-
-    it("says when the code can't be read", async () => {
-      openLink("album-tracker-sync:not-a-code");
-      renderApp();
-
-      expect(
-        await screen.findByText("That link's setup code couldn't be read."),
-      ).toBeVisible();
-      expect(screen.queryByRole("dialog")).toBeNull();
-    });
   });
 });
