@@ -45,4 +45,7 @@ export interface Settings {
   gridDensity: GridDensity;
   /** Filled in when adding an album. */
   defaultFormat?: AlbumFormat;
+  /** The view and sort order last chosen, which the app opens with. */
+  viewMode: AlbumViewMode;
+  sortOrder: AlbumSortOrder;
 }

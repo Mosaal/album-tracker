@@ -19,6 +19,9 @@ const SORT_COMPARATORS: Record<AlbumSortOrder, Comparator> = {
   },
 };
 
+export const isSortOrder = (value: unknown): value is AlbumSortOrder =>
+  typeof value === "string" && Object.keys(SORT_COMPARATORS).includes(value);
+
 interface AlbumListOptions {
   search: string;
   sortOrder: AlbumSortOrder;

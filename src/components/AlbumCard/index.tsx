@@ -67,6 +67,7 @@ function AlbumCover({ album }: { album: Album }) {
       className={styles.image}
       alt={album.title}
       src={album.coverUrl}
+      loading="lazy"
       onError={() => setFailedUrl(album.coverUrl)}
     />
   );

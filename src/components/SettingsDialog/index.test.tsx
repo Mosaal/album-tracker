@@ -17,6 +17,12 @@ const KIND_OF_BLUE: Album = {
   artist: "Miles Davis",
   status: "owned",
 };
+const IN_RAINBOWS: Album = {
+  id: "2",
+  title: "In Rainbows",
+  artist: "Radiohead",
+  status: "wishlisted",
+};
 
 function renderApp(albums: Album[] = [KIND_OF_BLUE]) {
   localStorage.setItem(ALBUMS_KEY, JSON.stringify(albums));
@@ -53,6 +59,15 @@ const formatIn = (dialog: HTMLElement) =>
     .getByRole("combobox", { name: /format/i })
     .closest(".ant-select")!.textContent;
 
+/** The albums shown, in order, in the grid or the list. */
+const shownTitles = () =>
+  screen
+    .getAllByRole("button", { name: /^Edit / })
+    .map((button) => button.getAttribute("aria-label")!.slice("Edit ".length));
+
+const isListShown = () =>
+  (screen.getByRole("radio", { name: "List" }) as HTMLInputElement).checked;
+
 describe("settings", () => {
   it("fits one more album in each row of the compact grid, and remembers it", async () => {
     const { user, unmount } = renderApp();
@@ -65,6 +80,23 @@ describe("settings", () => {
     unmount();
     renderApp();
     expect(gridColumns()).toBe(columns(5));
+  });
+
+  it("opens with the view and sort order last chosen", async () => {
+    const { user, unmount } = renderApp([KIND_OF_BLUE, IN_RAINBOWS]);
+    expect(shownTitles()).toEqual(["In Rainbows", "Kind of Blue"]);
+
+    await user.click(screen.getByText("List"));
+    await user.click(screen.getByRole("combobox", { name: "Sort order" }));
+    await user.click(
+      document.querySelector('.ant-select-item-option[title="Artist (A-Z)"]')!,
+    );
+    unmount();
+    renderApp([KIND_OF_BLUE, IN_RAINBOWS]);
+
+    expect(isListShown()).toBe(true);
+    expect(document.querySelector(".ant-card-meta-title")).toBeNull();
+    expect(shownTitles()).toEqual(["Kind of Blue", "In Rainbows"]);
   });
 
   it("starts new albums in the chosen format, leaving edits alone", async () => {
@@ -108,11 +140,18 @@ describe("settings", () => {
   it("uses the usual settings in place of ones it can't read", async () => {
     localStorage.setItem(
       SETTINGS_KEY,
-      JSON.stringify({ gridDensity: "tiny", defaultFormat: "8-track" }),
+      JSON.stringify({
+        gridDensity: "tiny",
+        defaultFormat: "8-track",
+        viewMode: "table",
+        sortOrder: "year",
+      }),
     );
-    const { user } = renderApp();
+    const { user } = renderApp([KIND_OF_BLUE, IN_RAINBOWS]);
 
     expect(gridColumns()).toBe(columns(4));
+    expect(isListShown()).toBe(false);
+    expect(shownTitles()).toEqual(["In Rainbows", "Kind of Blue"]);
     expect(formatIn(await openAddForm(user))).toBe("Choose a format");
   });
 });
