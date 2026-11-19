@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { isRecord } from "../albumFiles";
 import { FORMAT_OPTIONS } from "../albumFormats";
+import { isSortOrder } from "../albumList";
 import { AlbumFormat, Settings } from "../types";
 
 const STORAGE_KEY = "album-tracker:settings";
@@ -17,14 +18,14 @@ function readSettings(): Settings {
   } catch {
     stored = null;
   }
+  const saved: Record<string, unknown> = isRecord(stored) ? stored : {};
   const settings: Settings = {
-    gridDensity:
-      isRecord(stored) && stored.gridDensity === "compact"
-        ? "compact"
-        : "normal",
+    gridDensity: saved.gridDensity === "compact" ? "compact" : "normal",
+    viewMode: saved.viewMode === "list" ? "list" : "grid",
+    sortOrder: isSortOrder(saved.sortOrder) ? saved.sortOrder : "title-asc",
   };
-  if (isRecord(stored) && isFormat(stored.defaultFormat)) {
-    settings.defaultFormat = stored.defaultFormat;
+  if (isFormat(saved.defaultFormat)) {
+    settings.defaultFormat = saved.defaultFormat;
   }
   return settings;
 }

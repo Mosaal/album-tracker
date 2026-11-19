@@ -20,7 +20,8 @@ through a GitHub repository of your own.
   You're warned before adding an album that's already in your collection.
 - **Finding them:** search by title or artist, filter by owned or wishlisted,
   format and artist, and sort by title, artist or when you added them. Browse
-  them as a grid of covers or as a list.
+  them as a grid of covers or as a list. Each device opens with the view and
+  sort order you last chose.
 - **Quick changes:** switch an album between owned and wishlisted on its card,
   or select several to mark or delete at once. Deleting can be undone.
 - **Bringing your list:** import a JSON or CSV file, such as a spreadsheet with

@@ -24,9 +24,7 @@ import {
   Album,
   AlbumFormatFilter,
   AlbumInput,
-  AlbumSortOrder,
   AlbumStatusFilter,
-  AlbumViewMode,
   GridDensity,
 } from "./types";
 
@@ -59,6 +57,8 @@ const useStyles = createStyles(({ responsive }, density: GridDensity) => {
 
 export default function App() {
   const { settings, updateSettings } = useSettings();
+  // Saved with the settings, so the app opens the way it was left.
+  const { sortOrder, viewMode } = settings;
   const { styles } = useStyles(settings.gridDensity);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [store] = useState(createCollectionStore);
@@ -74,11 +74,9 @@ export default function App() {
   const isSyncConnected = sync.state.status !== "disconnected";
   const [syncDialog, setSyncDialog] = useState<"setup" | "settings">();
   const [search, setSearch] = useState("");
-  const [sortOrder, setSortOrder] = useState<AlbumSortOrder>("title-asc");
   const [statusFilter, setStatusFilter] = useState<AlbumStatusFilter>("all");
   const [formatFilter, setFormatFilter] = useState<AlbumFormatFilter>("all");
   const [artistFilter, setArtistFilter] = useState<string>();
-  const [viewMode, setViewMode] = useState<AlbumViewMode>("grid");
   const [isFormOpen, setIsFormOpen] = useState(false);
   // Not cleared on close, so the modal keeps its title while it animates out.
   const [editingAlbum, setEditingAlbum] = useState<Album>();
@@ -241,7 +239,7 @@ export default function App() {
             search={search}
             onSearchChange={setSearch}
             sortOrder={sortOrder}
-            onSortOrderChange={setSortOrder}
+            onSortOrderChange={(sortOrder) => updateSettings({ sortOrder })}
             statusFilter={statusFilter}
             onStatusFilterChange={setStatusFilter}
             formatFilter={formatFilter}
@@ -259,7 +257,7 @@ export default function App() {
           >
             <AlbumViewToggle
               viewMode={viewMode}
-              onViewModeChange={setViewMode}
+              onViewModeChange={(viewMode) => updateSettings({ viewMode })}
             />
             <Flex gap="16px">
               <Button

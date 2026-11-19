@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Avatar, Card, Flex, Tag, theme, Typography } from "antd";
 import { PictureOutlined } from "@ant-design/icons";
 
@@ -6,6 +7,31 @@ import { Album } from "../../types";
 import { DeleteAlbumButton, EditAlbumButton } from "../AlbumActionButtons";
 import { AlbumCheckbox, AlbumSelection } from "../AlbumCheckbox";
 import { AlbumStatusSwitch } from "../AlbumStatusSwitch";
+
+function AlbumThumbnail({ album }: { album: Album }) {
+  // Tracks the URL that failed, so editing in a different one tries again.
+  const [failedUrl, setFailedUrl] = useState<string>();
+  const coverUrl = album.coverUrl === failedUrl ? undefined : album.coverUrl;
+
+  return (
+    <Avatar
+      shape="square"
+      size={64}
+      icon={<PictureOutlined />}
+      // An image rather than its URL, so it only loads when scrolled near.
+      src={
+        coverUrl ? (
+          <img
+            src={coverUrl}
+            alt={album.title}
+            loading="lazy"
+            onError={() => setFailedUrl(coverUrl)}
+          />
+        ) : undefined
+      }
+    />
+  );
+}
 
 interface AlbumRowProps {
   album: Album;
@@ -29,13 +55,7 @@ export function AlbumRow({
     <Card size="small">
       {selection && <AlbumCheckbox album={album} selection={selection} />}
       <Flex gap="16px" align="center">
-        <Avatar
-          shape="square"
-          size={64}
-          src={album.coverUrl}
-          icon={<PictureOutlined />}
-          alt={album.title}
-        />
+        <AlbumThumbnail album={album} />
         <Flex vertical flex={1} style={{ minWidth: 0 }}>
           <Typography.Text strong ellipsis>
             {album.title}
