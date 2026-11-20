@@ -1,4 +1,4 @@
-import { isRecord } from "../albumFiles";
+import { isRecord } from "../albums/albumFiles";
 
 export const CONFIG_KEY = "album-tracker:github-sync";
 

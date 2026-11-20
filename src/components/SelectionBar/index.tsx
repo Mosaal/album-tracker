@@ -2,7 +2,7 @@ import { Button, Flex, Typography } from "antd";
 import { CloseOutlined } from "@ant-design/icons";
 import { createStyles } from "antd-style";
 
-import { albumCount } from "../../albumFiles";
+import { albumCount } from "../../albums/albumFiles";
 
 const useStyles = createStyles(({ token, responsive }) => ({
   // Stays in view while scrolling through a long collection.

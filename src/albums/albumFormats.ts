@@ -1,4 +1,4 @@
-import { AlbumFormat } from "./types";
+import { AlbumFormat } from "../types";
 
 export const FORMAT_LABELS: Record<AlbumFormat, string> = {
   vinyl: "Vinyl",

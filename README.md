@@ -166,6 +166,23 @@ npm install
 npm run dev
 ```
 
+### Where things are
+
+| Folder           | What's in it                                                            |
+| ---------------- | ----------------------------------------------------------------------- |
+| `src/albums`     | Albums, and how they are checked, compared, sorted, filtered and stored |
+| `src/api`        | MusicBrainz, the Cover Art Archive and GitHub                           |
+| `src/barcodes`   | Reading barcodes with the camera                                        |
+| `src/components` | The interface, a folder for each component                              |
+| `src/files`      | Importing and exporting JSON and CSV files                              |
+| `src/hooks`      | React hooks the components share                                        |
+| `src/sync`       | Syncing through GitHub                                                  |
+| `src/test`       | Helpers for the tests                                                   |
+| `src/utils`      | Small helpers, like Base64                                              |
+
+`src/App.tsx` puts the app together, and `src/types.ts` has the types shared
+across it. Tests sit next to the code they test.
+
 ## Contributing
 
 `main` is protected. All changes land through a pull request:

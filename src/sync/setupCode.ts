@@ -1,6 +1,6 @@
-import { isRecord } from "../albumFiles";
+import { isRecord } from "../albums/albumFiles";
 import { parseRepo } from "../api/github";
-import { decodeBase64, encodeBase64 } from "../base64";
+import { decodeBase64, encodeBase64 } from "../utils/base64";
 import { SyncConfig } from "./config";
 
 const PREFIX = "album-tracker-sync:";

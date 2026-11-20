@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createCollectionStore } from "../albumStore";
+import { createCollectionStore } from "../albums/albumStore";
 import { useAlbums } from "./useAlbums";
 
 const ALBUMS_KEY = "album-tracker:albums";

@@ -1,8 +1,8 @@
+import { Album, AlbumFormat, AlbumInput } from "../types";
+import { isHttpUrl } from "../utils/urls";
 import { toFormat } from "./albumFormats";
 import { toYear } from "./albumYears";
 import { toTimestamp } from "./timestamps";
-import { Album, AlbumFormat, AlbumInput } from "./types";
-import { isHttpUrl } from "./urls";
 
 export interface ImportSummary {
   added: number;

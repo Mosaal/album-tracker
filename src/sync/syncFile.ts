@@ -1,5 +1,5 @@
-import { albumCount, isRecord, toAlbum } from "../albumFiles";
-import { toTimestamp } from "../timestamps";
+import { albumCount, isRecord, toAlbum } from "../albums/albumFiles";
+import { toTimestamp } from "../albums/timestamps";
 import { Album, Collection, DeletedAlbum } from "../types";
 
 /** The file in the repository that holds the collection. */

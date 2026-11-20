@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { Album } from "../types";
 import { createJson, InvalidJsonError, readJson } from "./json";
-import { Album } from "./types";
 
 const KIND_OF_BLUE: Album = {
   id: "1",

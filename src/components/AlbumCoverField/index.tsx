@@ -6,7 +6,7 @@ import { createStyles } from "antd-style";
 import { CoverResult, searchCovers } from "../../api/coverArt";
 import { MusicBrainzError } from "../../api/musicBrainz";
 import { AlbumInput } from "../../types";
-import { isHttpUrl } from "../../urls";
+import { isHttpUrl } from "../../utils/urls";
 
 type CoverSearch =
   | { status: "idle" | "loading" }

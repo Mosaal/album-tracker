@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { Album } from "../types";
 import { createCsv, InvalidCsvError, readCsv } from "./csv";
-import { Album } from "./types";
 
 const ALBUMS: Album[] = [
   {

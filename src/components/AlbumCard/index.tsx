@@ -3,7 +3,7 @@ import { Card, Flex, Tag } from "antd";
 import { PictureOutlined } from "@ant-design/icons";
 import { createStyles } from "antd-style";
 
-import { FORMAT_LABELS } from "../../albumFormats";
+import { FORMAT_LABELS } from "../../albums/albumFormats";
 import { Album } from "../../types";
 import { DeleteAlbumButton, EditAlbumButton } from "../AlbumActionButtons";
 import { AlbumByline } from "../AlbumByline";

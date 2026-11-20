@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { isRecord } from "../albumFiles";
-import { FORMAT_OPTIONS } from "../albumFormats";
-import { isSortOrder } from "../albumList";
+import { isRecord } from "../albums/albumFiles";
+import { FORMAT_OPTIONS } from "../albums/albumFormats";
+import { isSortOrder } from "../albums/albumList";
 import { AlbumFormat, Settings } from "../types";
 
 const STORAGE_KEY = "album-tracker:settings";

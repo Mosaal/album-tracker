@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { Album } from "../types";
 import { listArtists, listDecades, selectAlbums } from "./albumList";
-import { Album } from "./types";
 
 // Stored oldest first, in the order they were added.
 const ALBUMS: Album[] = [

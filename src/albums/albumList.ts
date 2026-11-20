@@ -1,12 +1,12 @@
-import { decadeOf } from "./albumYears";
-import { timeOf } from "./timestamps";
 import {
   Album,
   AlbumDecadeFilter,
   AlbumFormatFilter,
   AlbumSortOrder,
   AlbumStatusFilter,
-} from "./types";
+} from "../types";
+import { decadeOf } from "./albumYears";
+import { timeOf } from "./timestamps";
 
 type Comparator = (a: Album, b: Album) => number;
 

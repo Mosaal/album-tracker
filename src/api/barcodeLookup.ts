@@ -1,4 +1,4 @@
-import { toYear } from "../albumYears";
+import { toYear } from "../albums/albumYears";
 import { AlbumFormat } from "../types";
 import {
   ArtistCredit,

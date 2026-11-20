@@ -1,5 +1,5 @@
-import { isRecord } from "../albumFiles";
-import { decodeBase64, encodeBase64 } from "../base64";
+import { isRecord } from "../albums/albumFiles";
+import { decodeBase64, encodeBase64 } from "../utils/base64";
 
 const API_URL = "https://api.github.com";
 

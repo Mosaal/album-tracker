@@ -1,6 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 
-import { CollectionStore } from "../albumStore";
+import { CollectionStore } from "../albums/albumStore";
 import { createSyncEngine } from "../sync/engine";
 
 /**

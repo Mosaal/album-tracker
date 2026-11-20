@@ -1,8 +1,8 @@
 import { Flex, Input, Select, Typography } from "antd";
 import { createStyles } from "antd-style";
 
-import { albumCount } from "../../albumFiles";
-import { FORMAT_OPTIONS } from "../../albumFormats";
+import { albumCount } from "../../albums/albumFiles";
+import { FORMAT_OPTIONS } from "../../albums/albumFormats";
 import {
   AlbumDecadeFilter,
   AlbumFormatFilter,
