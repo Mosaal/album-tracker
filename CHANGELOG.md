@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.9.0](https://github.com/Mosaal/album-tracker/compare/v0.8.0...v0.9.0) (2026-11-20)
+
+
+### Features
+
+* record each album's year and notes ([#50](https://github.com/Mosaal/album-tracker/issues/50)) ([d6cce6e](https://github.com/Mosaal/album-tracker/commit/d6cce6ed44023fa72159ae87efd4f12cbd106cd8))
+* remember the view and sort order, and load covers as you scroll ([#48](https://github.com/Mosaal/album-tracker/issues/48)) ([eff5454](https://github.com/Mosaal/album-tracker/commit/eff5454a889948bf00cb57b2b9fbcd3ae74ffda6))
+
 ## [0.8.0](https://github.com/Mosaal/album-tracker/compare/v0.7.0...v0.8.0) (2026-11-16)
 
 
