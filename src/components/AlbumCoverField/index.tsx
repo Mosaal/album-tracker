@@ -84,6 +84,9 @@ export function AlbumCoverField() {
   const [search, setSearch] = useState<CoverSearch>({ status: "idle" });
   const [failedIds, setFailedIds] = useState<string[]>([]);
   const controllerRef = useRef<AbortController>(null);
+  // The year the last cover picked filled in. Picking another cover replaces
+  // it, but a year typed in stays.
+  const filledYearRef = useRef<string>(null);
 
   // Cancels a search that's still running when the modal closes.
   useEffect(() => () => controllerRef.current?.abort(), []);
@@ -109,8 +112,13 @@ export function AlbumCoverField() {
   };
 
   const pickCover = (cover: CoverResult) => {
-    // setFields also clears any error left by a mistyped URL.
+    // setFields also clears any error left by a mistyped URL or year.
     form.setFields([{ name: "coverUrl", value: cover.imageUrl, errors: [] }]);
+    const year = form.getFieldValue("year")?.toString().trim() ?? "";
+    if (cover.year && (!year || year === filledYearRef.current)) {
+      form.setFields([{ name: "year", value: cover.year, errors: [] }]);
+      filledYearRef.current = cover.year;
+    }
   };
 
   // Albums without a cover are dropped once their thumbnail fails to load.

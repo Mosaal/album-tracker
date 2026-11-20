@@ -8,9 +8,11 @@ import { Album, AlbumInput, DeletedAlbum } from "../types";
 const sameDetails = (album: Album, input: AlbumInput) =>
   album.title === input.title &&
   album.artist === input.artist &&
+  album.year === input.year &&
   album.coverUrl === input.coverUrl &&
   album.format === input.format &&
-  album.status === input.status;
+  album.status === input.status &&
+  album.notes === input.notes;
 
 /** Drops the deletion records of albums that are back in the collection. */
 const forgetDeleted = (deleted: DeletedAlbum[], ids: string[]) =>

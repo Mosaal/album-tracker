@@ -3,7 +3,7 @@ import { Button, Empty, Flex, message, Modal } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { createStyles } from "antd-style";
 import { albumCount } from "./albumFiles";
-import { listArtists, selectAlbums } from "./albumList";
+import { listArtists, listDecades, selectAlbums } from "./albumList";
 import { createCollectionStore } from "./albumStore";
 import {
   AlbumCard,
@@ -22,6 +22,7 @@ import {
 import { useAlbums, useGitHubSync, useSettings } from "./hooks";
 import {
   Album,
+  AlbumDecadeFilter,
   AlbumFormatFilter,
   AlbumInput,
   AlbumStatusFilter,
@@ -50,8 +51,9 @@ const useStyles = createStyles(({ responsive }, density: GridDensity) => {
       [responsive.sm]: { gridTemplateColumns: gridColumns(sm) },
       [responsive.xs]: { gridTemplateColumns: gridColumns(xs) },
     },
-    // On phones the view toggle and the buttons sit at either end of the row.
-    actions: { [responsive.xs]: { width: "100%" } },
+    // Kept at the end of the toolbar, even when it wraps onto a line of its
+    // own. On phones the view toggle and the buttons sit at either end of it.
+    actions: { marginInlineStart: "auto", [responsive.xs]: { width: "100%" } },
   };
 });
 
@@ -77,6 +79,7 @@ export default function App() {
   const [statusFilter, setStatusFilter] = useState<AlbumStatusFilter>("all");
   const [formatFilter, setFormatFilter] = useState<AlbumFormatFilter>("all");
   const [artistFilter, setArtistFilter] = useState<string>();
+  const [decadeFilter, setDecadeFilter] = useState<AlbumDecadeFilter>("all");
   const [isFormOpen, setIsFormOpen] = useState(false);
   // Not cleared on close, so the modal keeps its title while it animates out.
   const [editingAlbum, setEditingAlbum] = useState<Album>();
@@ -88,6 +91,10 @@ export default function App() {
   const isSelecting = selectedIds !== undefined;
 
   const artists = useMemo(() => listArtists(albums), [albums]);
+  const decades = useMemo(() => listDecades(albums), [albums]);
+  // A decade that's no longer on offer stops filtering, so a hidden year
+  // filter can't hide albums.
+  const activeDecade = decades.includes(decadeFilter) ? decadeFilter : "all";
   const visibleAlbums = useMemo(
     () =>
       selectAlbums(albums, {
@@ -96,8 +103,17 @@ export default function App() {
         statusFilter,
         formatFilter,
         artistFilter,
+        decadeFilter: activeDecade,
       }),
-    [albums, search, sortOrder, statusFilter, formatFilter, artistFilter],
+    [
+      albums,
+      search,
+      sortOrder,
+      statusFilter,
+      formatFilter,
+      artistFilter,
+      activeDecade,
+    ],
   );
   // Only albums still shown count, so a filter can't hide what gets changed.
   const selectedAlbums = selectedIds
@@ -247,6 +263,9 @@ export default function App() {
             artists={artists}
             artistFilter={artistFilter}
             onArtistFilterChange={setArtistFilter}
+            decades={decades}
+            decadeFilter={activeDecade}
+            onDecadeFilterChange={setDecadeFilter}
             count={visibleAlbums.length}
           />
           <Flex

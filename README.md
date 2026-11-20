@@ -14,14 +14,16 @@ through a GitHub repository of your own.
 
 ## Features
 
-- **Your albums:** each has a title, artist, cover, format (vinyl, CD,
-  cassette, digital or other) and whether you own it or want it. Find a cover
-  by searching [MusicBrainz](https://musicbrainz.org/), or paste a link to one.
-  You're warned before adding an album that's already in your collection.
+- **Your albums:** each has a title, artist, year, cover, format (vinyl, CD,
+  cassette, digital or other), whether you own it or want it, and notes for
+  anything else, like the pressing or its condition. Find a cover by searching
+  [MusicBrainz](https://musicbrainz.org/), which fills in the year too, or
+  paste a link to one. You're warned before adding an album that's already in
+  your collection.
 - **Finding them:** search by title or artist, filter by owned or wishlisted,
-  format and artist, and sort by title, artist or when you added them. Browse
-  them as a grid of covers or as a list. Each device opens with the view and
-  sort order you last chose.
+  format, artist and decade, and sort by title, artist, year or when you added
+  them. Browse them as a grid of covers or as a list. Each device opens with
+  the view and sort order you last chose.
 - **Quick changes:** switch an album between owned and wishlisted on its card,
   or select several to mark or delete at once. Deleting can be undone.
 - **Bringing your list:** import a JSON or CSV file, such as a spreadsheet with
@@ -112,6 +114,9 @@ separate from Safari, so connect it as a device of its own.
   backup of every change.
 - You can edit `albums.json` on GitHub too. If an entry can't be read, the file
   is left as it is, and syncing stops with a message until it's fixed.
+- After an update that changes what's saved, a device still on an older
+  version stops syncing and asks you to reload it, so it can't lose anything
+  the newer version saved.
 - The token is stored only in the browser on each device, and can only read and
   write the repository you picked. **Disconnect** in Sync settings removes it
   from a device. To revoke it everywhere, delete it in GitHub's

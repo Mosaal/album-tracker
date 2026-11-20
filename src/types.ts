@@ -4,9 +4,13 @@ export interface Album {
   id: string;
   title: string;
   artist: string;
+  /** The year it came out. */
+  year?: number;
   coverUrl?: string;
   format?: AlbumFormat;
   status: "owned" | "wishlisted";
+  /** Anything else worth noting, like the pressing or its condition. */
+  notes?: string;
   /** When it joined the collection, as an ISO date. Unknown for older albums. */
   addedAt?: string;
   /** When it last changed, as an ISO date. Unknown for older albums. */
@@ -29,11 +33,20 @@ export interface Collection {
 }
 
 export type AlbumSortOrder =
-  "title-asc" | "title-desc" | "artist-asc" | "artist-desc" | "recent";
+  | "title-asc"
+  | "title-desc"
+  | "artist-asc"
+  | "artist-desc"
+  | "year-asc"
+  | "year-desc"
+  | "recent";
 
 export type AlbumStatusFilter = "all" | Album["status"];
 
 export type AlbumFormatFilter = "all" | AlbumFormat;
+
+/** A decade, by its first year (1950 for the 1950s), or albums with no year. */
+export type AlbumDecadeFilter = "all" | "none" | number;
 
 export type AlbumViewMode = "grid" | "list";
 

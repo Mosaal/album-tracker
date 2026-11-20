@@ -5,7 +5,9 @@ import { Album, Collection, DeletedAlbum } from "../types";
 /** The file in the repository that holds the collection. */
 export const SYNC_FILE_NAME = "albums.json";
 const FORMAT = "album-tracker";
-const VERSION = 1;
+// Version 2 added years and notes. Earlier versions of the app would drop
+// them when saving, so they refuse to sync with a newer file instead.
+const VERSION = 2;
 
 /** The file isn't one the app wrote, so it's left alone. */
 export class InvalidSyncFileError extends Error {}
@@ -28,9 +30,11 @@ const ALBUM_KEYS = [
   "id",
   "title",
   "artist",
+  "year",
   "format",
   "status",
   "coverUrl",
+  "notes",
   "addedAt",
   "updatedAt",
 ] as const;

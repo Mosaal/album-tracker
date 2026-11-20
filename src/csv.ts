@@ -2,21 +2,33 @@ import { toAlbum } from "./albumFiles";
 import { FORMAT_LABELS } from "./albumFormats";
 import { Album } from "./types";
 
-const HEADER = ["Title", "Artist", "Format", "Status", "Cover URL"];
+const HEADER = [
+  "Title",
+  "Artist",
+  "Year",
+  "Format",
+  "Status",
+  "Cover URL",
+  "Notes",
+];
 
 const STATUS_LABELS: Record<Album["status"], string> = {
   owned: "Owned",
   wishlisted: "Wishlisted",
 };
 
-type Column = "title" | "artist" | "format" | "status" | "coverUrl";
+type Column =
+  "title" | "artist" | "year" | "format" | "status" | "coverUrl" | "notes";
 
 // Header names are compared as lowercase letters only, so "Cover URL",
-// "cover_url" and "coverUrl" all match.
+// "cover_url" and "coverUrl" all match. Discogs exports call the year
+// "Released" and the notes "Collection Notes".
 const COLUMNS: Record<string, Column> = {
   title: "title",
   album: "title",
   artist: "artist",
+  year: "year",
+  released: "year",
   format: "format",
   media: "format",
   mediatype: "format",
@@ -25,6 +37,9 @@ const COLUMNS: Record<string, Column> = {
   coverurl: "coverUrl",
   coverimageurl: "coverUrl",
   cover: "coverUrl",
+  notes: "notes",
+  note: "notes",
+  collectionnotes: "notes",
 };
 
 // Spreadsheets run cells that start with these as formulas, so the export
@@ -49,9 +64,11 @@ export function createCsv(albums: Album[]) {
     ...albums.map((album) => [
       album.title,
       album.artist,
+      album.year?.toString() ?? "",
       album.format ? FORMAT_LABELS[album.format] : "",
       STATUS_LABELS[album.status],
       album.coverUrl ?? "",
+      album.notes ?? "",
     ]),
   ];
   const lines = rows.map((row) => row.map(toCell).join(",") + "\r\n");
@@ -151,10 +168,12 @@ export function readCsv(text: string) {
       toAlbum({
         title: read(record, "title"),
         artist: read(record, "artist"),
+        year: read(record, "year"),
         format: read(record, "format"),
         // Rows without a status are albums you have.
         status: read(record, "status").trim().toLowerCase() || "owned",
         coverUrl: read(record, "coverUrl"),
+        notes: read(record, "notes"),
       }),
     )
     .filter((album) => album !== undefined);

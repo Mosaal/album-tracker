@@ -8,9 +8,11 @@ const ALBUMS: Album[] = [
     id: "1",
     title: 'Hello, "World"',
     artist: "Björk",
+    year: 2001,
     coverUrl: "https://coverartarchive.org/release-group/rg-1/front-500",
     format: "vinyl",
     status: "owned",
+    notes: "Signed\nFirst pressing",
   },
   { id: "2", title: "=", artist: "Ed Sheeran", status: "wishlisted" },
 ];
@@ -22,9 +24,9 @@ describe("createCsv", () => {
   it("writes a header row, quotes cells that need it and keeps formulas as text", () => {
     expect(createCsv(ALBUMS)).toBe(
       "\uFEFF" +
-        "Title,Artist,Format,Status,Cover URL\r\n" +
-        '"Hello, ""World""",Björk,Vinyl,Owned,https://coverartarchive.org/release-group/rg-1/front-500\r\n' +
-        "'=,Ed Sheeran,,Wishlisted,\r\n",
+        "Title,Artist,Year,Format,Status,Cover URL,Notes\r\n" +
+        '"Hello, ""World""",Björk,2001,Vinyl,Owned,https://coverartarchive.org/release-group/rg-1/front-500,"Signed\nFirst pressing"\r\n' +
+        "'=,Ed Sheeran,,,Wishlisted,,\r\n",
     );
   });
 });
@@ -49,6 +51,7 @@ describe("readCsv", () => {
           title: "In Rainbows",
           artist: "Radiohead",
           status: "owned",
+          notes: "Signed",
         },
       ]);
     },
@@ -92,6 +95,41 @@ describe("readCsv", () => {
     ).albums;
 
     expect(album.format).toBe(expected);
+  });
+
+  it.each([
+    ["1959", 1959],
+    ["1959-08-17", 1959],
+    ["59", undefined],
+    ["19590", undefined],
+    ["Unknown", undefined],
+  ])(
+    "reads the year %j as %s, keeping the album either way",
+    (year, expected) => {
+      const [album] = readCsv(
+        `Title,Artist,Year\nKind of Blue,Miles Davis,${year}\n`,
+      ).albums;
+
+      expect(album.title).toBe("Kind of Blue");
+      expect(album.year).toBe(expected);
+    },
+  );
+
+  it("reads the year and notes from a Discogs collection export", () => {
+    const [album] = readCsv(
+      "Catalog#,Artist,Title,Label,Format,Rating,Released,release_id,CollectionFolder,Date Added,Collection Media Condition,Collection Sleeve Condition,Collection Notes\r\n" +
+        'CL 1355,Miles Davis,Kind of Blue,Columbia,"LP, Album, Mono",,1959,2537435,Uncategorized,2024-05-01 10:00:00,Very Good Plus (VG+),Very Good (VG),"Signed, sleeve worn"\r\n',
+    ).albums;
+
+    expect(album).toEqual({
+      ...newId,
+      title: "Kind of Blue",
+      artist: "Miles Davis",
+      year: 1959,
+      format: "vinyl",
+      status: "owned",
+      notes: "Signed, sleeve worn",
+    });
   });
 
   it.each([
