@@ -106,4 +106,20 @@ describe("readJson", () => {
       { ...IN_RAINBOWS, id: "3" },
     ]);
   });
+
+  it("reads years and notes, trimming notes and dropping years it can't use", () => {
+    const { albums } = readJson(
+      exportOf([
+        { ...IN_RAINBOWS, year: 2007, notes: "  Signed\n" },
+        { ...IN_RAINBOWS, id: "3", year: 207, notes: " " },
+        { ...IN_RAINBOWS, id: "4", year: 2007.5 },
+      ]),
+    );
+
+    expect(albums).toEqual([
+      { ...IN_RAINBOWS, year: 2007, notes: "Signed" },
+      { ...IN_RAINBOWS, id: "3" },
+      { ...IN_RAINBOWS, id: "4" },
+    ]);
+  });
 });

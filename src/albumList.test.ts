@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { listArtists, selectAlbums } from "./albumList";
+import { listArtists, listDecades, selectAlbums } from "./albumList";
 import { Album } from "./types";
 
 // Stored oldest first, in the order they were added.
@@ -127,5 +127,67 @@ describe("listArtists", () => {
         { ...ALBUMS[0], id: "6", artist: " Björk " },
       ]),
     ).toEqual(["Björk", "Massive Attack", "Miles Davis", "Radiohead"]);
+  });
+});
+
+describe("years", () => {
+  // Two from 1998, as albums from the same year go by artist, then title.
+  const [kindOfBlue, blueLines, mezzanine, inRainbows] = ALBUMS;
+  const DATED: Album[] = [
+    { ...kindOfBlue, year: 1959 },
+    { ...blueLines, year: 1991 },
+    { ...mezzanine, year: 1998 },
+    inRainbows,
+    {
+      id: "5",
+      title: "Mutations",
+      artist: "Beck",
+      status: "owned",
+      year: 1998,
+    },
+  ];
+  const selectDated = (options: Partial<Parameters<typeof selectAlbums>[1]>) =>
+    selectAlbums(DATED, {
+      search: "",
+      sortOrder: "title-asc",
+      statusFilter: "all",
+      formatFilter: "all",
+      ...options,
+    });
+
+  it("sorts oldest or newest first, with albums that have no year last", () => {
+    expect(titles(selectDated({ sortOrder: "year-asc" }))).toEqual([
+      "Kind of Blue",
+      "Blue Lines",
+      "Mutations",
+      "Mezzanine",
+      "In Rainbows",
+    ]);
+    expect(titles(selectDated({ sortOrder: "year-desc" }))).toEqual([
+      "Mutations",
+      "Mezzanine",
+      "Blue Lines",
+      "Kind of Blue",
+      "In Rainbows",
+    ]);
+  });
+
+  it("shows only the albums from a decade, or those with no year", () => {
+    expect(titles(selectDated({ decadeFilter: 1990 }))).toEqual([
+      "Blue Lines",
+      "Mezzanine",
+      "Mutations",
+    ]);
+    expect(titles(selectDated({ decadeFilter: "none" }))).toEqual([
+      "In Rainbows",
+    ]);
+  });
+
+  it("lists the decades oldest first, then no year if some albums have none", () => {
+    expect(listDecades(DATED)).toEqual([1950, 1990, "none"]);
+    expect(listDecades(DATED.filter((album) => album.year))).toEqual([
+      1950, 1990,
+    ]);
+    expect(listDecades(ALBUMS)).toEqual([]);
   });
 });

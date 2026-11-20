@@ -13,12 +13,14 @@ import {
 
 const KIND_OF_BLUE: Album = {
   status: "owned",
+  notes: "Mono, from my dad",
   updatedAt: "2026-03-01T10:00:00.000Z",
   title: "Kind of Blue",
   id: "1",
   artist: "Miles Davis",
   format: "vinyl",
   addedAt: "2026-01-01T09:00:00.000Z",
+  year: 1959,
 };
 const IN_RAINBOWS: Album = {
   id: "2",
@@ -52,14 +54,16 @@ describe("the sync file", () => {
 
     expect(text).toBe(`{
   "format": "album-tracker",
-  "version": 1,
+  "version": 2,
   "albums": [
     {
       "id": "1",
       "title": "Kind of Blue",
       "artist": "Miles Davis",
+      "year": 1959,
       "format": "vinyl",
       "status": "owned",
+      "notes": "Mono, from my dad",
       "addedAt": "2026-01-01T09:00:00.000Z",
       "updatedAt": "2026-03-01T10:00:00.000Z"
     }
@@ -165,7 +169,7 @@ describe("the sync file", () => {
   it("refuses a file from a newer version of the app", () => {
     const text = JSON.stringify({
       format: "album-tracker",
-      version: 2,
+      version: 3,
       albums: [],
     });
 

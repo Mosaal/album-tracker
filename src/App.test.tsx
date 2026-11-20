@@ -311,3 +311,107 @@ describe("App", () => {
     ).toBeVisible();
   });
 });
+
+describe("years and notes", () => {
+  const byline = () =>
+    document.querySelector(".ant-card-meta-description")?.textContent;
+
+  it("records an album's year and notes, and shows them", async () => {
+    const user = renderApp();
+
+    await user.click(
+      screen.getByRole("button", { name: /add your first album/i }),
+    );
+    const dialog = await findDialog("Add album");
+    await user.type(within(dialog).getByLabelText("Title"), "Kind of Blue");
+    await user.type(within(dialog).getByLabelText("Artist"), "Miles Davis");
+    await user.type(within(dialog).getByLabelText(/^Year/), "1959");
+    await user.type(
+      within(dialog).getByLabelText(/^Notes/),
+      " Signed{Enter}First pressing ",
+    );
+    await user.click(within(dialog).getByRole("button", { name: "Add" }));
+
+    await waitFor(() => expect(byline()).toBe("Miles Davis · 1959"));
+    expect(saved()).toEqual([
+      expect.objectContaining({
+        year: 1959,
+        notes: "Signed\nFirst pressing",
+      }),
+    ]);
+    await user.click(
+      screen.getByRole("button", { name: "Notes on Kind of Blue" }),
+    );
+    // Only in the document: popovers stay mid-animation in jsdom.
+    expect(
+      await screen.findByText("Signed First pressing"),
+    ).toBeInTheDocument();
+  });
+
+  it("won't take a year it can't read", async () => {
+    const user = renderApp();
+
+    await user.click(screen.getByRole("button", { name: /add album/i }));
+    const dialog = await findDialog("Add album");
+    await user.type(within(dialog).getByLabelText("Title"), "Kind of Blue");
+    await user.type(within(dialog).getByLabelText("Artist"), "Miles Davis");
+    await user.type(within(dialog).getByLabelText(/^Year/), "59");
+    await user.click(within(dialog).getByRole("button", { name: "Add" }));
+
+    expect(
+      await within(dialog).findByText("Enter a year, like 1959"),
+    ).toBeVisible();
+    expect(saved()).toEqual([]);
+  });
+
+  it("saves an edit to just the notes", async () => {
+    const user = renderApp(ALBUMS);
+
+    await user.click(screen.getByRole("button", { name: "Edit Kind of Blue" }));
+    const dialog = await findDialog("Edit album");
+    await user.type(within(dialog).getByLabelText(/^Notes/), "Signed");
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    await waitFor(() =>
+      expect(saved()[0]).toEqual({
+        ...ALBUMS[0],
+        notes: "Signed",
+        updatedAt: expect.any(String),
+      }),
+    );
+  });
+
+  it("sorts by year, and filters by decade or by having no year", async () => {
+    const [kindOfBlue, inRainbows, blueLines] = ALBUMS;
+    const user = renderApp([
+      { ...kindOfBlue, year: 1959 },
+      inRainbows,
+      { ...blueLines, year: 1991 },
+    ]);
+
+    await choose(user, "Sort order", "Year (newest)");
+    expect(cardTitles()).toEqual(["Blue Lines", "Kind of Blue", "In Rainbows"]);
+    await choose(user, "Filter by year", "1950s");
+    expect(cardTitles()).toEqual(["Kind of Blue"]);
+    await choose(user, "Filter by year", "No year");
+    expect(cardTitles()).toEqual(["In Rainbows"]);
+  });
+
+  it("only offers the year filter while some album has a year, and stops filtering without it", async () => {
+    const user = renderApp([{ ...ALBUMS[0], year: 1959 }, ALBUMS[1]]);
+    await choose(user, "Filter by year", "1950s");
+    expect(cardTitles()).toEqual(["Kind of Blue"]);
+
+    await user.click(screen.getByRole("button", { name: "Edit Kind of Blue" }));
+    const dialog = await findDialog("Edit album");
+    await user.clear(within(dialog).getByLabelText(/^Year/));
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    await waitFor(() =>
+      expect(cardTitles()).toEqual(["In Rainbows", "Kind of Blue"]),
+    );
+    expect(
+      screen.queryByRole("combobox", { name: "Filter by year" }),
+    ).toBeNull();
+  });
+});

@@ -81,6 +81,51 @@ describe("cover search in the album form", () => {
     );
   });
 
+  it("fills in the year from the cover you pick, but not over one you typed", async () => {
+    const reissue: CoverResult = {
+      ...KIND_OF_BLUE,
+      id: "rg-2",
+      year: "1997",
+      thumbnailUrl: "https://coverartarchive.org/release-group/rg-2/front-250",
+      imageUrl: "https://coverartarchive.org/release-group/rg-2/front-500",
+    };
+    vi.mocked(searchCovers).mockResolvedValue([KIND_OF_BLUE, reissue]);
+    const { user, dialog, onSubmit } = await renderForm();
+    const year = within(dialog).getByLabelText(/^Year/);
+    await user.type(within(dialog).getByLabelText("Title"), "Kind of Blue");
+    await user.type(within(dialog).getByLabelText("Artist"), "Miles Davis");
+    await user.click(
+      within(dialog).getByRole("button", { name: /find covers/i }),
+    );
+
+    await user.click(
+      await within(dialog).findByRole("button", {
+        name: "Kind of Blue 1997 · Miles Davis",
+      }),
+    );
+    expect(year).toHaveValue("1997");
+    // Another pick replaces the year the last one filled in.
+    await user.click(
+      within(dialog).getByRole("button", {
+        name: "Kind of Blue 1959 · Miles Davis",
+      }),
+    );
+    expect(year).toHaveValue("1959");
+    await user.clear(year);
+    await user.type(year, "1958");
+    await user.click(
+      within(dialog).getByRole("button", {
+        name: "Kind of Blue 1997 · Miles Davis",
+      }),
+    );
+    expect(year).toHaveValue("1958");
+
+    await user.click(within(dialog).getByRole("button", { name: "Add" }));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ coverUrl: reissue.imageUrl, year: 1958 }),
+    );
+  });
+
   it("says when nothing was found", async () => {
     vi.mocked(searchCovers).mockResolvedValue([]);
     const { user, dialog } = await renderForm();

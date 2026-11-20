@@ -6,7 +6,9 @@ import { createStyles } from "antd-style";
 import { FORMAT_LABELS } from "../../albumFormats";
 import { Album } from "../../types";
 import { DeleteAlbumButton, EditAlbumButton } from "../AlbumActionButtons";
+import { AlbumByline } from "../AlbumByline";
 import { AlbumCheckbox, AlbumSelection } from "../AlbumCheckbox";
+import { AlbumNotesButton } from "../AlbumNotesButton";
 import { AlbumStatusSwitch } from "../AlbumStatusSwitch";
 
 const useCoverStyles = createStyles(({ token }) => ({
@@ -29,14 +31,7 @@ const useCardStyles = createStyles(({ token }) => ({
   // status line wraps can't leave its neighbours' buttons out of line.
   card: { display: "flex", flexDirection: "column" },
   body: { flex: 1 },
-  // One line, like the title, so a long artist name can't push this card's
-  // switch and buttons out of line with its neighbours.
-  artist: {
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-  },
-  // As tall as a format tag even without one, for the same reason.
+  // As tall as a format tag even without one, so cards without one line up.
   statusLine: { marginTop: 12, minHeight: token.controlHeightSM },
   // The buttons fill the action bar edge to edge, at the bar's usual height.
   // The tripled class outweighs antd's ".ant-card .ant-card-actions > li".
@@ -120,7 +115,7 @@ export function AlbumCard({
       {selection && <AlbumCheckbox album={album} selection={selection} />}
       <Card.Meta
         title={album.title}
-        description={<div className={styles.artist}>{album.artist}</div>}
+        description={<AlbumByline album={album} />}
       />
       <Flex
         gap="small"
@@ -131,6 +126,7 @@ export function AlbumCard({
       >
         <AlbumStatusSwitch album={album} onChange={onStatusChange} />
         {album.format && <Tag>{FORMAT_LABELS[album.format]}</Tag>}
+        <AlbumNotesButton album={album} />
       </Flex>
     </Card>
   );

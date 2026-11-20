@@ -5,7 +5,9 @@ import { PictureOutlined } from "@ant-design/icons";
 import { FORMAT_LABELS } from "../../albumFormats";
 import { Album } from "../../types";
 import { DeleteAlbumButton, EditAlbumButton } from "../AlbumActionButtons";
+import { AlbumByline } from "../AlbumByline";
 import { AlbumCheckbox, AlbumSelection } from "../AlbumCheckbox";
+import { AlbumNotesButton } from "../AlbumNotesButton";
 import { AlbumStatusSwitch } from "../AlbumStatusSwitch";
 
 function AlbumThumbnail({ album }: { album: Album }) {
@@ -60,8 +62,8 @@ export function AlbumRow({
           <Typography.Text strong ellipsis>
             {album.title}
           </Typography.Text>
-          <Typography.Text type="secondary" ellipsis>
-            {album.artist}
+          <Typography.Text type="secondary">
+            <AlbumByline album={album} />
           </Typography.Text>
           {/* As tall as a format tag even without one, so rows match. The
               tag wraps below the switch when a phone has no room for both. */}
@@ -74,6 +76,7 @@ export function AlbumRow({
           >
             <AlbumStatusSwitch album={album} onChange={onStatusChange} />
             {album.format && <Tag>{FORMAT_LABELS[album.format]}</Tag>}
+            <AlbumNotesButton album={album} />
           </Flex>
         </Flex>
         {!selection && (
