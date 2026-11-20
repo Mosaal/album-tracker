@@ -11,7 +11,7 @@ import {
 } from "vitest";
 
 import App from "../../App";
-import { readJson } from "../../files/json";
+import { readJson } from "../../importExport/json";
 import { createSetupCode } from "../../sync/setupCode";
 import { createSyncFile } from "../../sync/syncFile";
 import { createFakeGitHub } from "../../test/fakeGitHub";

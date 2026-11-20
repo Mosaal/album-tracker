@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { readJson } from "../files/json";
+import { readJson } from "../importExport/json";
 import { Album, Collection } from "../types";
 import {
   createSyncFile,

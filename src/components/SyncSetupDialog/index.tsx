@@ -4,7 +4,7 @@ import { createStyles } from "antd-style";
 
 import { albumCount, findDuplicate } from "../../albums/albumFiles";
 import { GitHubError, parseRepo } from "../../api/github";
-import { downloadJson } from "../../files/downloads";
+import { downloadJson } from "../../importExport/downloads";
 import { SyncConfig } from "../../sync/config";
 import { describeSyncError, SyncEngine } from "../../sync/engine";
 import { NEW_REPO_URL, newTokenUrl } from "../../sync/githubLinks";
