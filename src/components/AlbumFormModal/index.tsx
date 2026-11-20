@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Alert,
   Button,
@@ -9,12 +10,15 @@ import {
   Row,
   Select,
 } from "antd";
+import { BarcodeOutlined } from "@ant-design/icons";
 
 import { findDuplicate } from "../../albumFiles";
 import { FORMAT_LABELS, FORMAT_OPTIONS } from "../../albumFormats";
 import { toYear } from "../../albumYears";
+import { BarcodeAlbum } from "../../api/barcodeLookup";
 import { Album, AlbumFormat, AlbumInput } from "../../types";
 import { AlbumCoverField } from "../AlbumCoverField";
+import { BarcodeScanDialog } from "../BarcodeScanDialog";
 
 const STATUS_OPTIONS: { value: Album["status"]; label: string }[] = [
   { value: "owned", label: "Owned" },
@@ -22,6 +26,15 @@ const STATUS_OPTIONS: { value: Album["status"]; label: string }[] = [
 ];
 
 const NEW_ALBUM: AlbumInput = { title: "", artist: "", status: "owned" };
+
+// What a barcode fills in. Status and notes are left as they are.
+const SCANNED_FIELDS = [
+  "title",
+  "artist",
+  "year",
+  "format",
+  "coverUrl",
+] as const;
 
 // Up to next year, for albums that are on the way.
 async function validateYear(_: unknown, value?: string | number) {
@@ -96,6 +109,37 @@ function SubmitButton(props: DuplicateCheckProps) {
   );
 }
 
+/** Fills in the form with the album a barcode belongs to. */
+function ScanBarcodeButton() {
+  const form = Form.useFormInstance<AlbumInput>();
+  const [isScanning, setIsScanning] = useState(false);
+
+  const fillIn = (album: BarcodeAlbum) => {
+    // setFields also clears any errors left on them.
+    form.setFields(
+      SCANNED_FIELDS.map((name) => ({ name, value: album[name], errors: [] })),
+    );
+    setIsScanning(false);
+  };
+
+  return (
+    <Form.Item>
+      <Button
+        icon={<BarcodeOutlined />}
+        block
+        onClick={() => setIsScanning(true)}
+      >
+        Scan a barcode
+      </Button>
+      <BarcodeScanDialog
+        open={isScanning}
+        onFound={fillIn}
+        onCancel={() => setIsScanning(false)}
+      />
+    </Form.Item>
+  );
+}
+
 export function AlbumFormModal({
   open,
   album,
@@ -153,6 +197,7 @@ export function AlbumFormModal({
         </Form>
       )}
     >
+      {!album && <ScanBarcodeButton />}
       <Form.Item
         name="title"
         label="Title"

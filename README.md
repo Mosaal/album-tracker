@@ -20,6 +20,9 @@ through a GitHub repository of your own.
   [MusicBrainz](https://musicbrainz.org/), which fills in the year too, or
   paste a link to one. You're warned before adding an album that's already in
   your collection.
+- **Adding by barcode:** scan the barcode on a CD or record with your phone's
+  camera, or type the number under it, and MusicBrainz fills in the title,
+  artist, year, format and cover.
 - **Finding them:** search by title or artist, filter by owned or wishlisted,
   format, artist and decade, and sort by title, artist, year or when you added
   them. Browse them as a grid of covers or as a list. Each device opens with
@@ -40,7 +43,7 @@ through a GitHub repository of your own.
 - **It runs in your browser.** Album Tracker is a static web app (React,
   TypeScript, Vite and Ant Design) hosted on GitHub Pages. It has no backend of
   its own: your device does the work, and only contacts MusicBrainz to find
-  covers and, if you turn on sync, GitHub.
+  covers and look up barcodes and, if you turn on sync, GitHub.
 - **Your collection is stored on your device,** in the browser's storage, so it
   opens instantly and works offline. Open tabs stay in step with each other.
 - **The app is stored too.** Once you've opened it, a service worker keeps the
@@ -50,6 +53,11 @@ through a GitHub repository of your own.
   albums on MusicBrainz and shows their covers from the
   [Cover Art Archive](https://coverartarchive.org/), straight from your
   browser.
+- **Barcodes are read on your device.** The camera only runs while the scanner
+  is open, and what it sees never leaves your device: the barcode is read in
+  the browser, with your browser's own barcode reader where it has one, or
+  [ZXing](https://github.com/zxing-cpp/zxing-cpp)'s, which loads the first
+  time you scan. Only the number is looked up on MusicBrainz.
 - **Sync goes through your own GitHub repository.** If you turn it on, your
   collection is kept in a file, `albums.json`, in a private repository you own,
   and each device talks to GitHub directly. Changes are merged album by album,

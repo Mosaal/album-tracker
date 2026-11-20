@@ -2,11 +2,8 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import {
-  CoverResult,
-  CoverSearchError,
-  searchCovers,
-} from "../../api/coverArt";
+import { CoverResult, searchCovers } from "../../api/coverArt";
+import { MusicBrainzError } from "../../api/musicBrainz";
 import { NoMotion } from "../../test/NoMotion";
 import { AlbumFormModal } from "../AlbumFormModal";
 
@@ -159,7 +156,7 @@ describe("cover search in the album form", () => {
 
   it("says when you're offline", async () => {
     vi.mocked(searchCovers).mockRejectedValue(
-      new CoverSearchError("offline", "The browser is offline"),
+      new MusicBrainzError("offline", "The browser is offline"),
     );
     const { user, dialog } = await renderForm();
     await user.type(within(dialog).getByLabelText("Title"), "Kind of Blue");

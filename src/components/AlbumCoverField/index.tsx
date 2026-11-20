@@ -3,17 +3,14 @@ import { Button, Form, Input, Space, Typography } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { createStyles } from "antd-style";
 
-import {
-  CoverResult,
-  CoverSearchError,
-  searchCovers,
-} from "../../api/coverArt";
+import { CoverResult, searchCovers } from "../../api/coverArt";
+import { MusicBrainzError } from "../../api/musicBrainz";
 import { AlbumInput } from "../../types";
 import { isHttpUrl } from "../../urls";
 
 type CoverSearch =
   | { status: "idle" | "loading" }
-  | { status: "error"; reason: CoverSearchError["reason"] }
+  | { status: "error"; reason: MusicBrainzError["reason"] }
   | { status: "done"; covers: CoverResult[] };
 
 const useStyles = createStyles(({ token }) => ({
@@ -105,7 +102,7 @@ export function AlbumCoverField() {
         setSearch({
           status: "error",
           reason:
-            error instanceof CoverSearchError ? error.reason : "unavailable",
+            error instanceof MusicBrainzError ? error.reason : "unavailable",
         });
       }
     }

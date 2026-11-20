@@ -18,8 +18,10 @@
     "@ant-design/icons": "^6.3.4",
     "antd": "^6.6.4",
     "antd-style": "^4.1.0",
+    "barcode-detector": "^3.2.4",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "zxing-wasm": "3.1.7"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
