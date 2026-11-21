@@ -1,8 +1,8 @@
 import { useCallback, useSyncExternalStore } from "react";
 
-import { mergeAlbums } from "../albumFiles";
-import { CollectionStore } from "../albumStore";
-import { nextTimestamp } from "../timestamps";
+import { mergeAlbums } from "../albums/albumFiles";
+import { CollectionStore } from "../albums/albumStore";
+import { nextTimestamp } from "../albums/timestamps";
 import { Album, AlbumInput, DeletedAlbum } from "../types";
 
 const sameDetails = (album: Album, input: AlbumInput) =>

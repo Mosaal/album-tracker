@@ -17,7 +17,10 @@ import {
   toBarcode,
 } from "../../api/barcodeLookup";
 import { MusicBrainzError } from "../../api/musicBrainz";
-import { BarcodeReader, createBarcodeReader } from "../../barcodeReader";
+import {
+  BarcodeReader,
+  createBarcodeReader,
+} from "../../barcodes/barcodeReader";
 
 // Often enough to feel instant, without keeping a phone's processor busy.
 const SCAN_INTERVAL_MS = 250;

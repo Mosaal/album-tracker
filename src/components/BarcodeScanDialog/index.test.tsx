@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { BarcodeAlbum, lookUpBarcode } from "../../api/barcodeLookup";
 import { MusicBrainzError } from "../../api/musicBrainz";
-import { createBarcodeReader } from "../../barcodeReader";
+import { createBarcodeReader } from "../../barcodes/barcodeReader";
 import { NoMotion } from "../../test/NoMotion";
 import { AlbumFormModal } from "../AlbumFormModal";
 
@@ -12,7 +12,9 @@ vi.mock("../../api/barcodeLookup", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../../api/barcodeLookup")>()),
   lookUpBarcode: vi.fn(),
 }));
-vi.mock("../../barcodeReader", () => ({ createBarcodeReader: vi.fn() }));
+vi.mock("../../barcodes/barcodeReader", () => ({
+  createBarcodeReader: vi.fn(),
+}));
 
 const OK_COMPUTER: BarcodeAlbum = {
   title: "OK Computer",

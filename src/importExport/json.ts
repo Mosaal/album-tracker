@@ -1,5 +1,5 @@
-import { isRecord, toAlbum } from "./albumFiles";
-import { Album } from "./types";
+import { isRecord, toAlbum } from "../albums/albumFiles";
+import { Album } from "../types";
 
 const FORMAT = "album-tracker";
 

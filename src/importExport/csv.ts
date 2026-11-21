@@ -1,6 +1,6 @@
-import { toAlbum } from "./albumFiles";
-import { FORMAT_LABELS } from "./albumFormats";
-import { Album } from "./types";
+import { toAlbum } from "../albums/albumFiles";
+import { FORMAT_LABELS } from "../albums/albumFormats";
+import { Album } from "../types";
 
 const HEADER = [
   "Title",

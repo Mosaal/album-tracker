@@ -1,4 +1,4 @@
-import { timeOf } from "../timestamps";
+import { timeOf } from "../albums/timestamps";
 import { Album, Collection } from "../types";
 
 /** The more recently changed version of an album. The second wins a tie. */

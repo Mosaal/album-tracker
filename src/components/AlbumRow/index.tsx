@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Avatar, Card, Flex, Tag, theme, Typography } from "antd";
 import { PictureOutlined } from "@ant-design/icons";
 
-import { FORMAT_LABELS } from "../../albumFormats";
+import { FORMAT_LABELS } from "../../albums/albumFormats";
 import { Album } from "../../types";
 import { DeleteAlbumButton, EditAlbumButton } from "../AlbumActionButtons";
 import { AlbumByline } from "../AlbumByline";

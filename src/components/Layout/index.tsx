@@ -11,7 +11,7 @@ import {
 import { createStyles } from "antd-style";
 
 import { useMediaQuery, useThemeMode } from "../../hooks";
-import { getThemeConfig } from "../../theme";
+import { getThemeConfig } from "./theme";
 
 interface LayoutProps {
   children?: React.ReactNode;

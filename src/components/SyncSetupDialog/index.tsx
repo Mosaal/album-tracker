@@ -2,9 +2,9 @@ import { useState } from "react";
 import { Alert, Button, Form, Input, Modal, Tabs, Typography } from "antd";
 import { createStyles } from "antd-style";
 
-import { albumCount, findDuplicate } from "../../albumFiles";
+import { albumCount, findDuplicate } from "../../albums/albumFiles";
 import { GitHubError, parseRepo } from "../../api/github";
-import { downloadJson } from "../../downloads";
+import { downloadJson } from "../../importExport/downloads";
 import { SyncConfig } from "../../sync/config";
 import { describeSyncError, SyncEngine } from "../../sync/engine";
 import { NEW_REPO_URL, newTokenUrl } from "../../sync/githubLinks";

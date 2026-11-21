@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Button, Empty, Flex, message, Modal } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { createStyles } from "antd-style";
-import { albumCount } from "./albumFiles";
-import { listArtists, listDecades, selectAlbums } from "./albumList";
-import { createCollectionStore } from "./albumStore";
+import { albumCount } from "./albums/albumFiles";
+import { listArtists, listDecades, selectAlbums } from "./albums/albumList";
+import { createCollectionStore } from "./albums/albumStore";
 import {
   AlbumCard,
   AlbumFilters,

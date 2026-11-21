@@ -1,6 +1,6 @@
 import { vi } from "vitest";
 
-import { decodeBase64, encodeBase64 } from "../base64";
+import { decodeBase64, encodeBase64 } from "../utils/base64";
 
 interface FakeGitHubOptions {
   repo?: string;

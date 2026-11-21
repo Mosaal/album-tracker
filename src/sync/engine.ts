@@ -1,4 +1,4 @@
-import { CollectionStore } from "../albumStore";
+import { CollectionStore } from "../albums/albumStore";
 import { createGitHubClient, GitHubClient, GitHubError } from "../api/github";
 import { Collection } from "../types";
 import {

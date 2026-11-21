@@ -1,6 +1,6 @@
 import { Button, Form, Modal, Segmented, Select, Typography } from "antd";
 
-import { FORMAT_OPTIONS } from "../../albumFormats";
+import { FORMAT_OPTIONS } from "../../albums/albumFormats";
 import { GridDensity, Settings } from "../../types";
 
 const DENSITY_OPTIONS: { value: GridDensity; label: string }[] = [

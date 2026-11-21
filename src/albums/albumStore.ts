@@ -1,4 +1,4 @@
-import { Collection } from "./types";
+import { Collection } from "../types";
 
 const ALBUMS_KEY = "album-tracker:albums";
 const DELETED_KEY = "album-tracker:deleted";

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createCollectionStore } from "../albumStore";
+import { createCollectionStore } from "../albums/albumStore";
 import { GitHubError } from "../api/github";
 import { createFakeGitHub, createMemoryStorage } from "../test/fakeGitHub";
 import { Album, Collection } from "../types";

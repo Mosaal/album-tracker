@@ -1,6 +1,6 @@
+import { Album } from "../types";
 import { createCsv } from "./csv";
 import { createJson } from "./json";
-import { Album } from "./types";
 
 function download(fileName: string, contents: string, type: string) {
   const url = URL.createObjectURL(new Blob([contents], { type }));

@@ -9,10 +9,10 @@ import {
   UploadOutlined,
 } from "@ant-design/icons";
 
-import { albumCount, describeImport } from "../../albumFiles";
-import { InvalidCsvError, readCsv } from "../../csv";
-import { downloadCsv, downloadJson } from "../../downloads";
-import { InvalidJsonError, readJson } from "../../json";
+import { albumCount, describeImport } from "../../albums/albumFiles";
+import { InvalidCsvError, readCsv } from "../../importExport/csv";
+import { downloadCsv, downloadJson } from "../../importExport/downloads";
+import { InvalidJsonError, readJson } from "../../importExport/json";
 import { Album } from "../../types";
 
 interface MoreActionsMenuProps {

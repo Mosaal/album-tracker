@@ -12,9 +12,9 @@ import {
 } from "antd";
 import { BarcodeOutlined } from "@ant-design/icons";
 
-import { findDuplicate } from "../../albumFiles";
-import { FORMAT_LABELS, FORMAT_OPTIONS } from "../../albumFormats";
-import { toYear } from "../../albumYears";
+import { findDuplicate } from "../../albums/albumFiles";
+import { FORMAT_LABELS, FORMAT_OPTIONS } from "../../albums/albumFormats";
+import { toYear } from "../../albums/albumYears";
 import { BarcodeAlbum } from "../../api/barcodeLookup";
 import { Album, AlbumFormat, AlbumInput } from "../../types";
 import { AlbumCoverField } from "../AlbumCoverField";

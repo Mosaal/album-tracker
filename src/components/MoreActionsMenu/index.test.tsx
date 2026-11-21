@@ -3,8 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import App from "../../App";
-import { createCsv, readCsv } from "../../csv";
-import { createJson, readJson } from "../../json";
+import { createCsv, readCsv } from "../../importExport/csv";
+import { createJson, readJson } from "../../importExport/json";
 import { NoMotion } from "../../test/NoMotion";
 import { Album } from "../../types";
 
