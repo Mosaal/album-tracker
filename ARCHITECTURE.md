@@ -37,25 +37,25 @@ Pages. There's no Album Tracker server, API or database. Everything happens in
 the browser, which talks to two outside services directly.
 
 ```mermaid
-flowchart LR
+flowchart TB
+    pages["GitHub Pages"]
     subgraph device["Your browser"]
+        sw["Service worker"]
         ui["Interface<br/>App.tsx and components"]
         store["Collection store<br/>albums/albumStore.ts"]
         storage[("localStorage")]
         engine["Sync engine<br/>sync/engine.ts"]
-        sw["Service worker"]
     end
-    pages["GitHub Pages"]
     mb["MusicBrainz and<br/>Cover Art Archive"]
     repo["Your GitHub repository<br/>albums.json"]
 
     pages -->|the app's files| sw
     sw -->|the app, online or offline| ui
     ui -->|changes, through hooks| store
+    ui -->|cover searches and barcodes| mb
     store <--> storage
     store <--> engine
     engine <-->|GitHub's API| repo
-    ui -->|cover searches and barcodes| mb
 ```
 
 - **The interface** is React with Ant Design. There's one screen,
