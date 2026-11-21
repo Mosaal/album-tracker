@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/Mosaal/album-tracker/compare/v0.9.0...v0.10.0) (2026-11-21)
+
+
+### Features
+
+* add albums by scanning their barcode ([#51](https://github.com/Mosaal/album-tracker/issues/51)) ([8dbf7de](https://github.com/Mosaal/album-tracker/commit/8dbf7de08d255096a148bf7545fa017aeacbba94))
+
 ## [0.9.0](https://github.com/Mosaal/album-tracker/compare/v0.8.0...v0.9.0) (2026-11-20)
 
 
