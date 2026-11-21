@@ -181,7 +181,8 @@ npm run dev
 | `src/utils`        | Small helpers, like Base64                                              |
 
 `src/App.tsx` puts the app together, and `src/types.ts` has the types shared
-across it. Tests sit next to the code they test.
+across it. Tests sit next to the code they test. For how it all works, and
+why, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Contributing
 
