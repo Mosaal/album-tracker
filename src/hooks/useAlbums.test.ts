@@ -117,6 +117,22 @@ describe("useAlbums", () => {
     ]);
   });
 
+  it("sets the format of the albums given, noting which ones changed", () => {
+    const result = renderAlbums([
+      { ...KIND_OF_BLUE, id: "1" },
+      { ...KIND_OF_BLUE, id: "2", format: "cd" },
+      { ...KIND_OF_BLUE, id: "3", format: "vinyl" },
+    ]);
+
+    act(() => result.current.setAlbumsFormat(["1", "3"], "vinyl"));
+
+    expect(saved()).toEqual([
+      { ...KIND_OF_BLUE, id: "1", format: "vinyl", updatedAt: NOW },
+      { ...KIND_OF_BLUE, id: "2", format: "cd" },
+      { ...KIND_OF_BLUE, id: "3", format: "vinyl" },
+    ]);
+  });
+
   it("never notes a change as older than the newest one it has", () => {
     // From a device whose clock ran ahead.
     const result = renderAlbums([

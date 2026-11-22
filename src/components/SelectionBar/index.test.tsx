@@ -52,6 +52,29 @@ describe("selecting albums", () => {
     expect(screen.queryByRole("checkbox")).toBeNull();
   });
 
+  it("sets the format of the selected albums", async () => {
+    const user = await startSelecting();
+
+    await user.click(
+      screen.getByRole("checkbox", { name: "Select Kind of Blue" }),
+    );
+    await user.click(
+      screen.getByRole("checkbox", { name: "Select Blue Lines" }),
+    );
+    await user.click(screen.getByRole("button", { name: /set format/i }));
+    await user.click(await screen.findByRole("menuitem", { name: "Vinyl" }));
+
+    expect(saved().map((album) => album.format)).toEqual([
+      "vinyl",
+      undefined,
+      "vinyl",
+    ]);
+    expect(
+      await screen.findByText("Set the format of 2 albums to Vinyl."),
+    ).toBeVisible();
+    expect(screen.queryByRole("checkbox")).toBeNull();
+  });
+
   it("deletes the selected albums after confirming, with Undo", async () => {
     const user = await startSelecting();
     await user.click(screen.getByRole("button", { name: "Select all" }));
@@ -93,6 +116,7 @@ describe("selecting albums", () => {
     await user.type(search, "rainbows");
     expect(screen.getByText("0 albums selected")).toBeVisible();
     expect(screen.getByRole("button", { name: "Mark owned" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /set format/i })).toBeDisabled();
 
     await user.keyboard("{Escape}");
     expect(screen.queryByText(/selected$/)).toBeNull();

@@ -3,7 +3,13 @@ import { useCallback, useSyncExternalStore } from "react";
 import { mergeAlbums } from "../albums/albumFiles";
 import { CollectionStore } from "../albums/albumStore";
 import { nextTimestamp } from "../albums/timestamps";
-import { Album, AlbumInput, DeletedAlbum } from "../types";
+import {
+  Album,
+  AlbumFormat,
+  AlbumInput,
+  Collection,
+  DeletedAlbum,
+} from "../types";
 
 const sameDetails = (album: Album, input: AlbumInput) =>
   album.title === input.title &&
@@ -13,6 +19,31 @@ const sameDetails = (album: Album, input: AlbumInput) =>
   album.format === input.format &&
   album.status === input.status &&
   album.notes === input.notes;
+
+/**
+ * Gives the albums with these ids the same status or format. Only the ones
+ * that change get a new updatedAt.
+ */
+const setField =
+  <Key extends "status" | "format">(
+    ids: string[],
+    key: Key,
+    value: Album[Key],
+  ) =>
+  (current: Collection): Collection => {
+    const changes = (album: Album) =>
+      ids.includes(album.id) && album[key] !== value;
+    if (!current.albums.some(changes)) {
+      return current;
+    }
+    const now = nextTimestamp(current);
+    return {
+      ...current,
+      albums: current.albums.map((album) =>
+        changes(album) ? { ...album, [key]: value, updatedAt: now } : album,
+      ),
+    };
+  };
 
 /** Drops the deletion records of albums that are back in the collection. */
 const forgetDeleted = (deleted: DeletedAlbum[], ids: string[]) =>
@@ -68,22 +99,14 @@ export function useAlbums(store: CollectionStore) {
   );
 
   const setAlbumsStatus = useCallback(
-    (ids: string[], status: Album["status"]) => {
-      store.update((current) => {
-        const changes = (album: Album) =>
-          ids.includes(album.id) && album.status !== status;
-        if (!current.albums.some(changes)) {
-          return current;
-        }
-        const now = nextTimestamp(current);
-        return {
-          ...current,
-          albums: current.albums.map((album) =>
-            changes(album) ? { ...album, status, updatedAt: now } : album,
-          ),
-        };
-      });
-    },
+    (ids: string[], status: Album["status"]) =>
+      store.update(setField(ids, "status", status)),
+    [store],
+  );
+
+  const setAlbumsFormat = useCallback(
+    (ids: string[], format: AlbumFormat) =>
+      store.update(setField(ids, "format", format)),
     [store],
   );
 
@@ -174,6 +197,7 @@ export function useAlbums(store: CollectionStore) {
     addAlbum,
     updateAlbum,
     setAlbumsStatus,
+    setAlbumsFormat,
     deleteAlbums,
     importAlbums,
   };
