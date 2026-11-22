@@ -33,7 +33,9 @@ through a GitHub repository of your own.
   delete them at once. Deleting can be undone.
 - **Bringing your list:** import a JSON or CSV file, such as a spreadsheet with
   Title and Artist columns or a [Discogs](https://www.discogs.com/) collection
-  export. Export your collection as either, for a backup or a spreadsheet.
+  export, or a folder of music files, such as your CD rips or downloads, whose
+  albums are added as ones you own, in the format you pick. Export your
+  collection as JSON or CSV, for a backup or a spreadsheet.
 - **All your devices:** install it on your phone or computer, use it offline,
   and keep the same collection everywhere with
   [sync](#sync-across-devices).
@@ -60,6 +62,13 @@ through a GitHub repository of your own.
   the browser, with your browser's own barcode reader where it has one, or
   [ZXing](https://github.com/zxing-cpp/zxing-cpp)'s, which loads the first
   time you scan. Only the number is looked up on MusicBrainz.
+- **Music files are read on your device too.** Importing a music folder reads
+  the album, artist and year from each file's tags in your browser, with
+  [music-metadata](https://github.com/Borewit/music-metadata), which loads the
+  first time you import one. The files aren't uploaded anywhere. Covers come
+  from the [Cover Art Archive](https://coverartarchive.org/) for files tagged
+  with MusicBrainz ids, as [MusicBrainz Picard](https://picard.musicbrainz.org/)
+  tags them.
 - **Sync goes through your own GitHub repository.** If you turn it on, your
   collection is kept in a file, `albums.json`, in a private repository you own,
   and each device talks to GitHub directly. Changes are merged album by album,
@@ -177,7 +186,7 @@ npm run dev
 | `src/barcodes`     | Reading barcodes with the camera                                        |
 | `src/components`   | The interface, a folder for each component                              |
 | `src/hooks`        | React hooks the components share                                        |
-| `src/importExport` | Importing and exporting JSON and CSV files                              |
+| `src/importExport` | Importing and exporting JSON and CSV files, and reading music folders   |
 | `src/sync`         | Syncing through GitHub                                                  |
 | `src/test`         | Helpers for the tests                                                   |
 | `src/utils`        | Small helpers, like Base64                                              |

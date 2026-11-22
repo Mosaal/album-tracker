@@ -4,6 +4,7 @@ import {
   CheckSquareOutlined,
   DownloadOutlined,
   EllipsisOutlined,
+  FolderOpenOutlined,
   GithubOutlined,
   SettingOutlined,
   UploadOutlined,
@@ -25,6 +26,8 @@ interface MoreActionsMenuProps {
   onOpenSettings: () => void;
   albums: Album[];
   onImport: (albums: Album[]) => { added: number; skipped: number };
+  /** Opens the dialog that imports the albums in a folder of music files. */
+  onImportMusicFolder: () => void;
 }
 
 const isCsv = (file: File) =>
@@ -32,11 +35,12 @@ const isCsv = (file: File) =>
 
 /**
  * The ⋯ menu: select albums, sync with GitHub, save the collection to a file,
- * add albums from one, or change settings.
+ * add albums from one or from a folder of music, or change settings.
  */
 export function MoreActionsMenu({
   albums,
   onImport,
+  onImportMusicFolder,
   onSelectAlbums,
   isSyncConnected,
   onOpenSync,
@@ -124,6 +128,11 @@ export function MoreActionsMenu({
               icon: <UploadOutlined />,
               label: "Import JSON or CSV",
             },
+            {
+              key: "import-music",
+              icon: <FolderOpenOutlined />,
+              label: "Import music folder…",
+            },
             { type: "divider" },
             {
               key: "settings",
@@ -142,6 +151,8 @@ export function MoreActionsMenu({
               exportJson();
             } else if (key === "export-csv") {
               exportCsv();
+            } else if (key === "import-music") {
+              onImportMusicFolder();
             } else {
               fileInput.current?.click();
             }

@@ -90,21 +90,23 @@ A few ideas explain most of the decisions below.
   sync and the outside services are plain functions and objects, which the
   tests call directly.
 - **Load only what's needed.** The barcode reader loads the first time someone
-  scans, covers load as they scroll into view, and the first paint doesn't
-  wait for the JavaScript.
+  scans, the music folder import the first time someone opens it, covers load
+  as they scroll into view, and the first paint doesn't wait for the
+  JavaScript.
 
 ## Tech stack
 
-| What                                            | Used for                                    | Why                                                                                                                              |
-| ----------------------------------------------- | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| React 19 and TypeScript (strict)                | The interface and everything else           | Components and hooks suit a single interactive screen, and types catch mistakes in the data rules                                |
-| Vite 8                                          | The dev server and the build                | Fast, with little config. The build runs `tsc` first, so type errors fail it                                                     |
-| Ant Design 6, antd-style, `@ant-design/icons`   | Components, theming and styles              | A complete, accessible set of components with light and dark themes. antd-style writes each component's styles with theme tokens |
-| vite-plugin-pwa (Workbox)                       | The service worker and the web app manifest | Installable and offline with a few lines of config                                                                               |
-| `barcode-detector` and `zxing-wasm`             | Reading barcodes where the browser can't    | The same API as the browser's own `BarcodeDetector`, backed by ZXing compiled to WebAssembly                                     |
-| Vitest, Testing Library and jsdom               | Tests                                       | Vitest shares Vite's config, and Testing Library tests the app the way people use it                                             |
-| ESLint and Prettier                             | Linting and formatting                      | Checked in CI                                                                                                                    |
-| GitHub Actions, release-please and GitHub Pages | CI, releases and hosting                    | Free, with nothing to run                                                                                                        |
+| What                                            | Used for                                    | Why                                                                                                                                |
+| ----------------------------------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| React 19 and TypeScript (strict)                | The interface and everything else           | Components and hooks suit a single interactive screen, and types catch mistakes in the data rules                                  |
+| Vite 8                                          | The dev server and the build                | Fast, with little config. The build runs `tsc` first, so type errors fail it                                                       |
+| Ant Design 6, antd-style, `@ant-design/icons`   | Components, theming and styles              | A complete, accessible set of components with light and dark themes. antd-style writes each component's styles with theme tokens   |
+| vite-plugin-pwa (Workbox)                       | The service worker and the web app manifest | Installable and offline with a few lines of config                                                                                 |
+| `barcode-detector` and `zxing-wasm`             | Reading barcodes where the browser can't    | The same API as the browser's own `BarcodeDetector`, backed by ZXing compiled to WebAssembly                                       |
+| `music-metadata`                                | Reading the tags of music files             | Reads the tags of every common audio format in the browser, a slice of each file at a time, loading each format's parser as needed |
+| Vitest, Testing Library and jsdom               | Tests                                       | Vitest shares Vite's config, and Testing Library tests the app the way people use it                                               |
+| ESLint and Prettier                             | Linting and formatting                      | Checked in CI                                                                                                                      |
+| GitHub Actions, release-please and GitHub Pages | CI, releases and hosting                    | Free, with nothing to run                                                                                                          |
 
 There's no router, state library or data-fetching library. The app has one
 screen, one small store and a handful of `fetch` calls, so they wouldn't earn
@@ -127,14 +129,14 @@ Tests sit next to the code they test, as `*.test.ts` or `*.test.tsx`.
 
 ### `src/albums`: albums and their rules
 
-| File              | What it does                                                                                                             |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `albumStore.ts`   | The collection store: saves the albums and deleted albums in `localStorage`, and announces every change, other tabs' too |
-| `albumFiles.ts`   | Checks albums read from files (`toAlbum`), finds duplicates, adds imported albums, and words import summaries            |
-| `albumFormats.ts` | The five formats, their labels, and the names files use for them                                                         |
-| `albumYears.ts`   | Reads years, and works out decades                                                                                       |
-| `albumList.ts`    | Searches, filters, sorts and groups the albums for the screen, and lists the artists and decades to filter by            |
-| `timestamps.ts`   | Reads and compares dates, and picks the time to record a change at                                                       |
+| File              | What it does                                                                                                                                                               |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `albumStore.ts`   | The collection store: saves the albums and deleted albums in `localStorage`, and announces every change, other tabs' too                                                   |
+| `albumFiles.ts`   | Checks albums read from files (`toAlbum`), finds duplicates, adds imported albums, compares albums found in a music folder with the collection, and words import summaries |
+| `albumFormats.ts` | The five formats, their labels, and the names files use for them                                                                                                           |
+| `albumYears.ts`   | Reads years, and works out decades                                                                                                                                         |
+| `albumList.ts`    | Searches, filters, sorts and groups the albums for the screen, and lists the artists and decades to filter by                                                              |
+| `timestamps.ts`   | Reads and compares dates, and picks the time to record a change at                                                                                                         |
 
 ### `src/api`: the outside services
 
@@ -154,11 +156,13 @@ Tests sit next to the code they test, as `*.test.ts` or `*.test.tsx`.
 
 ### `src/importExport`: files
 
-| File           | What it does                                                     |
-| -------------- | ---------------------------------------------------------------- |
-| `json.ts`      | Writes and reads JSON exports                                    |
-| `csv.ts`       | Writes and reads CSV files, including Discogs collection exports |
-| `downloads.ts` | Saves an export as a file named with the date                    |
+| File              | What it does                                                                           |
+| ----------------- | -------------------------------------------------------------------------------------- |
+| `json.ts`         | Writes and reads JSON exports                                                          |
+| `csv.ts`          | Writes and reads CSV files, including Discogs collection exports                       |
+| `downloads.ts`    | Saves an export as a file named with the date                                          |
+| `musicTags.ts`    | Reads the tags of music files, with music-metadata, which it loads when first needed   |
+| `musicLibrary.ts` | Puts the tracks of a music folder together into albums, and says which look incomplete |
 
 ### `src/sync`: syncing through GitHub
 
@@ -174,19 +178,20 @@ Tests sit next to the code they test, as `*.test.ts` or `*.test.tsx`.
 
 ### `src/hooks`: React hooks
 
-| File               | What it does                                                                    |
-| ------------------ | ------------------------------------------------------------------------------- |
-| `useAlbums.ts`     | The albums, and every change to them: add, edit, mark, delete with undo, import |
-| `useGitHubSync.ts` | Creates and starts the sync engine, and follows its state                       |
-| `useSettings.ts`   | This device's settings                                                          |
-| `useThemeMode.ts`  | Light, dark or the system's theme, whichever was chosen                         |
-| `useMediaQuery.ts` | Whether a CSS media query matches                                               |
+| File               | What it does                                                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `useAlbums.ts`     | The albums, and every change to them: add, edit, mark, delete with undo, import from files and music folders |
+| `useGitHubSync.ts` | Creates and starts the sync engine, and follows its state                                                    |
+| `useSettings.ts`   | This device's settings                                                                                       |
+| `useThemeMode.ts`  | Light, dark or the system's theme, whichever was chosen                                                      |
+| `useMediaQuery.ts` | Whether a CSS media query matches                                                                            |
 
 ### `src/components`: the interface
 
 Each component has a folder with an `index.tsx`, and some an `index.test.tsx`.
-`src/components/index.ts` only exports the ones `App.tsx` uses. The rest are
-parts of those.
+`src/components/index.ts` exports the ones `App.tsx` uses, except
+`MusicFolderDialog`, which `App.tsx` loads the first time it's opened. The rest
+are parts of those.
 
 | Component            | What it is                                                                                                                            |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
@@ -195,6 +200,7 @@ parts of those.
 | `AlbumViewToggle`    | Grid or list                                                                                                                          |
 | `AlbumSection`       | A heading and its albums, when they're grouped                                                                                        |
 | `MoreActionsMenu`    | The ⋯ menu: select albums, sync, export, import and settings                                                                          |
+| `MusicFolderDialog`  | Imports the albums in a folder of music files: choose the folder, read it, pick the format and the albums                             |
 | `AlbumCard`          | An album in the grid                                                                                                                  |
 | `AlbumRow`           | An album in the list                                                                                                                  |
 | `AlbumByline`        | The artist and year, like "Miles Davis · 1959"                                                                                        |
@@ -337,6 +343,9 @@ the current collection, given to `store.update`, and records its time with
   new `updatedAt` so they win over the deletion when syncing, and forgets the
   deletion.
 - `importAlbums` adds the albums that aren't in the collection yet.
+- `importMusicFolder` adds albums found in a music folder as owned, in the
+  format chosen, and marks the wishlisted ones found there as owned, in one
+  change.
 
 **`useSettings`** fills in a default for any setting that's missing or can't
 be read. It reads the storage again before each save, so it can't undo a change
@@ -386,8 +395,10 @@ From top to bottom, it renders `Layout` with the header; the toolbar, with
 that `selectAlbums` picks, as `AlbumCard`s in a grid or `AlbumRow`s in a list.
 When they're grouped, `groupAlbums` splits them into sections, each an
 `AlbumSection` with its own grid or list, and a divider between them. The
-dialogs come last: `AlbumFormModal`, `SyncSetupDialog`, `SyncSettingsDialog`
-and `SettingsDialog`.
+dialogs come last: `AlbumFormModal`, `SyncSetupDialog`, `SyncSettingsDialog`,
+`SettingsDialog` and `MusicFolderDialog`. The last is loaded with `lazy()` and
+only rendered once it's first opened, so its code, about 10 kB compressed,
+isn't part of the main bundle.
 
 Some details:
 
@@ -559,6 +570,63 @@ These are all in the ⋯ menu, `MoreActionsMenu`.
   their `addedAt` if they have one, and get a new `updatedAt`. The message says
   how many albums were added, how many were already there, and how many
   couldn't be read.
+
+### Music folders
+
+**Import music folder…** opens `MusicFolderDialog`, which adds the albums in a
+folder of music files, like CD rips or downloads from any store, as albums you
+own.
+
+1. **Choose.** A file input with `webkitdirectory` picks a folder, and gives
+   the page every file in it, with its path. Browsers that can't pick folders
+   pick files instead. Nothing is uploaded: the files are read where they are.
+2. **Read.** `readTracks` (`importExport/musicTags.ts`) keeps the music files,
+   by their extension, and reads their tags with music-metadata, four at a time.
+   It only reads the tags, not the audio or the cover art in them, so a 7 MB
+   MP3 takes about 20 kB of reading. Hidden files, like `.Trashes` or the `._`
+   files macOS leaves on other drives, are skipped, as are audiobooks and
+   podcasts. Album names that start with dots, like "...And Justice for All",
+   aren't hidden. music-metadata is loaded with `import()`, and loads each
+   format's parser when it first meets that format.
+3. **Albums.** `findAlbums` (`importExport/musicLibrary.ts`) puts the tracks
+   together by album artist and title, compared as duplicates are, so the discs
+   of an album, and copies of it in other file types, make one album.
+   - Titles lose disc suffixes like "(Disc 1)" or "[CD 2]", and folders like
+     "CD1" count as part of the album's folder.
+   - The artist is the album artist tag, or Various Artists for a compilation.
+     Without either, in a folder that has one album, it's the artist of more
+     than half the tracks, leaving out guests ("feat."), and Various Artists if
+     no artist has that many. In a folder of loose tracks from many albums, it's
+     each track's artist, without guests.
+   - The year is the one the album first came out, as MusicBrainz Picard tags
+     it, then the year in the tags. Tracks that disagree go by the most common,
+     then the earliest.
+   - The cover comes from the MusicBrainz release group most of the tracks are
+     tagged with, if they have one. Nothing is looked up, so a big folder
+     doesn't send thousands of searches to MusicBrainz.
+   - Files without an album tag go by their folder's name, like "Massive
+     Attack - Mezzanine (1998)", or "OK Computer" in a "Radiohead" folder. The
+     folder chosen is never used as a name, so a "Music" folder can't become an
+     album. Files the app can't place are left out, and counted.
+4. **Review.** Nothing is listed until a format is chosen, as it decides which
+   albums are new. `matchFoundAlbums` (`albums/albumFiles.ts`) compares the
+   albums found with the collection:
+   - Owned in that format, or with no format: already there, so not listed.
+   - On the wishlist in that format, or with no format: ticked, and marked as
+     owned on import, getting the format if it had none.
+   - Owned only in other formats: listed, unticked, saying which.
+   - Anything else is new, including albums wished for in another format: you
+     might want the record even with the download. New albums are ticked
+     unless they look incomplete (`whyIncomplete`): a single, under 3 tracks,
+     or under half the tracks their tags count.
+5. **Import.** `importMusicFolder` adds the albums ticked and marks the
+   wishlisted ones owned, in one change, so one sync. If the browser's storage
+   is full, nothing changes and the dialog says so.
+
+A library can have thousands of albums, so each row of the list is plain
+elements rather than antd components, rows out of view skip layout with
+`content-visibility: auto`, and ticking one only renders that row again. A list
+of 2,000 albums takes about 150 ms to show, and scrolls smoothly.
 
 ## Sync
 
@@ -830,14 +898,18 @@ manifest, both configured in `vite.config.ts`. It's off in development.
 - **The app's files** are downloaded on the first visit (`globPatterns`): the
   JavaScript, CSS, HTML, icons and manifest. Later visits load them from the
   device, online or not, and opening the app offline gets the saved
-  `index.html`. The link preview image, `og-image.png`, is left out, and so is
-  ZXing's `.wasm` file: looking a barcode up needs the network anyway, and the
-  file is nearly as big as everything else put together.
+  `index.html`. That includes the JavaScript loaded only when needed, like the
+  music folder dialog and music-metadata, about 340 kB before compression, so
+  a music folder can be read offline. The link preview image, `og-image.png`,
+  is left out, and so is ZXing's `.wasm` file: looking a barcode up needs the
+  network anyway, and the file is nearly as big as everything else put
+  together.
 - **Covers** are saved as they're shown, in a cache called `album-covers` that
   keeps up to 300. They come from other sites without CORS, so the service
-  worker can't see whether one loaded, and saves the answer as it is. The cover
-  picker's 250 px thumbnails are left out: searching needs the network anyway,
-  and a thumbnail that failed during an outage would stay broken.
+  worker can't see whether one loaded, and saves the answer as it is. The
+  250 px thumbnails, in the cover picker and the music folder list, are left
+  out: they're only shown while choosing, and a thumbnail that failed during an
+  outage would stay broken.
 - **Updates.** `registerSW.js` registers the service worker once the page has
   loaded (`injectRegister: "script-defer"`), so it doesn't hold up the first
   paint. On a later visit, the browser finds a new version, and downloads its
@@ -925,11 +997,16 @@ Testing antd in jsdom has a few catches:
 - Popovers, and dialogs opened over another dialog, stay transparent, part way
   through their animation, so check them with `toBeInTheDocument()`, not
   `toBeVisible()`.
+- A dialog loaded with `lazy()` mounts already open, and plays an opening
+  animation that jsdom only ends after about half a second, so wait for it with
+  `waitFor(() => expect(dialog).toBeVisible())`.
 - The add and edit form marks optional fields, so their labels read like "Year
   (optional)": match them with `/^Year/`.
 
 jsdom has no layout, camera or service worker, so those are checked by hand in a
-browser.
+browser. Reading real music files is too: the tests replace music-metadata's
+`parseBlob` with `vi.mock`, and give files a `webkitRelativePath`, which jsdom's
+files lack.
 
 ## Build, releases and deploys
 
@@ -1007,19 +1084,21 @@ default, and listen for `storage` events if open tabs should follow.
 
 ## Decisions and trade-offs
 
-| Decision                                                    | Why                                                                                     | The cost                                                                                      |
-| ----------------------------------------------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| No server: sync through each person's own GitHub repository | Nothing to run or pay for, people own their data, and the history is a backup           | Setting up sync takes a GitHub account, a repository and a token                              |
-| `localStorage`, not IndexedDB                               | Synchronous, so the first render has the albums, and `storage` events keep tabs in step | About 5 MB, the whole list is saved on every change, and Safari can clear it                  |
-| One store for the interface and sync                        | Each sees the other's changes, with nothing to wire up                                  | None to speak of                                                                              |
-| The latest change wins, for each album                      | Simple and predictable, and the file stays plain JSON                                   | If two devices change different fields of an album between syncs, only the later change stays |
-| Deletions remembered forever                                | A device that's been offline can't bring deleted albums back                            | The list only grows, though each entry is tiny                                                |
-| The whole collection in one file                            | One request to read it and one to save, and it's easy to read and edit on GitHub        | Devices saving at once conflict, which retrying handles                                       |
-| Tokens pasted in, not signing in with GitHub                | Signing in needs a server                                                               | More steps to set up, and a token saved on each device                                        |
-| Setup codes to copy, not QR codes                           | The iPhone's Camera app can't copy text from a QR code                                  | Getting the code to the other device is up to you                                             |
-| Ant Design                                                  | Complete, accessible components, with themes                                            | A large bundle, which the app shell and the service worker make up for                        |
-| The browser's barcode reader, or ZXing loaded when needed   | The browser's is built in, and ZXing covers iPhones without slowing anyone else         | Two paths to test                                                                             |
-| Deploy on release, not on merge                             | The site is always a released version                                                   | Merged changes wait for the next release                                                      |
+| Decision                                                    | Why                                                                                     | The cost                                                                                       |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| No server: sync through each person's own GitHub repository | Nothing to run or pay for, people own their data, and the history is a backup           | Setting up sync takes a GitHub account, a repository and a token                               |
+| `localStorage`, not IndexedDB                               | Synchronous, so the first render has the albums, and `storage` events keep tabs in step | About 5 MB, the whole list is saved on every change, and Safari can clear it                   |
+| One store for the interface and sync                        | Each sees the other's changes, with nothing to wire up                                  | None to speak of                                                                               |
+| The latest change wins, for each album                      | Simple and predictable, and the file stays plain JSON                                   | If two devices change different fields of an album between syncs, only the later change stays  |
+| Deletions remembered forever                                | A device that's been offline can't bring deleted albums back                            | The list only grows, though each entry is tiny                                                 |
+| The whole collection in one file                            | One request to read it and one to save, and it's easy to read and edit on GitHub        | Devices saving at once conflict, which retrying handles                                        |
+| Tokens pasted in, not signing in with GitHub                | Signing in needs a server                                                               | More steps to set up, and a token saved on each device                                         |
+| Setup codes to copy, not QR codes                           | The iPhone's Camera app can't copy text from a QR code                                  | Getting the code to the other device is up to you                                              |
+| Ant Design                                                  | Complete, accessible components, with themes                                            | A large bundle, which the app shell and the service worker make up for                         |
+| The browser's barcode reader, or ZXing loaded when needed   | The browser's is built in, and ZXing covers iPhones without slowing anyone else         | Two paths to test                                                                              |
+| Music folders read in the browser, from their tags          | Nothing is uploaded, and no server is needed                                            | Files with poor tags fall back to folder names, and some albums need fixing by hand afterwards |
+| Covers for music folders from MusicBrainz ids only          | Thousands of albums import at once, without thousands of searches                       | Albums whose files have no MusicBrainz ids get no cover                                        |
+| Deploy on release, not on merge                             | The site is always a released version                                                   | Merged changes wait for the next release                                                       |
 
 ## Known limitations
 
@@ -1036,8 +1115,14 @@ default, and listen for `storage` events if open tabs should follow.
 - **Size.** Every change saves the whole list in `localStorage`, and the whole
   `albums.json` on GitHub. That's fine for a personal collection, but it isn't
   built for tens of thousands of albums.
+- **Every album shown is rendered.** The grid and the list draw every album the
+  filters let through. A couple of thousand, which one music folder can add,
+  take a few seconds to show.
+- **Music on phones.** Phones' browsers can only pick folders from their file
+  apps, so music that apps like Music or Spotify keep can't be imported. A
+  computer can import it, and sync brings the albums to the phone.
 - **Updates wait** until every tab and window of the app has been closed.
 - **The main bundle** is about 1 MB of JavaScript, about 320 kB compressed, and
   Vite warns that it's over 500 kB on every build.
-- **jsdom** can't test the layout, the camera or the service worker, so those
-  are checked by hand.
+- **jsdom** can't test the layout, the camera, the service worker or reading
+  real music files, so those are checked by hand.

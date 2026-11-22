@@ -13,7 +13,7 @@ export interface ImportSummary {
 }
 
 export const albumCount = (count: number) =>
-  `${count} album${count === 1 ? "" : "s"}`;
+  `${count.toLocaleString()} album${count === 1 ? "" : "s"}`;
 
 export const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
@@ -125,6 +125,53 @@ export function mergeAlbums(existing: Album[], imported: Album[]) {
   };
 }
 
+/** How an album found in a music folder compares with the collection. */
+export type FoundAlbumMatch =
+  /** Owned in the format chosen, or with a format that isn't known. */
+  | { kind: "owned" }
+  /** On the wishlist, so importing it marks this album as owned. */
+  | { kind: "wishlisted"; id: string }
+  /** Owned in other formats only. */
+  | { kind: "other-format"; formats: AlbumFormat[] }
+  | { kind: "new" };
+
+/**
+ * Compares albums found in a music folder with the collection, as they'd be
+ * imported in this format. Albums match on title and artist, like duplicates.
+ */
+export function matchFoundAlbums(
+  collection: Album[],
+  found: Pick<AlbumInput, "title" | "artist">[],
+  format: AlbumFormat,
+): FoundAlbumMatch[] {
+  const byKey = new Map<string, Album[]>();
+  for (const album of collection) {
+    const key = titleAndArtist(album);
+    byKey.set(key, [...(byKey.get(key) ?? []), album]);
+  }
+
+  return found.map((album): FoundAlbumMatch => {
+    const matches = byKey.get(titleAndArtist(album)) ?? [];
+    const inFormat = matches.filter((match) =>
+      formatsMatch(match.format, format),
+    );
+    if (inFormat.some((match) => match.status === "owned")) {
+      return { kind: "owned" };
+    }
+    const wishlisted = inFormat.find((match) => match.status === "wishlisted");
+    if (wishlisted) {
+      return { kind: "wishlisted", id: wishlisted.id };
+    }
+    // Owned albums left have a format, and it's another one.
+    const formats = matches.flatMap((match) =>
+      match.status === "owned" && match.format ? [match.format] : [],
+    );
+    return formats.length > 0
+      ? { kind: "other-format", formats: [...new Set(formats)] }
+      : { kind: "new" };
+  });
+}
+
 export function describeImport({ added, skipped, unreadable }: ImportSummary) {
   const headline =
     added > 0 ? `Imported ${albumCount(added)}.` : "No new albums to import.";
@@ -135,5 +182,32 @@ export function describeImport({ added, skipped, unreadable }: ImportSummary) {
 
   return notes.length > 0
     ? `${headline} Skipped ${notes.join(" and ")}.`
+    : headline;
+}
+
+interface MusicImportSummary {
+  added: number;
+  /** Wishlisted albums marked as owned. */
+  markedOwned: number;
+  /** Albums that were in the collection by the time they were imported. */
+  skipped: number;
+}
+
+export function describeMusicImport({
+  added,
+  markedOwned,
+  skipped,
+}: MusicImportSummary) {
+  const done = [
+    added > 0 && `imported ${albumCount(added)}`,
+    markedOwned > 0 &&
+      `marked ${albumCount(markedOwned)} on your wishlist as owned`,
+  ].filter(Boolean);
+  const headline =
+    done.length > 0
+      ? `${done.join(" and ")}.`.replace(/^./, (first) => first.toUpperCase())
+      : "No new albums to import.";
+  return skipped > 0
+    ? `${headline} Skipped ${skipped.toLocaleString()} already in your collection.`
     : headline;
 }

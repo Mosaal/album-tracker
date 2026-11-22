@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import { Album } from "../types";
-import { describeImport, mergeAlbums } from "./albumFiles";
+import {
+  describeImport,
+  describeMusicImport,
+  matchFoundAlbums,
+  mergeAlbums,
+} from "./albumFiles";
 
 const KIND_OF_BLUE: Album = {
   id: "1",
@@ -73,5 +78,78 @@ describe("describeImport", () => {
     ],
   ])("summarises %o", (summary, message) => {
     expect(describeImport(summary)).toBe(message);
+  });
+});
+
+describe("matchFoundAlbums", () => {
+  it("tells albums owned, on the wishlist, owned in another format and new apart", () => {
+    const collection: Album[] = [
+      { ...KIND_OF_BLUE, format: "digital" },
+      // Without a format, it could be the same copy.
+      {
+        id: "3",
+        title: "Blue Train",
+        artist: "John Coltrane",
+        status: "owned",
+      },
+      IN_RAINBOWS,
+      ...(["vinyl", "cd"] as const).map((format) => ({
+        id: format,
+        title: "Blue Lines",
+        artist: "Massive Attack",
+        status: "owned" as const,
+        format,
+      })),
+      // Wanted on vinyl, which a digital copy doesn't make owned.
+      {
+        id: "5",
+        title: "Mezzanine",
+        artist: "Massive Attack",
+        status: "wishlisted",
+        format: "vinyl",
+      },
+    ];
+
+    expect(
+      matchFoundAlbums(
+        collection,
+        [
+          { title: "kind of blue", artist: " Miles Davis" },
+          { title: "Blue Train", artist: "John Coltrane" },
+          { title: "In Rainbows", artist: "Radiohead" },
+          { title: "Blue Lines", artist: "Massive Attack" },
+          { title: "Mezzanine", artist: "Massive Attack" },
+          { title: "Heligoland", artist: "Massive Attack" },
+        ],
+        "digital",
+      ),
+    ).toEqual([
+      { kind: "owned" },
+      { kind: "owned" },
+      { kind: "wishlisted", id: "2" },
+      { kind: "other-format", formats: ["vinyl", "cd"] },
+      { kind: "new" },
+      { kind: "new" },
+    ]);
+  });
+});
+
+describe("describeMusicImport", () => {
+  it.each([
+    [{ added: 1, markedOwned: 0, skipped: 0 }, "Imported 1 album."],
+    [
+      { added: 380, markedOwned: 3, skipped: 0 },
+      "Imported 380 albums and marked 3 albums on your wishlist as owned.",
+    ],
+    [
+      { added: 0, markedOwned: 1, skipped: 2 },
+      "Marked 1 album on your wishlist as owned. Skipped 2 already in your collection.",
+    ],
+    [
+      { added: 0, markedOwned: 0, skipped: 1 },
+      "No new albums to import. Skipped 1 already in your collection.",
+    ],
+  ])("summarises %o", (summary, message) => {
+    expect(describeMusicImport(summary)).toBe(message);
   });
 });
