@@ -1,3 +1,5 @@
+import { wait } from "../utils/wait";
+
 const API_URL = "https://musicbrainz.org/ws/2";
 export const COVER_ART_URL = "https://coverartarchive.org/release-group";
 // MusicBrainz sheds requests with a 503 in short bursts when it's busy, and
@@ -21,20 +23,6 @@ export type ArtistCredit = { name: string; joinphrase?: string }[];
 /** The artists as credited, like "Miles Davis / John Coltrane". */
 export const creditedArtist = (credit: ArtistCredit = []) =>
   credit.map(({ name, joinphrase = "" }) => name + joinphrase).join("");
-
-function wait(ms: number, signal?: AbortSignal) {
-  return new Promise<void>((resolve, reject) => {
-    const timer = setTimeout(resolve, ms);
-    signal?.addEventListener(
-      "abort",
-      () => {
-        clearTimeout(timer);
-        reject(signal.reason);
-      },
-      { once: true },
-    );
-  });
-}
 
 /**
  * Gets JSON from MusicBrainz's API, such as `release-group/?query=…`. Throws

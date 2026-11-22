@@ -18,8 +18,9 @@ through a GitHub repository of your own.
   cassette, digital or other), whether you own it or want it, and notes for
   anything else, like the pressing or its condition. Find a cover by searching
   [MusicBrainz](https://musicbrainz.org/), which fills in the year too, or
-  paste a link to one. You're warned before adding an album that's already in
-  your collection.
+  paste a link to one, or have covers found for every album without one, in
+  the background. You're warned before adding an album that's already in your
+  collection.
 - **Adding by barcode:** scan the barcode on a CD or record with your phone's
   camera, or type the number under it, and MusicBrainz fills in the title,
   artist, year, format and cover.
@@ -56,7 +57,9 @@ through a GitHub repository of your own.
 - **Covers come from MusicBrainz.** Searching for a cover looks up matching
   albums on MusicBrainz and shows their covers from the
   [Cover Art Archive](https://coverartarchive.org/), straight from your
-  browser.
+  browser. Finding missing covers looks up each album the same way, about one
+  a second as MusicBrainz asks, and only keeps a cover when the title and
+  artist match, as a wrong cover is worse than none.
 - **Barcodes are read on your device.** The camera only runs while the scanner
   is open, and what it sees never leaves your device: the barcode is read in
   the browser, with your browser's own barcode reader where it has one, or
@@ -68,7 +71,7 @@ through a GitHub repository of your own.
   first time you import one. The files aren't uploaded anywhere. Covers come
   from the [Cover Art Archive](https://coverartarchive.org/) for files tagged
   with MusicBrainz ids, as [MusicBrainz Picard](https://picard.musicbrainz.org/)
-  tags them.
+  tags them, and are looked up for the other albums afterwards.
 - **Sync goes through your own GitHub repository.** If you turn it on, your
   collection is kept in a file, `albums.json`, in a private repository you own,
   and each device talks to GitHub directly. Changes are merged album by album,

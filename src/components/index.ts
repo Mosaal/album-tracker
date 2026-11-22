@@ -5,6 +5,7 @@ export * from "./AlbumFilters";
 export * from "./AlbumFormModal";
 export * from "./AlbumSection";
 export * from "./AlbumViewToggle";
+export * from "./CoverFinderStatus";
 export * from "./MoreActionsMenu";
 export * from "./SelectionBar";
 export * from "./SettingsDialog";
