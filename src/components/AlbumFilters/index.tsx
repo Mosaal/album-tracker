@@ -132,7 +132,6 @@ export function AlbumFilters({
           value={artistFilter ?? ALL_ARTISTS}
           onChange={(artist) => onArtistFilterChange(artist || undefined)}
           options={artistOptions}
-          showSearch={{ optionFilterProp: "label" }}
           // Wider than the filter, so long names fit.
           popupMatchSelectWidth={240}
           aria-label="Filter by artist"

@@ -244,18 +244,21 @@ describe("App", () => {
     expect(saved()[1].status).toBe("owned");
   });
 
-  it("filters by artist, found by typing part of their name", async () => {
+  it("filters by artist, picked from a list of every artist", async () => {
     const user = renderApp(ALBUMS);
     const artistFilter = screen.getByRole("combobox", {
       name: "Filter by artist",
     });
+    // A list to pick from, like the other filters, rather than a field to type
+    // in, which would bring up the keyboard on phones.
+    expect(artistFilter).toHaveAttribute("readonly");
 
-    await user.type(artistFilter, "radio");
+    await user.click(artistFilter);
     expect(
       [...document.querySelectorAll(".ant-select-item-option")].map(
         (option) => option.textContent,
       ),
-    ).toEqual(["Radiohead"]);
+    ).toEqual(["All artists", "Massive Attack", "Miles Davis", "Radiohead"]);
     await user.click(
       document.querySelector('.ant-select-item-option[title="Radiohead"]')!,
     );
