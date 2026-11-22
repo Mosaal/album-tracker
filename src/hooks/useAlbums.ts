@@ -192,6 +192,58 @@ export function useAlbums(store: CollectionStore) {
     [store],
   );
 
+  /**
+   * Adds albums found in a music folder as owned, in the format chosen, and
+   * marks the wishlisted ones found there as owned, in that format if they
+   * had none. Albums already in the collection by then are skipped.
+   */
+  const importMusicFolder = useCallback(
+    (
+      found: Pick<AlbumInput, "title" | "artist" | "year" | "coverUrl">[],
+      wishlistedIds: string[],
+      format: AlbumFormat,
+    ) => {
+      let summary = { added: 0, markedOwned: 0, skipped: 0 };
+      const toMarkOwned = new Set(wishlistedIds);
+      store.update((current) => {
+        const now = nextTimestamp(current);
+        let markedOwned = 0;
+        const withOwned = current.albums.map((album) => {
+          if (album.status !== "wishlisted" || !toMarkOwned.has(album.id)) {
+            return album;
+          }
+          markedOwned += 1;
+          return {
+            ...album,
+            status: "owned" as const,
+            format: album.format ?? format,
+            updatedAt: now,
+          };
+        });
+        const { albums, added, skipped } = mergeAlbums(
+          withOwned,
+          found.map(({ title, artist, year, coverUrl }) => ({
+            id: crypto.randomUUID(),
+            title,
+            artist,
+            ...(year !== undefined && { year }),
+            ...(coverUrl && { coverUrl }),
+            format,
+            status: "owned" as const,
+            addedAt: now,
+            updatedAt: now,
+          })),
+        );
+        summary = { added, markedOwned, skipped };
+        return added === 0 && markedOwned === 0
+          ? current
+          : { ...current, albums };
+      });
+      return summary;
+    },
+    [store],
+  );
+
   return {
     albums,
     addAlbum,
@@ -200,5 +252,6 @@ export function useAlbums(store: CollectionStore) {
     setAlbumsFormat,
     deleteAlbums,
     importAlbums,
+    importMusicFolder,
   };
 }

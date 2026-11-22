@@ -1,8 +1,8 @@
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Button, Divider, Empty, Flex, message, Modal } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { createStyles } from "antd-style";
-import { albumCount } from "./albums/albumFiles";
+import { albumCount, describeMusicImport } from "./albums/albumFiles";
 import { FORMAT_LABELS } from "./albums/albumFormats";
 import {
   groupAlbums,
@@ -39,6 +39,13 @@ import {
 
 // minmax(0, 1fr) rather than 1fr so wide covers shrink instead of overflowing.
 const gridColumns = (count: number) => `repeat(${count}, minmax(0, 1fr))`;
+
+// Loaded the first time it's opened, as few people need it.
+const MusicFolderDialog = lazy(() =>
+  import("./components/MusicFolderDialog").then((module) => ({
+    default: module.MusicFolderDialog,
+  })),
+);
 
 // Albums in each row, from the widest screens down to phones.
 const GRID_COLUMNS: Record<GridDensity, number[]> = {
@@ -80,10 +87,13 @@ export default function App() {
     setAlbumsFormat,
     deleteAlbums,
     importAlbums,
+    importMusicFolder,
   } = useAlbums(store);
   const sync = useGitHubSync(store);
   const isSyncConnected = sync.state.status !== "disconnected";
   const [syncDialog, setSyncDialog] = useState<"setup" | "settings">();
+  // Undefined until it's first opened, so its code only loads then.
+  const [isMusicFolderOpen, setIsMusicFolderOpen] = useState<boolean>();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<AlbumStatusFilter>("all");
   const [formatFilter, setFormatFilter] = useState<AlbumFormatFilter>("all");
@@ -298,6 +308,17 @@ export default function App() {
     });
   };
 
+  const importFromMusicFolder = (
+    found: Pick<AlbumInput, "title" | "artist" | "year" | "coverUrl">[],
+    wishlistedIds: string[],
+    format: AlbumFormat,
+  ) => {
+    // Throws, leaving the dialog open, if the albums can't be saved.
+    const summary = importMusicFolder(found, wishlistedIds, format);
+    setIsMusicFolderOpen(false);
+    messageApi.success(describeMusicImport(summary));
+  };
+
   return (
     <Layout
       headerExtra={
@@ -349,6 +370,7 @@ export default function App() {
               <MoreActionsMenu
                 albums={albums}
                 onImport={importAlbums}
+                onImportMusicFolder={() => setIsMusicFolderOpen(true)}
                 onSelectAlbums={() => setSelectedIds(new Set())}
                 isSyncConnected={isSyncConnected}
                 onOpenSync={() =>
@@ -440,6 +462,16 @@ export default function App() {
         onChange={updateSettings}
         onClose={() => setIsSettingsOpen(false)}
       />
+      {isMusicFolderOpen !== undefined && (
+        <Suspense>
+          <MusicFolderDialog
+            open={isMusicFolderOpen}
+            albums={albums}
+            onImport={importFromMusicFolder}
+            onClose={() => setIsMusicFolderOpen(false)}
+          />
+        </Suspense>
+      )}
       {modalContextHolder}
       {messageContextHolder}
     </Layout>

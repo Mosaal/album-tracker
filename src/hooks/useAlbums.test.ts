@@ -212,6 +212,63 @@ describe("useAlbums", () => {
     expect(saved(DELETED_KEY)).toEqual([]);
   });
 
+  it("adds albums from a music folder as owned, and marks wishlisted ones found there as owned", () => {
+    const result = renderAlbums([
+      { ...KIND_OF_BLUE, id: "1", status: "wishlisted" },
+      {
+        ...KIND_OF_BLUE,
+        id: "2",
+        title: "Milestones",
+        status: "wishlisted",
+        format: "vinyl",
+      },
+      { ...KIND_OF_BLUE, id: "3", title: "Sketches of Spain" },
+    ]);
+
+    let summary;
+    act(() => {
+      summary = result.current.importMusicFolder(
+        [
+          {
+            title: "Bitches Brew",
+            artist: "Miles Davis",
+            year: 1970,
+            coverUrl: "https://example.com/bitches-brew.jpg",
+          },
+          // In the collection already, with no format.
+          { title: "Sketches of Spain", artist: "Miles Davis" },
+        ],
+        ["1", "2"],
+        "digital",
+      );
+    });
+
+    expect(summary).toEqual({ added: 1, markedOwned: 2, skipped: 1 });
+    expect(saved()).toEqual([
+      // Only filled in where the format was missing.
+      { ...KIND_OF_BLUE, id: "1", format: "digital", updatedAt: NOW },
+      {
+        ...KIND_OF_BLUE,
+        id: "2",
+        title: "Milestones",
+        format: "vinyl",
+        updatedAt: NOW,
+      },
+      { ...KIND_OF_BLUE, id: "3", title: "Sketches of Spain" },
+      {
+        id: expect.any(String),
+        title: "Bitches Brew",
+        artist: "Miles Davis",
+        year: 1970,
+        coverUrl: "https://example.com/bitches-brew.jpg",
+        format: "digital",
+        status: "owned",
+        addedAt: NOW,
+        updatedAt: NOW,
+      },
+    ]);
+  });
+
   it("picks up albums saved by another tab", () => {
     const result = renderAlbums([{ ...KIND_OF_BLUE, id: "1" }]);
 
