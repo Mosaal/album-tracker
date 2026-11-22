@@ -1,7 +1,9 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { Input, Select } from "antd";
 import { afterEach, describe, expect, it } from "vitest";
 
+import { NoMotion } from "../../test/NoMotion";
 import { Layout } from ".";
 
 const realMatchMedia = window.matchMedia;
@@ -37,5 +39,27 @@ describe("Layout", () => {
 
   it("keeps the usual 14px text with a mouse", () => {
     expect(fieldFontSizes(false)).toEqual(["14px", "14px", "14px", "14px"]);
+  });
+
+  it("lets you pick a light, dark or system theme, and starts with the system's", async () => {
+    window.matchMedia = (query) => ({
+      ...realMatchMedia(query),
+      matches: query === "(prefers-color-scheme: dark)",
+    });
+    const user = userEvent.setup();
+    render(<Layout />, { wrapper: NoMotion });
+    const shownTheme = () => document.documentElement.dataset.theme;
+    const savedTheme = () => localStorage.getItem("album-tracker:theme");
+    expect(shownTheme()).toBe("dark");
+
+    await user.click(screen.getByRole("button", { name: "Theme: System" }));
+    await user.click(await screen.findByRole("menuitem", { name: /light/i }));
+    expect(shownTheme()).toBe("light");
+    expect(savedTheme()).toBe("light");
+
+    await user.click(screen.getByRole("button", { name: "Theme: Light" }));
+    await user.click(await screen.findByRole("menuitem", { name: /system/i }));
+    expect(shownTheme()).toBe("dark");
+    expect(savedTheme()).toBeNull();
   });
 });

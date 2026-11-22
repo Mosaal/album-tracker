@@ -35,8 +35,8 @@ through a GitHub repository of your own.
 - **All your devices:** install it on your phone or computer, use it offline,
   and keep the same collection everywhere with
   [sync](#sync-across-devices).
-- **Your way:** light and dark themes, a compact grid that fits more albums
-  in, and a format that new albums start with.
+- **Your way:** a light, dark or your device's theme, a compact grid that fits
+  more albums in, and a format that new albums start with.
 
 ## How it works
 
@@ -117,7 +117,7 @@ separate from Safari, so connect it as a device of its own.
 
 - Each device keeps its own copy, so the app works offline. It syncs when it
   opens, a couple of seconds after a change, when you come back to it, and when
-  the connection returns. The icon next to the theme switch shows how it's going.
+  the connection returns. The icon next to the theme button shows how it's going.
 - Each sync is a commit to `albums.json`, so the repository's history is a
   backup of every change.
 - You can edit `albums.json` on GitHub too. If an entry can't be read, the file

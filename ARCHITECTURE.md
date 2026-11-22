@@ -179,7 +179,7 @@ Tests sit next to the code they test, as `*.test.ts` or `*.test.tsx`.
 | `useAlbums.ts`     | The albums, and every change to them: add, edit, mark, delete with undo, import |
 | `useGitHubSync.ts` | Creates and starts the sync engine, and follows its state                       |
 | `useSettings.ts`   | This device's settings                                                          |
-| `useThemeMode.ts`  | Light or dark: the system's, until someone picks                                |
+| `useThemeMode.ts`  | Light, dark or the system's theme, whichever was chosen                         |
 | `useMediaQuery.ts` | Whether a CSS media query matches                                               |
 
 ### `src/components`: the interface
@@ -188,29 +188,30 @@ Each component has a folder with an `index.tsx`, and some an `index.test.tsx`.
 `src/components/index.ts` only exports the ones `App.tsx` uses. The rest are
 parts of those.
 
-| Component            | What it is                                                                                                                              |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `Layout`             | The theme, the header (name, version, sync icon and theme switch) and the page background. `theme.ts` beside it has the theme overrides |
-| `AlbumFilters`       | Search, sort, the status, format, artist and decade filters, and the album count                                                        |
-| `AlbumViewToggle`    | Grid or list                                                                                                                            |
-| `MoreActionsMenu`    | The ⋯ menu: select albums, sync, export, import and settings                                                                            |
-| `AlbumCard`          | An album in the grid                                                                                                                    |
-| `AlbumRow`           | An album in the list                                                                                                                    |
-| `AlbumByline`        | The artist and year, like "Miles Davis · 1959"                                                                                          |
-| `AlbumStatusSwitch`  | Owned or wishlisted, switched in one click                                                                                              |
-| `AlbumNotesButton`   | Shows an album's notes in a popover                                                                                                     |
-| `AlbumActionButtons` | The edit and delete buttons                                                                                                             |
-| `AlbumCheckbox`      | Picks an album in selection mode                                                                                                        |
-| `SelectionBar`       | What to do with the selected albums                                                                                                     |
-| `AlbumFormModal`     | The add and edit dialog                                                                                                                 |
-| `AlbumCoverField`    | The cover field, and the cover search                                                                                                   |
-| `BarcodeScanDialog`  | The camera or a typed number, and the barcode lookup                                                                                    |
-| `SettingsDialog`     | The grid density and the format for new albums                                                                                          |
-| `SyncSetupDialog`    | Connects to a repository, as a new setup or with a setup code                                                                           |
-| `SyncSettingsDialog` | The sync status, Sync now, the setup code, the token and Disconnect                                                                     |
-| `SyncStatusButton`   | The sync icon in the header                                                                                                             |
-| `ExternalLink`       | A link that opens in a new tab                                                                                                          |
-| `formRules.ts`       | Form checks the sync dialogs share                                                                                                      |
+| Component            | What it is                                                                                                                            |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `Layout`             | The theme, the header (name, version, sync icon and theme menu) and the page background. `theme.ts` beside it has the theme overrides |
+| `AlbumFilters`       | Search, sort, the status, format, artist and decade filters, and the album count                                                      |
+| `AlbumViewToggle`    | Grid or list                                                                                                                          |
+| `MoreActionsMenu`    | The ⋯ menu: select albums, sync, export, import and settings                                                                          |
+| `AlbumCard`          | An album in the grid                                                                                                                  |
+| `AlbumRow`           | An album in the list                                                                                                                  |
+| `AlbumByline`        | The artist and year, like "Miles Davis · 1959"                                                                                        |
+| `AlbumStatusSwitch`  | Owned or wishlisted, switched in one click                                                                                            |
+| `AlbumNotesButton`   | Shows an album's notes in a popover                                                                                                   |
+| `AlbumActionButtons` | The edit and delete buttons                                                                                                           |
+| `AlbumCheckbox`      | Picks an album in selection mode                                                                                                      |
+| `SelectionBar`       | What to do with the selected albums                                                                                                   |
+| `AlbumFormModal`     | The add and edit dialog                                                                                                               |
+| `AlbumCoverField`    | The cover field, and the cover search                                                                                                 |
+| `BarcodeScanDialog`  | The camera or a typed number, and the barcode lookup                                                                                  |
+| `SettingsDialog`     | The grid density and the format for new albums                                                                                        |
+| `SyncSetupDialog`    | Connects to a repository, as a new setup or with a setup code                                                                         |
+| `SyncSettingsDialog` | The sync status, Sync now, the setup code, the token and Disconnect                                                                   |
+| `SyncStatusButton`   | The sync icon in the header                                                                                                           |
+| `ThemeMenu`          | The theme button in the header, with Light, Dark and System to pick from                                                              |
+| `ExternalLink`       | A link that opens in a new tab                                                                                                        |
+| `formRules.ts`       | Form checks the sync dialogs share                                                                                                    |
 
 ### `src/test` and `src/utils`
 
@@ -338,8 +339,8 @@ the current collection, given to `store.update`, and records its time with
 be read. It reads the storage again before each save, so it can't undo a change
 made in another tab, and follows other tabs through `storage` events.
 
-**`useThemeMode`** follows the system's theme until the switch in the header is
-used, then remembers the choice.
+**`useThemeMode`** returns the theme chosen (light, dark or system) and whether
+it's dark. System, the default, follows the device's theme, as it changes.
 
 **`useGitHubSync(store)`** creates the sync engine once, starts it in an effect
 (whose cleanup stops it), and reads its state with `useSyncExternalStore`.
@@ -851,7 +852,9 @@ manifest, both configured in `vite.config.ts`. It's off in development.
 - **Touch screens** (`pointer: coarse`) get 16 px text in text fields and
   selects, because iOS zooms in on a field with smaller text when it's focused.
   Selects keep their 22 px line, so they don't grow taller.
-- **Light or dark** follows the system until the switch in the header is used.
+- **Light, dark or system** is picked from the theme button in the header.
+  System, the default, follows the device as it changes. Light or dark is
+  remembered, until System is picked again.
   The choice is saved as `album-tracker:theme`, which `index.html` reads too.
 - **Styles** live with their component, written with antd-style's
   `createStyles` and the theme's tokens, so they follow the theme. The only

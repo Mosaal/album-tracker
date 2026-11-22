@@ -4,23 +4,23 @@ import {
   ConfigProvider,
   Layout as AntdLayout,
   Space,
-  Switch,
   theme,
   Typography,
 } from "antd";
 import { createStyles } from "antd-style";
 
-import { useMediaQuery, useThemeMode } from "../../hooks";
+import { ThemeMode, useMediaQuery, useThemeMode } from "../../hooks";
+import { ThemeMenu } from "../ThemeMenu";
 import { getThemeConfig } from "./theme";
 
 interface LayoutProps {
   children?: React.ReactNode;
-  /** Shown in the header, just before the theme switch. */
+  /** Shown in the header, just before the theme menu. */
   headerExtra?: React.ReactNode;
 }
 
 export function Layout({ children, headerExtra }: LayoutProps) {
-  const { isDark, setIsDark } = useThemeMode();
+  const { mode, isDark, setMode } = useThemeMode();
   const isTouch = useMediaQuery("(pointer: coarse)");
   return (
     <ConfigProvider theme={getThemeConfig(isDark, isTouch)}>
@@ -28,8 +28,8 @@ export function Layout({ children, headerExtra }: LayoutProps) {
       <AntdApp>
         <AntdLayout style={{ minHeight: "100vh" }}>
           <Header
-            isDark={isDark}
-            onThemeChange={setIsDark}
+            themeMode={mode}
+            onThemeModeChange={setMode}
             extra={headerExtra}
           />
           <AntdLayout.Content style={{ padding: 24 }}>
@@ -70,12 +70,12 @@ const useHeaderStyles = createStyles(({ token }) => ({
 }));
 
 interface HeaderProps {
-  isDark: boolean;
-  onThemeChange: (isDark: boolean) => void;
+  themeMode: ThemeMode;
+  onThemeModeChange: (mode: ThemeMode) => void;
   extra?: React.ReactNode;
 }
 
-function Header({ isDark, onThemeChange, extra }: HeaderProps) {
+function Header({ themeMode, onThemeModeChange, extra }: HeaderProps) {
   const { token } = theme.useToken();
   const { styles } = useHeaderStyles();
 
@@ -94,13 +94,7 @@ function Header({ isDark, onThemeChange, extra }: HeaderProps) {
       </Space>
       <Space size="small">
         {extra}
-        <Switch
-          checked={isDark}
-          onChange={onThemeChange}
-          checkedChildren="Dark"
-          unCheckedChildren="Light"
-          aria-label="Toggle dark theme"
-        />
+        <ThemeMenu mode={themeMode} onChange={onThemeModeChange} />
       </Space>
     </AntdLayout.Header>
   );
