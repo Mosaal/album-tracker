@@ -2,9 +2,11 @@ import {
   Album,
   AlbumDecadeFilter,
   AlbumFormatFilter,
+  AlbumGrouping,
   AlbumSortOrder,
   AlbumStatusFilter,
 } from "../types";
+import { FORMAT_LABELS, FORMAT_OPTIONS } from "./albumFormats";
 import { decadeOf } from "./albumYears";
 import { timeOf } from "./timestamps";
 
@@ -125,4 +127,146 @@ export function selectAlbums(
     visible.reverse();
   }
   return visible.sort(SORT_COMPARATORS[sortOrder]);
+}
+
+/** A section of the albums shown, like an artist's or a decade's. */
+export interface AlbumGroup {
+  key: string;
+  /** Its heading, like "Radiohead", "1990s", "Vinyl" or "B". */
+  label: string;
+  albums: Album[];
+}
+
+const GROUPINGS: AlbumGrouping[] = [
+  "none",
+  "artist",
+  "decade",
+  "format",
+  "letter",
+];
+
+export const isGrouping = (value: unknown): value is AlbumGrouping =>
+  GROUPINGS.includes(value as AlbumGrouping);
+
+/** The section an album goes in, and that section's place among the others. */
+interface Section {
+  key: string;
+  label: string;
+  rank: number | string;
+  /** For albums without what's grouped by, like a year, which go last. */
+  isLast?: boolean;
+}
+
+const FORMAT_ORDER = FORMAT_OPTIONS.map(({ value }) => value);
+
+/**
+ * The letter something is filed under: its first, in capitals and without
+ * accents, after any punctuation, so "(What's the Story)" goes under W and
+ * "Ágætis byrjun" under A. Something starting with a number goes under #.
+ */
+function initialOf(text: string) {
+  const match = /[\p{L}\p{N}]/u.exec(text.normalize("NFD"));
+  const [initial = ""] = match?.[0].toUpperCase() ?? "";
+  return /\p{L}/u.test(initial) ? initial : "#";
+}
+
+const sortsByArtist = (sortOrder: AlbumSortOrder) =>
+  sortOrder === "artist-asc" || sortOrder === "artist-desc";
+
+function sectionOf(
+  album: Album,
+  grouping: Exclude<AlbumGrouping, "none">,
+  sortOrder: AlbumSortOrder,
+): Section {
+  switch (grouping) {
+    case "artist": {
+      const label = album.artist.trim();
+      return { key: artistKey(album.artist), label, rank: label };
+    }
+    case "decade": {
+      if (album.year === undefined) {
+        return { key: "none", label: "No year", rank: 0, isLast: true };
+      }
+      const decade = decadeOf(album.year);
+      return { key: String(decade), label: `${decade}s`, rank: decade };
+    }
+    case "format":
+      return album.format
+        ? {
+            key: album.format,
+            label: FORMAT_LABELS[album.format],
+            rank: FORMAT_ORDER.indexOf(album.format),
+          }
+        : { key: "none", label: "No format", rank: 0, isLast: true };
+    case "letter": {
+      // By artist when sorted by artist, like the bins in a record shop.
+      const initial = initialOf(
+        sortsByArtist(sortOrder) ? album.artist : album.title,
+      );
+      return {
+        key: initial,
+        label: initial,
+        rank: initial,
+        isLast: initial === "#",
+      };
+    }
+  }
+}
+
+/** Sections run backwards when the albums are sorted backwards by the same thing. */
+function runsBackwards(
+  grouping: Exclude<AlbumGrouping, "none">,
+  sortOrder: AlbumSortOrder,
+) {
+  switch (grouping) {
+    case "artist":
+      return sortOrder === "artist-desc";
+    case "decade":
+      return sortOrder === "year-desc";
+    case "letter":
+      return sortOrder === "title-desc" || sortOrder === "artist-desc";
+    case "format":
+      return false;
+  }
+}
+
+/**
+ * Splits the albums shown into sections, keeping their order within each.
+ * Sections go alphabetically, from the oldest decade, or in the formats'
+ * usual order, and backwards when the albums are sorted backwards by the
+ * same thing. Albums without what's grouped by, like a year, come last.
+ */
+export function groupAlbums(
+  albums: Album[],
+  grouping: Exclude<AlbumGrouping, "none">,
+  sortOrder: AlbumSortOrder,
+): AlbumGroup[] {
+  const sections = new Map<string, { section: Section; albums: Album[] }>();
+  for (const album of albums) {
+    const section = sectionOf(album, grouping, sortOrder);
+    const known = sections.get(section.key);
+    if (known) {
+      known.albums.push(album);
+    } else {
+      sections.set(section.key, { section, albums: [album] });
+    }
+  }
+
+  const direction = runsBackwards(grouping, sortOrder) ? -1 : 1;
+  return [...sections.values()]
+    .sort(({ section: a }, { section: b }) => {
+      if (Boolean(a.isLast) !== Boolean(b.isLast)) {
+        return a.isLast ? 1 : -1;
+      }
+      const order =
+        typeof a.rank === "number" && typeof b.rank === "number"
+          ? a.rank - b.rank
+          : String(a.rank).localeCompare(String(b.rank));
+      return order * direction;
+    })
+    .map(({ section, albums }) => ({
+      key: section.key,
+      label: section.label,
+      albums,
+    }));
 }

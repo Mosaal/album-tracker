@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { Album } from "../types";
-import { listArtists, listDecades, selectAlbums } from "./albumList";
+import { Album, AlbumSortOrder } from "../types";
+import {
+  AlbumGroup,
+  groupAlbums,
+  listArtists,
+  listDecades,
+  selectAlbums,
+} from "./albumList";
 
 // Stored oldest first, in the order they were added.
 const ALBUMS: Album[] = [
@@ -30,6 +36,11 @@ const ALBUMS: Album[] = [
 ];
 
 const titles = (albums: Album[]) => albums.map((album) => album.title);
+
+/** Each section's heading, with the titles of its albums. */
+const sections = (groups: AlbumGroup[]) =>
+  groups.map(({ label, albums }) => [label, titles(albums)]);
+const headings = (groups: AlbumGroup[]) => groups.map(({ label }) => label);
 
 const select = (options: Partial<Parameters<typeof selectAlbums>[1]>) =>
   selectAlbums(ALBUMS, {
@@ -130,6 +141,105 @@ describe("listArtists", () => {
   });
 });
 
+describe("groupAlbums", () => {
+  it("groups by artist, whatever the case, A to Z, or Z to A when sorted that way", () => {
+    const albums: Album[] = [
+      ...ALBUMS,
+      {
+        id: "5",
+        title: "Heligoland",
+        artist: "massive attack",
+        status: "owned",
+      },
+    ];
+    const visible = selectAlbums(albums, {
+      search: "",
+      sortOrder: "title-asc",
+      statusFilter: "all",
+      formatFilter: "all",
+    });
+
+    expect(sections(groupAlbums(visible, "artist", "title-asc"))).toEqual([
+      ["Massive Attack", ["Blue Lines", "Heligoland", "Mezzanine"]],
+      ["Miles Davis", ["Kind of Blue"]],
+      ["Radiohead", ["In Rainbows"]],
+    ]);
+    expect(
+      headings(
+        groupAlbums(
+          select({ sortOrder: "artist-desc" }),
+          "artist",
+          "artist-desc",
+        ),
+      ),
+    ).toEqual(["Radiohead", "Miles Davis", "Massive Attack"]);
+  });
+
+  it("groups by format, in the usual order, with albums that have none last", () => {
+    expect(sections(groupAlbums(select({}), "format", "title-asc"))).toEqual([
+      ["Vinyl", ["Blue Lines", "Kind of Blue"]],
+      ["CD", ["Mezzanine"]],
+      ["No format", ["In Rainbows"]],
+    ]);
+  });
+
+  describe("by letter", () => {
+    const FILED: Album[] = [
+      ...ALBUMS,
+      {
+        id: "5",
+        title: "(What's the Story) Morning Glory?",
+        artist: "Oasis",
+        status: "owned",
+      },
+      { id: "6", title: "1989", artist: "Taylor Swift", status: "owned" },
+      { id: "7", title: "Ágætis byrjun", artist: "Sigur Rós", status: "owned" },
+    ];
+    const groupFiled = (sortOrder: AlbumSortOrder) =>
+      groupAlbums(
+        selectAlbums(FILED, {
+          search: "",
+          sortOrder,
+          statusFilter: "all",
+          formatFilter: "all",
+        }),
+        "letter",
+        sortOrder,
+      );
+
+    it("files titles under their first letter, without accents or punctuation, and numbers under # last", () => {
+      expect(sections(groupFiled("title-asc"))).toEqual([
+        ["A", ["Ágætis byrjun"]],
+        ["B", ["Blue Lines"]],
+        ["I", ["In Rainbows"]],
+        ["K", ["Kind of Blue"]],
+        ["M", ["Mezzanine"]],
+        ["W", ["(What's the Story) Morning Glory?"]],
+        ["#", ["1989"]],
+      ]);
+    });
+
+    it("files by artist when sorting by artist, and runs backwards when sorting backwards", () => {
+      expect(sections(groupFiled("artist-asc"))).toEqual([
+        ["M", ["Blue Lines", "Mezzanine", "Kind of Blue"]],
+        ["O", ["(What's the Story) Morning Glory?"]],
+        ["R", ["In Rainbows"]],
+        ["S", ["Ágætis byrjun"]],
+        ["T", ["1989"]],
+      ]);
+      expect(headings(groupFiled("title-desc"))).toEqual([
+        "W",
+        "M",
+        "K",
+        "I",
+        "B",
+        "A",
+        "#",
+      ]);
+    });
+  });
+});
+
 describe("years", () => {
   // Two from 1998, as albums from the same year go by artist, then title.
   const [kindOfBlue, blueLines, mezzanine, inRainbows] = ALBUMS;
@@ -189,5 +299,30 @@ describe("years", () => {
       1950, 1990,
     ]);
     expect(listDecades(ALBUMS)).toEqual([]);
+  });
+
+  it("groups by decade, oldest or newest first as sorted, with no year last", () => {
+    expect(
+      sections(
+        groupAlbums(
+          selectDated({ sortOrder: "year-asc" }),
+          "decade",
+          "year-asc",
+        ),
+      ),
+    ).toEqual([
+      ["1950s", ["Kind of Blue"]],
+      ["1990s", ["Blue Lines", "Mutations", "Mezzanine"]],
+      ["No year", ["In Rainbows"]],
+    ]);
+    expect(
+      headings(
+        groupAlbums(
+          selectDated({ sortOrder: "year-desc" }),
+          "decade",
+          "year-desc",
+        ),
+      ),
+    ).toEqual(["1990s", "1950s", "No year"]);
   });
 });

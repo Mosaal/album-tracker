@@ -72,6 +72,12 @@ const shownTitles = () =>
 const isListShown = () =>
   (screen.getByRole("radio", { name: "List" }) as HTMLInputElement).checked;
 
+/** The headings of the sections the albums are grouped into, if they are. */
+const sectionHeadings = () =>
+  screen
+    .queryAllByRole("heading", { level: 5 })
+    .map((heading) => heading.textContent);
+
 describe("settings", () => {
   it("fits one more album in each row of the compact grid, and remembers it", async () => {
     const { user, unmount } = renderApp();
@@ -96,7 +102,7 @@ describe("settings", () => {
     expect(detailsPadding()).toBe("12px");
   });
 
-  it("opens with the view and sort order last chosen", async () => {
+  it("opens with the view, sort order and grouping last chosen", async () => {
     const { user, unmount } = renderApp([KIND_OF_BLUE, IN_RAINBOWS]);
     expect(shownTitles()).toEqual(["In Rainbows", "Kind of Blue"]);
 
@@ -105,12 +111,19 @@ describe("settings", () => {
     await user.click(
       document.querySelector('.ant-select-item-option[title="Artist (A-Z)"]')!,
     );
+    await user.click(screen.getByRole("combobox", { name: "Group albums" }));
+    await user.click(
+      document.querySelector(
+        '.ant-select-item-option[title="Group by artist"]',
+      )!,
+    );
     unmount();
     renderApp([KIND_OF_BLUE, IN_RAINBOWS]);
 
     expect(isListShown()).toBe(true);
     expect(document.querySelector(".ant-card-meta-title")).toBeNull();
     expect(shownTitles()).toEqual(["Kind of Blue", "In Rainbows"]);
+    expect(sectionHeadings()).toEqual(["Miles Davis", "Radiohead"]);
   });
 
   it("starts new albums in the chosen format, leaving edits alone", async () => {
@@ -159,6 +172,7 @@ describe("settings", () => {
         defaultFormat: "8-track",
         viewMode: "table",
         sortOrder: "year",
+        grouping: "genre",
       }),
     );
     const { user } = renderApp([KIND_OF_BLUE, IN_RAINBOWS]);
@@ -166,6 +180,7 @@ describe("settings", () => {
     expect(gridColumns()).toBe(columns(4));
     expect(isListShown()).toBe(false);
     expect(shownTitles()).toEqual(["In Rainbows", "Kind of Blue"]);
+    expect(sectionHeadings()).toEqual([]);
     expect(formatIn(await openAddForm(user))).toBe("Choose a format");
   });
 });

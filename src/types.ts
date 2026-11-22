@@ -50,6 +50,9 @@ export type AlbumDecadeFilter = "all" | "none" | number;
 
 export type AlbumViewMode = "grid" | "list";
 
+/** How the albums shown are split into sections, if they are. */
+export type AlbumGrouping = "none" | "artist" | "decade" | "format" | "letter";
+
 /** How many albums fit in each row of the grid. */
 export type GridDensity = "normal" | "compact";
 
@@ -58,7 +61,8 @@ export interface Settings {
   gridDensity: GridDensity;
   /** Filled in when adding an album. */
   defaultFormat?: AlbumFormat;
-  /** The view and sort order last chosen, which the app opens with. */
+  /** The view, sort order and grouping last chosen, which the app opens with. */
   viewMode: AlbumViewMode;
   sortOrder: AlbumSortOrder;
+  grouping: AlbumGrouping;
 }
