@@ -853,6 +853,9 @@ manifest, both configured in `vite.config.ts`. It's off in development.
   Selects keep their 22 px line, so they don't grow taller.
 - **Light or dark** follows the system until the switch in the header is used.
   The choice is saved as `album-tracker:theme`, which `index.html` reads too.
+- **Dialogs** get 24 px of space below them, through the `modal` setting
+  `Layout` gives `ConfigProvider`. antd 6 leaves none, so a dialog taller than
+  the screen would end flush with its bottom edge.
 - **Styles** live with their component, written with antd-style's
   `createStyles` and the theme's tokens, so they follow the theme. The only
   global CSS is antd's reset, loaded in `main.tsx`.
