@@ -3,6 +3,7 @@ export * from "./AlbumCard";
 export * from "./AlbumRow";
 export * from "./AlbumFilters";
 export * from "./AlbumFormModal";
+export * from "./AlbumSection";
 export * from "./AlbumViewToggle";
 export * from "./MoreActionsMenu";
 export * from "./SelectionBar";

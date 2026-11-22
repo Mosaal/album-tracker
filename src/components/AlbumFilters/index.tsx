@@ -6,22 +6,24 @@ import { FORMAT_OPTIONS } from "../../albums/albumFormats";
 import {
   AlbumDecadeFilter,
   AlbumFormatFilter,
+  AlbumGrouping,
   AlbumSortOrder,
   AlbumStatusFilter,
 } from "../../types";
 
-// Sized so the toolbar fits on one line on a 1280px screen, until the year
-// filter shows up. On phones, each group gets a full-width row of its own,
-// which its controls share.
+// Sized so the filters fit on one line on a 1280px screen. On phones, each
+// group gets a full-width row of its own, which its controls share.
 const useStyles = createStyles(({ responsive }) => ({
   filters: { [responsive.xs]: { width: "100%" } },
   search: { width: 220, [responsive.xs]: { flex: 1, minWidth: 0 } },
   year: { width: 110 },
   row: { [responsive.xs]: { width: "100%" } },
   sort: { width: 160, [responsive.xs]: { flex: 1, minWidth: 0 } },
+  grouping: { width: 150, [responsive.xs]: { flex: 1, minWidth: 0 } },
   artist: { width: 150, [responsive.xs]: { flex: 1, minWidth: 0 } },
-  // The status and format filters share their row up to the count.
-  filter: { width: 130, [responsive.xs]: { flex: 1, minWidth: 0 } },
+  status: { width: 130, [responsive.xs]: { flex: 1, minWidth: 0 } },
+  // Shares its row with the count, as wide as the controls above it.
+  format: { width: 130, [responsive.xs]: { width: "calc(50% - 4px)" } },
 }));
 
 // No artist goes by an empty name, so it stands for all of them.
@@ -35,6 +37,14 @@ const SORT_OPTIONS: { value: AlbumSortOrder; label: string }[] = [
   { value: "year-asc", label: "Year (oldest)" },
   { value: "year-desc", label: "Year (newest)" },
   { value: "recent", label: "Recently added" },
+];
+
+const GROUPING_OPTIONS: { value: AlbumGrouping; label: string }[] = [
+  { value: "none", label: "No grouping" },
+  { value: "artist", label: "Group by artist" },
+  { value: "decade", label: "Group by decade" },
+  { value: "format", label: "Group by format" },
+  { value: "letter", label: "Group by letter" },
 ];
 
 const STATUS_OPTIONS: { value: AlbumStatusFilter; label: string }[] = [
@@ -53,6 +63,8 @@ interface AlbumFiltersProps {
   onSearchChange: (search: string) => void;
   sortOrder: AlbumSortOrder;
   onSortOrderChange: (sortOrder: AlbumSortOrder) => void;
+  grouping: AlbumGrouping;
+  onGroupingChange: (grouping: AlbumGrouping) => void;
   statusFilter: AlbumStatusFilter;
   onStatusFilterChange: (statusFilter: AlbumStatusFilter) => void;
   formatFilter: AlbumFormatFilter;
@@ -78,6 +90,8 @@ export function AlbumFilters({
   onSearchChange,
   sortOrder,
   onSortOrderChange,
+  grouping,
+  onGroupingChange,
   statusFilter,
   onStatusFilterChange,
   formatFilter,
@@ -129,6 +143,15 @@ export function AlbumFilters({
           className={styles.sort}
         />
         <Select
+          value={grouping}
+          onChange={onGroupingChange}
+          options={GROUPING_OPTIONS}
+          aria-label="Group albums"
+          className={styles.grouping}
+        />
+      </Flex>
+      <Flex gap="small" className={styles.row}>
+        <Select
           value={artistFilter ?? ALL_ARTISTS}
           onChange={(artist) => onArtistFilterChange(artist || undefined)}
           options={artistOptions}
@@ -137,22 +160,22 @@ export function AlbumFilters({
           aria-label="Filter by artist"
           className={styles.artist}
         />
-      </Flex>
-      {/* Grouped so the count never wraps onto a line of its own. */}
-      <Flex gap="small" align="center" className={styles.row}>
         <Select
           value={statusFilter}
           onChange={onStatusFilterChange}
           options={STATUS_OPTIONS}
           aria-label="Filter by status"
-          className={styles.filter}
+          className={styles.status}
         />
+      </Flex>
+      {/* Grouped so the count never wraps onto a line of its own. */}
+      <Flex gap="small" align="center" className={styles.row}>
         <Select
           value={formatFilter}
           onChange={onFormatFilterChange}
           options={FORMAT_FILTER_OPTIONS}
           aria-label="Filter by format"
-          className={styles.filter}
+          className={styles.format}
         />
         {/* A status role, so screen readers announce the count as it changes. */}
         <Typography.Text type="secondary" role="status">

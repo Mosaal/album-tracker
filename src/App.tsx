@@ -3,13 +3,19 @@ import { Button, Empty, Flex, message, Modal } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { createStyles } from "antd-style";
 import { albumCount } from "./albums/albumFiles";
-import { listArtists, listDecades, selectAlbums } from "./albums/albumList";
+import {
+  groupAlbums,
+  listArtists,
+  listDecades,
+  selectAlbums,
+} from "./albums/albumList";
 import { createCollectionStore } from "./albums/albumStore";
 import {
   AlbumCard,
   AlbumFilters,
   AlbumFormModal,
   AlbumRow,
+  AlbumSection,
   AlbumViewToggle,
   Layout,
   MoreActionsMenu,
@@ -60,7 +66,7 @@ const useStyles = createStyles(({ responsive }, density: GridDensity) => {
 export default function App() {
   const { settings, updateSettings } = useSettings();
   // Saved with the settings, so the app opens the way it was left.
-  const { sortOrder, viewMode } = settings;
+  const { sortOrder, viewMode, grouping } = settings;
   const { styles } = useStyles(settings.gridDensity);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [store] = useState(createCollectionStore);
@@ -114,6 +120,13 @@ export default function App() {
       artistFilter,
       activeDecade,
     ],
+  );
+  const groups = useMemo(
+    () =>
+      grouping === "none"
+        ? undefined
+        : groupAlbums(visibleAlbums, grouping, sortOrder),
+    [visibleAlbums, grouping, sortOrder],
   );
   // Only albums still shown count, so a filter can't hide what gets changed.
   const selectedAlbums = selectedIds
@@ -213,6 +226,37 @@ export default function App() {
       onToggle: toggleSelected,
     };
 
+  /** The albums as cards in the grid, or rows in the list. */
+  const renderAlbums = (shown: Album[]) =>
+    viewMode === "grid" ? (
+      <div className={styles.grid}>
+        {shown.map((album) => (
+          <AlbumCard
+            key={album.id}
+            album={album}
+            compact={settings.gridDensity === "compact"}
+            onEdit={openEditForm}
+            onDelete={confirmDelete}
+            onStatusChange={changeStatus}
+            selection={selectionOf(album)}
+          />
+        ))}
+      </div>
+    ) : (
+      <Flex vertical gap="16px">
+        {shown.map((album) => (
+          <AlbumRow
+            key={album.id}
+            album={album}
+            onEdit={openEditForm}
+            onDelete={confirmDelete}
+            onStatusChange={changeStatus}
+            selection={selectionOf(album)}
+          />
+        ))}
+      </Flex>
+    );
+
   const markSelected = (status: Album["status"]) => {
     setAlbumsStatus(
       selectedAlbums.map((album) => album.id),
@@ -256,6 +300,8 @@ export default function App() {
             onSearchChange={setSearch}
             sortOrder={sortOrder}
             onSortOrderChange={(sortOrder) => updateSettings({ sortOrder })}
+            grouping={grouping}
+            onGroupingChange={(grouping) => updateSettings({ grouping })}
             statusFilter={statusFilter}
             onStatusFilterChange={setStatusFilter}
             formatFilter={formatFilter}
@@ -334,33 +380,20 @@ export default function App() {
               </Button>
             )}
           </Empty>
-        ) : viewMode === "grid" ? (
-          <div className={styles.grid}>
-            {visibleAlbums.map((album) => (
-              <AlbumCard
-                key={album.id}
-                album={album}
-                compact={settings.gridDensity === "compact"}
-                onEdit={openEditForm}
-                onDelete={confirmDelete}
-                onStatusChange={changeStatus}
-                selection={selectionOf(album)}
-              />
-            ))}
-          </div>
-        ) : (
-          <Flex vertical gap="16px">
-            {visibleAlbums.map((album) => (
-              <AlbumRow
-                key={album.id}
-                album={album}
-                onEdit={openEditForm}
-                onDelete={confirmDelete}
-                onStatusChange={changeStatus}
-                selection={selectionOf(album)}
-              />
+        ) : groups ? (
+          <Flex vertical gap="32px">
+            {groups.map((group) => (
+              <AlbumSection
+                key={group.key}
+                title={group.label}
+                count={group.albums.length}
+              >
+                {renderAlbums(group.albums)}
+              </AlbumSection>
             ))}
           </Flex>
+        ) : (
+          renderAlbums(visibleAlbums)
         )}
       </Flex>
       <AlbumFormModal

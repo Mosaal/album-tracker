@@ -27,6 +27,16 @@ const cardTitles = () =>
     (title) => title.textContent,
   );
 
+/** Each section's heading, album count and albums, in order. */
+const shownSections = () =>
+  [...document.querySelectorAll("section")].map((section) => [
+    within(section).getByRole("heading").textContent,
+    within(section).getByText(/^\d+ albums?$/).textContent,
+    [...section.querySelectorAll(".ant-card-meta-title")].map(
+      (title) => title.textContent,
+    ),
+  ]);
+
 // antd gives every generated id the same value under test, so dialogs can't be
 // found by their accessible name. Find the open one and check its title instead.
 async function findDialog(title: string) {
@@ -268,6 +278,36 @@ describe("App", () => {
 
     await choose(user, "Filter by artist", "All artists");
     expect(cardTitles()).toEqual(["Blue Lines", "In Rainbows", "Kind of Blue"]);
+  });
+
+  it("splits the albums shown into sections, such as by artist", async () => {
+    const user = renderApp([
+      ...ALBUMS,
+      {
+        id: "4",
+        title: "Mezzanine",
+        artist: "Massive Attack",
+        status: "wishlisted",
+      },
+    ]);
+    expect(shownSections()).toEqual([]);
+
+    await choose(user, "Group albums", "Group by artist");
+    expect(shownSections()).toEqual([
+      ["Massive Attack", "2 albums", ["Blue Lines", "Mezzanine"]],
+      ["Miles Davis", "1 album", ["Kind of Blue"]],
+      ["Radiohead", "1 album", ["In Rainbows"]],
+    ]);
+
+    await choose(user, "Filter by status", "Wishlisted");
+    expect(shownSections()).toEqual([
+      ["Massive Attack", "1 album", ["Mezzanine"]],
+      ["Radiohead", "1 album", ["In Rainbows"]],
+    ]);
+
+    await choose(user, "Group albums", "No grouping");
+    expect(shownSections()).toEqual([]);
+    expect(cardTitles()).toEqual(["In Rainbows", "Mezzanine"]);
   });
 
   it("searches, filters by status and sorts", async () => {

@@ -133,7 +133,7 @@ Tests sit next to the code they test, as `*.test.ts` or `*.test.tsx`.
 | `albumFiles.ts`   | Checks albums read from files (`toAlbum`), finds duplicates, adds imported albums, and words import summaries            |
 | `albumFormats.ts` | The five formats, their labels, and the names files use for them                                                         |
 | `albumYears.ts`   | Reads years, and works out decades                                                                                       |
-| `albumList.ts`    | Searches, filters and sorts the albums for the screen, and lists the artists and decades to filter by                    |
+| `albumList.ts`    | Searches, filters, sorts and groups the albums for the screen, and lists the artists and decades to filter by            |
 | `timestamps.ts`   | Reads and compares dates, and picks the time to record a change at                                                       |
 
 ### `src/api`: the outside services
@@ -191,8 +191,9 @@ parts of those.
 | Component            | What it is                                                                                                                            |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `Layout`             | The theme, the header (name, version, sync icon and theme menu) and the page background. `theme.ts` beside it has the theme overrides |
-| `AlbumFilters`       | Search, sort, the status, format, artist and decade filters, and the album count                                                      |
+| `AlbumFilters`       | Search, sort, grouping, the status, format, artist and decade filters, and the album count                                            |
 | `AlbumViewToggle`    | Grid or list                                                                                                                          |
+| `AlbumSection`       | A heading and its albums, when they're grouped                                                                                        |
 | `MoreActionsMenu`    | The ⋯ menu: select albums, sync, export, import and settings                                                                          |
 | `AlbumCard`          | An album in the grid                                                                                                                  |
 | `AlbumRow`           | An album in the list                                                                                                                  |
@@ -267,8 +268,9 @@ The other types:
   devices delete their copy too, rather than syncing it back.
 - **`Collection`** (`{ albums, deleted }`) is everything saved about the
   collection, and what the store and sync work with.
-- **`Settings`** has the grid density, the format for new albums, and the view
-  and sort order last chosen. Settings belong to the device and aren't synced.
+- **`Settings`** has the grid density, the format for new albums, and the view,
+  sort order and grouping last chosen. Settings belong to the device and aren't
+  synced.
 
 ## Where data is kept
 
@@ -373,16 +375,17 @@ Editing an album, from the click to the commit:
 - **What's on screen:** the search, the status, format, artist and decade
   filters, the selection, and which dialog is open. These last until the page
   closes.
-- **Settings:** the view (grid or list) and the sort order, saved so that each
-  device opens the way it was left, plus the grid density and the format for
-  new albums.
+- **Settings:** the view (grid or list), the sort order and the grouping, saved
+  so that each device opens the way it was left, plus the grid density and the
+  format for new albums.
 
 From top to bottom, it renders `Layout` with the header; the toolbar, with
 `AlbumFilters` on one side and `AlbumViewToggle`, **Add album** and
 `MoreActionsMenu` on the other; `SelectionBar` in selection mode; and the albums
 that `selectAlbums` picks, as `AlbumCard`s in a grid or `AlbumRow`s in a list.
-The dialogs come last: `AlbumFormModal`, `SyncSetupDialog`, `SyncSettingsDialog`
-and `SettingsDialog`.
+When they're grouped, `groupAlbums` splits them into sections, each an
+`AlbumSection` with its own grid or list. The dialogs come last:
+`AlbumFormModal`, `SyncSetupDialog`, `SyncSettingsDialog` and `SettingsDialog`.
 
 Some details:
 
@@ -439,6 +442,22 @@ These live in `src/albums`.
   **Recently added** sorts by `addedAt`, newest first. Albums from before the
   app kept dates come last, newest of them first: the reverse of the order
   they're saved in.
+- **Grouping.** `groupAlbums` splits the albums `selectAlbums` picked into
+  sections, keeping their order within each, so the sort applies inside every
+  section:
+  - **Artist:** A to Z, ignoring case, headed as the first album shown spells
+    the name.
+  - **Decade:** oldest first, then "No year".
+  - **Format:** in the order the form lists them, then "No format".
+  - **Letter:** the first letter of the title, or of the artist when sorting by
+    artist, like a record shop's bins. Accents and leading punctuation are
+    skipped, so "(What's the Story)" goes under W, and titles that start with a
+    number go under "#", last.
+
+  Sections run backwards when the sort goes backwards by the same thing, such
+  as Z to A, or newest first when grouping by decade. Sections for albums
+  without a year or format stay last either way.
+
 - **Times.** `nextTimestamp` records a change at the current time, or 1 ms
   after the newest time already in the collection, if that's later. That way, a
   device whose clock runs behind can't make its new changes look older than ones
@@ -960,7 +979,7 @@ of the app:
    like the view and sort order.
 4. Use it from `settings` in `App.tsx`.
 
-### Add a sort order or a filter
+### Add a sort order, a filter or a grouping
 
 - **A sort order:** add it to `AlbumSortOrder` in `types.ts`, a comparator to
   `SORT_COMPARATORS` in `albums/albumList.ts`, and an option to `AlbumFilters`.
@@ -968,6 +987,9 @@ of the app:
   then on.
 - **A filter:** add its state to `App.tsx`, an option and a check to
   `selectAlbums`, and a control to `AlbumFilters`.
+- **A grouping:** add it to `AlbumGrouping` in `types.ts`, and to `GROUPINGS`,
+  `sectionOf` and `runsBackwards` in `albums/albumList.ts`, then an option to
+  `AlbumFilters`.
 
 ### Ask MusicBrainz for something new
 
