@@ -29,7 +29,8 @@ through a GitHub repository of your own.
   decade, format or first letter if you like. Each device opens with the view,
   sort order and grouping you last chose.
 - **Quick changes:** switch an album between owned and wishlisted on its card,
-  or select several to mark or delete at once. Deleting can be undone.
+  or select several to mark them owned or wishlisted, set their format, or
+  delete them at once. Deleting can be undone.
 - **Bringing your list:** import a JSON or CSV file, such as a spreadsheet with
   Title and Artist columns or a [Discogs](https://www.discogs.com/) collection
   export. Export your collection as either, for a backup or a spreadsheet.

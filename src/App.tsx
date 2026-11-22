@@ -3,6 +3,7 @@ import { Button, Divider, Empty, Flex, message, Modal } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { createStyles } from "antd-style";
 import { albumCount } from "./albums/albumFiles";
+import { FORMAT_LABELS } from "./albums/albumFormats";
 import {
   groupAlbums,
   listArtists,
@@ -29,6 +30,7 @@ import { useAlbums, useGitHubSync, useSettings } from "./hooks";
 import {
   Album,
   AlbumDecadeFilter,
+  AlbumFormat,
   AlbumFormatFilter,
   AlbumInput,
   AlbumStatusFilter,
@@ -75,6 +77,7 @@ export default function App() {
     addAlbum,
     updateAlbum,
     setAlbumsStatus,
+    setAlbumsFormat,
     deleteAlbums,
     importAlbums,
   } = useAlbums(store);
@@ -268,6 +271,17 @@ export default function App() {
     setSelectedIds(undefined);
   };
 
+  const setSelectedFormat = (format: AlbumFormat) => {
+    setAlbumsFormat(
+      selectedAlbums.map((album) => album.id),
+      format,
+    );
+    messageApi.success(
+      `Set the format of ${albumCount(selectedAlbums.length)} to ${FORMAT_LABELS[format]}.`,
+    );
+    setSelectedIds(undefined);
+  };
+
   const confirmDeleteSelected = () => {
     const count = albumCount(selectedAlbums.length);
     const ids = selectedAlbums.map((album) => album.id);
@@ -358,6 +372,7 @@ export default function App() {
             onDeselectAll={() => setSelectedIds(new Set())}
             onMarkOwned={() => markSelected("owned")}
             onMarkWishlisted={() => markSelected("wishlisted")}
+            onSetFormat={setSelectedFormat}
             onDelete={confirmDeleteSelected}
             onClose={() => setSelectedIds(undefined)}
           />

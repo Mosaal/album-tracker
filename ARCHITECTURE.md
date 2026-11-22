@@ -330,7 +330,8 @@ the current collection, given to `store.update`, and records its time with
 - `addAlbum` gives the album a UUID, and sets `addedAt` and `updatedAt`.
 - `updateAlbum` does nothing if no detail changed (`sameDetails`), so opening
   the form and saving it as it is doesn't make a commit.
-- `setAlbumsStatus` marks albums as owned or wishlisted.
+- `setAlbumsStatus` marks albums as owned or wishlisted, and `setAlbumsFormat`
+  sets their format. Both only stamp the albums that change.
 - `deleteAlbums` removes albums, remembers their deletion, and returns a
   function that undoes it. Undoing puts them back where they were, gives them a
   new `updatedAt` so they win over the deletion when syncing, and forgets the
@@ -395,9 +396,10 @@ Some details:
   pick up the theme. antd's static `Modal.confirm()` and `message` wouldn't.
 - **Deleting** asks first, with the focus on **Cancel** so Enter can't delete
   by accident. A message then offers **Undo** for 8 seconds.
-- **Selection mode** swaps each album's buttons for a checkbox. Only albums
-  still shown count as selected, so a filter can't hide what gets changed.
-  Escape ends it, unless the focus is in a dialog.
+- **Selection mode** swaps each album's buttons for a checkbox. `SelectionBar`
+  marks the selected albums owned or wishlisted, sets their format, or deletes
+  them. Only albums still shown count as selected, so a filter can't hide what
+  gets changed. Escape ends it, unless the focus is in a dialog.
 - **The decade filter** only appears once an album has a year. If the decade
   chosen disappears, say because its last album was deleted, the filter stops
   applying, so a hidden filter can't hide albums.

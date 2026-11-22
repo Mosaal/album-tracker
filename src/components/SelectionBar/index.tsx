@@ -1,8 +1,10 @@
-import { Button, Flex, Typography } from "antd";
-import { CloseOutlined } from "@ant-design/icons";
+import { Button, Dropdown, Flex, Typography } from "antd";
+import { CloseOutlined, DownOutlined } from "@ant-design/icons";
 import { createStyles } from "antd-style";
 
 import { albumCount } from "../../albums/albumFiles";
+import { FORMAT_OPTIONS } from "../../albums/albumFormats";
+import { AlbumFormat } from "../../types";
 
 const useStyles = createStyles(({ token, responsive }) => ({
   // Stays in view while scrolling through a long collection.
@@ -20,11 +22,15 @@ const useStyles = createStyles(({ token, responsive }) => ({
   },
   // On phones, the count and the actions get a full-width row each.
   group: { [responsive.xs]: { width: "100%" } },
-  // Narrower padding lets the three actions share a phone's row, which they
-  // then fill. Doubled to outweigh antd's button padding.
+  // On phones, the actions fill two even rows of two. Narrower padding lets
+  // the longest labels fit. Doubled to outweigh antd's button padding.
   actions: {
     [responsive.xs]: {
-      "&& > *": { flex: "1 1 auto", paddingInline: token.paddingXS },
+      "&& > *": {
+        // Half the row each, less half of the small gap between them.
+        flex: `1 1 calc(50% - ${token.paddingXS / 2}px)`,
+        paddingInline: token.paddingXS,
+      },
     },
   },
 }));
@@ -38,6 +44,7 @@ interface SelectionBarProps {
   onDeselectAll: () => void;
   onMarkOwned: () => void;
   onMarkWishlisted: () => void;
+  onSetFormat: (format: AlbumFormat) => void;
   onDelete: () => void;
   onClose: () => void;
 }
@@ -50,6 +57,7 @@ export function SelectionBar({
   onDeselectAll,
   onMarkOwned,
   onMarkWishlisted,
+  onSetFormat,
   onDelete,
   onClose,
 }: SelectionBarProps) {
@@ -85,6 +93,25 @@ export function SelectionBar({
         <Button disabled={count === 0} onClick={onMarkWishlisted}>
           Mark wishlisted
         </Button>
+        <Dropdown
+          trigger={["click"]}
+          disabled={count === 0}
+          menu={{
+            items: FORMAT_OPTIONS.map(({ value, label }) => ({
+              key: value,
+              label,
+            })),
+            onClick: ({ key }) => onSetFormat(key as AlbumFormat),
+          }}
+        >
+          <Button
+            disabled={count === 0}
+            icon={<DownOutlined />}
+            iconPlacement="end"
+          >
+            Set format
+          </Button>
+        </Dropdown>
         <Button danger disabled={count === 0} onClick={onDelete}>
           Delete
         </Button>
