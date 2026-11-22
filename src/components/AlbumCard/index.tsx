@@ -70,6 +70,8 @@ function AlbumCover({ album }: { album: Album }) {
 
 interface AlbumCardProps {
   album: Album;
+  /** In the compact grid, where the details get less room around them. */
+  compact?: boolean;
   onEdit: (album: Album) => void;
   onDelete: (album: Album) => void;
   onStatusChange: (album: Album, status: Album["status"]) => void;
@@ -79,6 +81,7 @@ interface AlbumCardProps {
 
 export function AlbumCard({
   album,
+  compact,
   onEdit,
   onDelete,
   onStatusChange,
@@ -89,6 +92,9 @@ export function AlbumCard({
   return (
     <Card
       cover={<AlbumCover album={album} />}
+      // antd's small size halves the padding around the details, and changes
+      // nothing else on a card without a header.
+      size={compact ? "small" : undefined}
       className={styles.card}
       classNames={{ body: styles.body, actions: styles.actions }}
       actions={

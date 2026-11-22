@@ -397,7 +397,8 @@ Some details:
   chosen disappears, say because its last album was deleted, the filter stops
   applying, so a hidden filter can't hide albums.
 - **The grid** has 5, 4, 3, 2 or 1 columns, from the widest screens to phones,
-  or 6 to 2 when it's compact.
+  or 6 to 2 when it's compact. Compact cards also have half the padding around
+  their details, using antd's small card size.
 - **The add and edit form** wraps the whole dialog in its `Form`, through
   `modalRender`, so Enter and the button in the footer submit it, and the footer
   can see the fields. A click outside doesn't close it, so a half-filled form
