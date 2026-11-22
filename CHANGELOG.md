@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.0](https://github.com/Mosaal/album-tracker/compare/v0.11.0...v0.12.0) (2026-11-22)
+
+
+### Features
+
+* group albums by artist, decade, format or first letter ([#60](https://github.com/Mosaal/album-tracker/issues/60)) ([6c86fdd](https://github.com/Mosaal/album-tracker/commit/6c86fdd69331537830dfae874bdeec1a0c04e77c))
+
 ## [0.11.0](https://github.com/Mosaal/album-tracker/compare/v0.10.0...v0.11.0) (2026-11-22)
 
 
