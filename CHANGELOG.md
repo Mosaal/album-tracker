@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.11.0](https://github.com/Mosaal/album-tracker/compare/v0.10.0...v0.11.0) (2026-11-22)
+
+
+### Features
+
+* choose a light, dark or system theme ([#58](https://github.com/Mosaal/album-tracker/issues/58)) ([3036339](https://github.com/Mosaal/album-tracker/commit/3036339786a736d71c0c12fcfa3cb718176b231f))
+
+
+### Bug Fixes
+
+* give cards in the compact grid less padding ([#55](https://github.com/Mosaal/album-tracker/issues/55)) ([ed38747](https://github.com/Mosaal/album-tracker/commit/ed38747402b83603fad4d623a922d308d5a215dd))
+* leave space below dialogs taller than the screen ([#56](https://github.com/Mosaal/album-tracker/issues/56)) ([5c06cbe](https://github.com/Mosaal/album-tracker/commit/5c06cbe7b127eda4fea8e1b5eceeb2d5b7947d13))
+* make the artist filter a plain dropdown ([#57](https://github.com/Mosaal/album-tracker/issues/57)) ([1324d43](https://github.com/Mosaal/album-tracker/commit/1324d43e7cb73e28b9fec460cf51105bbe5375e0))
+
 ## [0.10.0](https://github.com/Mosaal/album-tracker/compare/v0.9.0...v0.10.0) (2026-11-21)
 
 
