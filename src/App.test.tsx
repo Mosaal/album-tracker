@@ -298,15 +298,19 @@ describe("App", () => {
       ["Miles Davis", "1 album", ["Kind of Blue"]],
       ["Radiohead", "1 album", ["In Rainbows"]],
     ]);
+    // Only between sections, not before the first or after the last.
+    expect(screen.getAllByRole("separator")).toHaveLength(2);
 
     await choose(user, "Filter by status", "Wishlisted");
     expect(shownSections()).toEqual([
       ["Massive Attack", "1 album", ["Mezzanine"]],
       ["Radiohead", "1 album", ["In Rainbows"]],
     ]);
+    expect(screen.getAllByRole("separator")).toHaveLength(1);
 
     await choose(user, "Group albums", "No grouping");
     expect(shownSections()).toEqual([]);
+    expect(screen.queryAllByRole("separator")).toEqual([]);
     expect(cardTitles()).toEqual(["In Rainbows", "Mezzanine"]);
   });
 

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { Button, Empty, Flex, message, Modal } from "antd";
+import { Fragment, useEffect, useMemo, useState } from "react";
+import { Button, Divider, Empty, Flex, message, Modal } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { createStyles } from "antd-style";
 import { albumCount } from "./albums/albumFiles";
@@ -381,17 +381,16 @@ export default function App() {
             )}
           </Empty>
         ) : groups ? (
-          <Flex vertical gap="32px">
-            {groups.map((group) => (
-              <AlbumSection
-                key={group.key}
-                title={group.label}
-                count={group.albums.length}
-              >
-                {renderAlbums(group.albums)}
-              </AlbumSection>
+          <div>
+            {groups.map((group, index) => (
+              <Fragment key={group.key}>
+                {index > 0 && <Divider />}
+                <AlbumSection title={group.label} count={group.albums.length}>
+                  {renderAlbums(group.albums)}
+                </AlbumSection>
+              </Fragment>
             ))}
-          </Flex>
+          </div>
         ) : (
           renderAlbums(visibleAlbums)
         )}

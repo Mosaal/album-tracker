@@ -384,8 +384,9 @@ From top to bottom, it renders `Layout` with the header; the toolbar, with
 `MoreActionsMenu` on the other; `SelectionBar` in selection mode; and the albums
 that `selectAlbums` picks, as `AlbumCard`s in a grid or `AlbumRow`s in a list.
 When they're grouped, `groupAlbums` splits them into sections, each an
-`AlbumSection` with its own grid or list. The dialogs come last:
-`AlbumFormModal`, `SyncSetupDialog`, `SyncSettingsDialog` and `SettingsDialog`.
+`AlbumSection` with its own grid or list, and a divider between them. The
+dialogs come last: `AlbumFormModal`, `SyncSetupDialog`, `SyncSettingsDialog`
+and `SettingsDialog`.
 
 Some details:
 
