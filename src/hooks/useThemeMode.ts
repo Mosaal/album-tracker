@@ -1,37 +1,38 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
+
+import { useMediaQuery } from "./useMediaQuery";
 
 const STORAGE_KEY = "album-tracker:theme";
-const DARK_QUERY = "(prefers-color-scheme: dark)";
 
-type ThemeChoice = "light" | "dark";
+/** A light or dark theme, or whichever the system uses. */
+export type ThemeMode = "light" | "dark" | "system";
 
-function readStoredChoice(): ThemeChoice | null {
+function readStoredMode(): ThemeMode {
   const stored = localStorage.getItem(STORAGE_KEY);
-  return stored === "light" || stored === "dark" ? stored : null;
+  return stored === "light" || stored === "dark" ? stored : "system";
 }
 
-/** Follows the OS theme until the user picks one, which then persists across sessions. */
+/**
+ * The theme chosen on this device, and whether it's dark. It follows the
+ * system's until light or dark is chosen, which persists across sessions.
+ */
 export function useThemeMode() {
-  const [choice, setChoice] = useState<ThemeChoice | null>(readStoredChoice);
-  const [systemIsDark, setSystemIsDark] = useState(
-    () => window.matchMedia(DARK_QUERY).matches,
-  );
+  const [mode, setSavedMode] = useState(readStoredMode);
+  const systemIsDark = useMediaQuery("(prefers-color-scheme: dark)");
 
-  useEffect(() => {
-    const media = window.matchMedia(DARK_QUERY);
-    const handleChange = (event: MediaQueryListEvent) => {
-      setSystemIsDark(event.matches);
-    };
-
-    media.addEventListener("change", handleChange);
-    return () => media.removeEventListener("change", handleChange);
+  const setMode = useCallback((next: ThemeMode) => {
+    // Nothing saved means following the system, as index.html reads it too.
+    if (next === "system") {
+      localStorage.removeItem(STORAGE_KEY);
+    } else {
+      localStorage.setItem(STORAGE_KEY, next);
+    }
+    setSavedMode(next);
   }, []);
 
-  const setIsDark = useCallback((isDark: boolean) => {
-    const next: ThemeChoice = isDark ? "dark" : "light";
-    localStorage.setItem(STORAGE_KEY, next);
-    setChoice(next);
-  }, []);
-
-  return { isDark: choice ? choice === "dark" : systemIsDark, setIsDark };
+  return {
+    mode,
+    isDark: mode === "system" ? systemIsDark : mode === "dark",
+    setMode,
+  };
 }
