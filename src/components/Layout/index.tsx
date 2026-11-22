@@ -2,6 +2,7 @@ import { useLayoutEffect } from "react";
 import {
   App as AntdApp,
   ConfigProvider,
+  type ConfigProviderProps,
   Layout as AntdLayout,
   Space,
   Switch,
@@ -13,6 +14,14 @@ import { createStyles } from "antd-style";
 import { useMediaQuery, useThemeMode } from "../../hooks";
 import { getThemeConfig } from "./theme";
 
+// antd 6 moves each dialog 100px down the page but, unlike antd 5, leaves no
+// room below it, so a dialog taller than the screen ends flush with its bottom
+// edge. The room has to be padding on the dialog's own box: the move already
+// reaches past any small margin.
+const MODAL_CONFIG: ConfigProviderProps["modal"] = {
+  style: { paddingBottom: 24 },
+};
+
 interface LayoutProps {
   children?: React.ReactNode;
   /** Shown in the header, just before the theme switch. */
@@ -23,7 +32,10 @@ export function Layout({ children, headerExtra }: LayoutProps) {
   const { isDark, setIsDark } = useThemeMode();
   const isTouch = useMediaQuery("(pointer: coarse)");
   return (
-    <ConfigProvider theme={getThemeConfig(isDark, isTouch)}>
+    <ConfigProvider
+      theme={getThemeConfig(isDark, isTouch)}
+      modal={MODAL_CONFIG}
+    >
       <PageBackground isDark={isDark} />
       <AntdApp>
         <AntdLayout style={{ minHeight: "100vh" }}>
