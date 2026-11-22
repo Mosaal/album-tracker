@@ -213,19 +213,21 @@ describe("useAlbums", () => {
   });
 
   it("adds albums from a music folder as owned, and marks wishlisted ones found there as owned", () => {
+    const noCover = { ...KIND_OF_BLUE, coverUrl: undefined };
     const result = renderAlbums([
       { ...KIND_OF_BLUE, id: "1", status: "wishlisted" },
       {
-        ...KIND_OF_BLUE,
+        ...noCover,
         id: "2",
         title: "Milestones",
         status: "wishlisted",
         format: "vinyl",
       },
       { ...KIND_OF_BLUE, id: "3", title: "Sketches of Spain" },
+      { ...noCover, id: "4", title: "Porgy and Bess", status: "wishlisted" },
     ]);
 
-    let summary;
+    let summary: ReturnType<typeof result.current.importMusicFolder>;
     act(() => {
       summary = result.current.importMusicFolder(
         [
@@ -235,26 +237,38 @@ describe("useAlbums", () => {
             year: 1970,
             coverUrl: "https://example.com/bitches-brew.jpg",
           },
+          { title: "In a Silent Way", artist: "Miles Davis" },
           // In the collection already, with no format.
           { title: "Sketches of Spain", artist: "Miles Davis" },
         ],
-        ["1", "2"],
+        [
+          { id: "1", coverUrl: "https://example.com/another.jpg" },
+          { id: "2", coverUrl: "https://example.com/milestones.jpg" },
+          { id: "4" },
+        ],
         "digital",
       );
     });
 
-    expect(summary).toEqual({ added: 1, markedOwned: 2, skipped: 1 });
+    // The format and cover are only filled in where they were missing.
     expect(saved()).toEqual([
-      // Only filled in where the format was missing.
       { ...KIND_OF_BLUE, id: "1", format: "digital", updatedAt: NOW },
       {
         ...KIND_OF_BLUE,
         id: "2",
         title: "Milestones",
         format: "vinyl",
+        coverUrl: "https://example.com/milestones.jpg",
         updatedAt: NOW,
       },
       { ...KIND_OF_BLUE, id: "3", title: "Sketches of Spain" },
+      {
+        ...noCover,
+        id: "4",
+        title: "Porgy and Bess",
+        format: "digital",
+        updatedAt: NOW,
+      },
       {
         id: expect.any(String),
         title: "Bitches Brew",
@@ -266,7 +280,23 @@ describe("useAlbums", () => {
         addedAt: NOW,
         updatedAt: NOW,
       },
+      {
+        id: expect.any(String),
+        title: "In a Silent Way",
+        artist: "Miles Davis",
+        format: "digital",
+        status: "owned",
+        addedAt: NOW,
+        updatedAt: NOW,
+      },
     ]);
+    // Those still without a cover are given back, to look covers up for.
+    expect(summary!).toEqual({
+      added: 2,
+      markedOwned: 3,
+      skipped: 1,
+      withoutCover: ["4", saved()[5].id],
+    });
   });
 
   it("picks up albums saved by another tab", () => {

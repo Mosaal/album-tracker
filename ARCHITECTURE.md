@@ -143,7 +143,7 @@ Tests sit next to the code they test, as `*.test.ts` or `*.test.tsx`.
 | File               | What it does                                                                         |
 | ------------------ | ------------------------------------------------------------------------------------ |
 | `musicBrainz.ts`   | Requests to MusicBrainz, with retries, and the helpers the two files below share     |
-| `coverArt.ts`      | Finds covers by title and artist                                                     |
+| `coverArt.ts`      | Finds covers by title and artist, and picks out the one for an album                 |
 | `barcodeLookup.ts` | Finds an album by its barcode                                                        |
 | `github.ts`        | A small GitHub client: open a repository, read and save a file, and explain failures |
 
@@ -164,6 +164,12 @@ Tests sit next to the code they test, as `*.test.ts` or `*.test.tsx`.
 | `musicTags.ts`    | Reads the tags of music files, with music-metadata, which it loads when first needed   |
 | `musicLibrary.ts` | Puts the tracks of a music folder together into albums, and says which look incomplete |
 
+### `src/covers`: finding missing covers
+
+| File             | What it does                                                                                             |
+| ---------------- | -------------------------------------------------------------------------------------------------------- |
+| `coverFinder.ts` | Looks up covers for albums without one, in the background, about one a second, and saves them as it goes |
+
 ### `src/sync`: syncing through GitHub
 
 | File             | What it does                                                                              |
@@ -178,13 +184,14 @@ Tests sit next to the code they test, as `*.test.ts` or `*.test.tsx`.
 
 ### `src/hooks`: React hooks
 
-| File               | What it does                                                                                                 |
-| ------------------ | ------------------------------------------------------------------------------------------------------------ |
-| `useAlbums.ts`     | The albums, and every change to them: add, edit, mark, delete with undo, import from files and music folders |
-| `useGitHubSync.ts` | Creates and starts the sync engine, and follows its state                                                    |
-| `useSettings.ts`   | This device's settings                                                                                       |
-| `useThemeMode.ts`  | Light, dark or the system's theme, whichever was chosen                                                      |
-| `useMediaQuery.ts` | Whether a CSS media query matches                                                                            |
+| File                | What it does                                                                                                 |
+| ------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `useAlbums.ts`      | The albums, and every change to them: add, edit, mark, delete with undo, import from files and music folders |
+| `useCoverFinder.ts` | Creates the cover finder, and stops it when the app closes                                                   |
+| `useGitHubSync.ts`  | Creates and starts the sync engine, and follows its state                                                    |
+| `useSettings.ts`    | This device's settings                                                                                       |
+| `useThemeMode.ts`   | Light, dark or the system's theme, whichever was chosen                                                      |
+| `useMediaQuery.ts`  | Whether a CSS media query matches                                                                            |
 
 ### `src/components`: the interface
 
@@ -216,6 +223,7 @@ are parts of those.
 | `SyncSetupDialog`    | Connects to a repository, as a new setup or with a setup code                                                                         |
 | `SyncSettingsDialog` | The sync status, Sync now, the setup code, the token and Disconnect                                                                   |
 | `SyncStatusButton`   | The sync icon in the header                                                                                                           |
+| `CoverFinderStatus`  | How finding covers is going, as a ring in the header, with **Stop**                                                                   |
 | `ThemeMenu`          | The theme button in the header, with Light, Dark and System to pick from                                                              |
 | `ExternalLink`       | A link that opens in a new tab                                                                                                        |
 | `formRules.ts`       | Form checks the sync dialogs share                                                                                                    |
@@ -229,6 +237,7 @@ are parts of those.
 | `test/fakeGitHub.ts` | A stand-in for GitHub's API, and in-memory storage for more devices                                    |
 | `utils/base64.ts`    | Base64 for any text, not just Latin-1                                                                  |
 | `utils/urls.ts`      | Checks that a URL is http or https                                                                     |
+| `utils/wait.ts`      | Waits a while, unless it's cancelled first                                                             |
 
 ### Which folder uses which
 
@@ -237,7 +246,7 @@ Each layer only imports from the layers below it:
 1. `App.tsx`
 2. `components`
 3. `hooks`
-4. `sync`
+4. `sync` and `covers`
 5. `api`, `importExport` and `barcodes`
 6. `albums`
 7. `utils` and `types.ts`
@@ -357,6 +366,11 @@ it's dark. System, the default, follows the device's theme, as it changes.
 **`useGitHubSync(store)`** creates the sync engine once, starts it in an effect
 (whose cleanup stops it), and reads its state with `useSyncExternalStore`.
 
+**`useCoverFinder(store)`** creates the cover finder once, and stops it when the
+app closes. It doesn't read the finder's state: `CoverFinderStatus` does, so
+its progress, which changes every second, only renders that button rather than
+the whole screen.
+
 ## How a change travels
 
 Editing an album, from the click to the commit:
@@ -389,7 +403,9 @@ Editing an album, from the click to the commit:
   so that each device opens the way it was left, plus the grid density and the
   format for new albums.
 
-From top to bottom, it renders `Layout` with the header; the toolbar, with
+From top to bottom, it renders `Layout` with the header, which shows
+`CoverFinderStatus` and `SyncStatusButton` while they have something to show;
+the toolbar, with
 `AlbumFilters` on one side and `AlbumViewToggle`, **Add album** and
 `MoreActionsMenu` on the other; `SelectionBar` in selection mode; and the albums
 that `selectAlbums` picks, as `AlbumCard`s in a grid or `AlbumRow`s in a list.
@@ -500,6 +516,43 @@ These live in `src/albums`.
   away. Failures throw a `MusicBrainzError`, with `offline` or `unavailable` as
   the reason, for the interface to explain. Each request takes an
   `AbortSignal`, so closing a dialog cancels its requests.
+
+### Finding missing covers
+
+**Find missing covers…** in the ⋯ menu looks up a cover for every album
+without one, after asking, and saying how long it takes. Importing a music
+folder does the same, without asking, for the albums it adds or marks owned
+that still have none. Both hand the albums to the cover finder,
+`createCoverFinder` (`covers/coverFinder.ts`), which works in the background
+while the app is open:
+
+- **One album at a time,** at least 1.1 seconds apart, as MusicBrainz asks for
+  one request a second. Each album is read from the store when its turn comes,
+  so one deleted, or given a cover, meanwhile is skipped.
+- **Only the same album's cover.** `findCover` (`api/coverArt.ts`) searches
+  for the album's title without its edition (`withoutEdition` drops
+  "(Remastered 2009)", "[Deluxe Edition]", " - EP" and the like), then keeps
+  the results whose title and artist match its own, ignoring accents, case,
+  punctuation, "&" and a leading "The" (`matchCovers`). The year closest to
+  the album's comes first, which picks the right one of Weezer's albums called
+  "Weezer". Nothing else is taken: a wrong cover is worse than none.
+- **Only covers that exist.** It asks the Cover Art Archive for the cover with
+  `HEAD` and `redirect: "manual"`: the archive redirects to images it has,
+  which the browser hides as an opaque redirect without following it, and
+  answers 404 otherwise. It checks up to 3 matches.
+- **Saved in batches,** once 20 covers are waiting or 30 seconds after the last
+  save, and at the end. Each save is one change to the store, so the screen
+  and sync redo their work a few times rather than once per album. A cover
+  isn't saved over one set meanwhile.
+- **When MusicBrainz stays busy** after its own retries, the finder waits 30
+  seconds, then a minute, then two, trying the same album each time, and stops
+  if it's still busy. Offline, it stops straight away. The covers found are
+  kept either way, and running it again carries on: only albums without a
+  cover are looked up.
+- **Progress** shows in the header, as a ring that `CoverFinderStatus` draws
+  with SVG rather than antd's `Progress`, which would add to the main bundle.
+  Clicking it says how far it's got, and offers **Stop**. When a run ends,
+  `App.tsx` says how it went (`describeCoverSearch`).
 
 ## Barcodes
 
@@ -613,7 +666,8 @@ own.
    albums found with the collection:
    - Owned in that format, or with no format: already there, so not listed.
    - On the wishlist in that format, or with no format: ticked, and marked as
-     owned on import, getting the format if it had none.
+     owned on import, getting the format, and the cover its files name, if it
+     had none.
    - Owned only in other formats: listed, unticked, saying which.
    - Anything else is new, including albums wished for in another format: you
      might want the record even with the download. New albums are ticked
@@ -621,7 +675,9 @@ own.
      or under half the tracks their tags count.
 5. **Import.** `importMusicFolder` adds the albums ticked and marks the
    wishlisted ones owned, in one change, so one sync. If the browser's storage
-   is full, nothing changes and the dialog says so.
+   is full, nothing changes and the dialog says so. The albums it added or
+   marked that still have no cover then have one looked up, as
+   [finding missing covers](#finding-missing-covers) does.
 
 A library can have thousands of albums, so each row of the list is plain
 elements rather than antd components, rows out of view skip layout with
@@ -977,6 +1033,9 @@ them in jsdom, with Testing Library and user-event.
   request fail (`failNextWith`), or run code when a save arrives
   (`beforeNextSave`), to have another device save at just the wrong moment.
   `commits` lists each commit's message and text.
+- **The cover finder is tested with fake timers** and a stand-in for
+  `findCover`, so its pace, its batches and its waits for a busy MusicBrainz
+  take no time.
 - **The interface is tested the way people use it.** Most of its tests render
   the whole `<App />` and click through it, including those for the menu, the
   selection bar, and the settings and sync dialogs, so they test the real
@@ -1097,7 +1156,9 @@ default, and listen for `storage` events if open tabs should follow.
 | Ant Design                                                  | Complete, accessible components, with themes                                            | A large bundle, which the app shell and the service worker make up for                         |
 | The browser's barcode reader, or ZXing loaded when needed   | The browser's is built in, and ZXing covers iPhones without slowing anyone else         | Two paths to test                                                                              |
 | Music folders read in the browser, from their tags          | Nothing is uploaded, and no server is needed                                            | Files with poor tags fall back to folder names, and some albums need fixing by hand afterwards |
-| Covers for music folders from MusicBrainz ids only          | Thousands of albums import at once, without thousands of searches                       | Albums whose files have no MusicBrainz ids get no cover                                        |
+| Covers for music folders from their MusicBrainz ids, first  | They're exact, and need no search                                                       | Albums whose files have no ids wait for the cover finder                                       |
+| Missing covers only when the title and artist match         | A wrong cover is worse than none                                                        | Albums named differently from MusicBrainz get none, and need **Find covers** by hand           |
+| One cover lookup a second                                   | MusicBrainz asks for it, and turns busier clients away                                  | A big library takes a while: about 7 minutes for 400 albums                                    |
 | Deploy on release, not on merge                             | The site is always a released version                                                   | Merged changes wait for the next release                                                       |
 
 ## Known limitations
@@ -1121,6 +1182,10 @@ default, and listen for `storage` events if open tabs should follow.
 - **Music on phones.** Phones' browsers can only pick folders from their file
   apps, so music that apps like Music or Spotify keep can't be imported. A
   computer can import it, and sync brings the albums to the phone.
+- **Finding covers only runs while the app is open,** and browsers slow down
+  timers in background tabs, so it slows down there too. If the app closes,
+  **Find missing covers…** picks up where it stopped, looking up again the
+  albums it couldn't find covers for.
 - **Updates wait** until every tab and window of the app has been closed.
 - **The main bundle** is about 1 MB of JavaScript, about 320 kB compressed, and
   Vite warns that it's over 500 kB on every build.

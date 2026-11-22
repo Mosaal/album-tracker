@@ -194,31 +194,42 @@ export function useAlbums(store: CollectionStore) {
 
   /**
    * Adds albums found in a music folder as owned, in the format chosen, and
-   * marks the wishlisted ones found there as owned, in that format if they
-   * had none. Albums already in the collection by then are skipped.
+   * marks the wishlisted ones found there as owned, filling in the format and
+   * cover if they had none. Albums already in the collection by then are
+   * skipped. Also returns the albums it added or marked that have no cover.
    */
   const importMusicFolder = useCallback(
     (
       found: Pick<AlbumInput, "title" | "artist" | "year" | "coverUrl">[],
-      wishlistedIds: string[],
+      wishlisted: { id: string; coverUrl?: string }[],
       format: AlbumFormat,
     ) => {
-      let summary = { added: 0, markedOwned: 0, skipped: 0 };
-      const toMarkOwned = new Set(wishlistedIds);
+      let summary = {
+        added: 0,
+        markedOwned: 0,
+        skipped: 0,
+        withoutCover: [] as string[],
+      };
+      const covers = new Map(
+        wishlisted.map(({ id, coverUrl }) => [id, coverUrl]),
+      );
       store.update((current) => {
         const now = nextTimestamp(current);
-        let markedOwned = 0;
+        const markedOwned: Album[] = [];
         const withOwned = current.albums.map((album) => {
-          if (album.status !== "wishlisted" || !toMarkOwned.has(album.id)) {
+          if (album.status !== "wishlisted" || !covers.has(album.id)) {
             return album;
           }
-          markedOwned += 1;
-          return {
+          const coverUrl = album.coverUrl || covers.get(album.id);
+          const owned: Album = {
             ...album,
-            status: "owned" as const,
+            status: "owned",
             format: album.format ?? format,
+            ...(coverUrl && { coverUrl }),
             updatedAt: now,
           };
+          markedOwned.push(owned);
+          return owned;
         });
         const { albums, added, skipped } = mergeAlbums(
           withOwned,
@@ -234,8 +245,15 @@ export function useAlbums(store: CollectionStore) {
             updatedAt: now,
           })),
         );
-        summary = { added, markedOwned, skipped };
-        return added === 0 && markedOwned === 0
+        summary = {
+          added,
+          markedOwned: markedOwned.length,
+          skipped,
+          withoutCover: [...markedOwned, ...albums.slice(withOwned.length)]
+            .filter((album) => !album.coverUrl)
+            .map(({ id }) => id),
+        };
+        return added === 0 && markedOwned.length === 0
           ? current
           : { ...current, albums };
       });

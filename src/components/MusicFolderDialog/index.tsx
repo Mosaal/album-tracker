@@ -203,12 +203,12 @@ interface MusicFolderDialogProps {
   /** The collection, which the albums found are compared with. */
   albums: Album[];
   /**
-   * Adds the albums ticked, and marks the wishlisted ones owned. Throws if
-   * they can't be saved.
+   * Adds the albums ticked, and marks the wishlisted ones owned, with the
+   * covers found for them. Throws if they can't be saved.
    */
   onImport: (
     found: Pick<AlbumInput, "title" | "artist" | "year" | "coverUrl">[],
-    wishlistedIds: string[],
+    wishlisted: { id: string; coverUrl?: string }[],
     format: AlbumFormat,
   ) => void;
   onClose: () => void;
@@ -356,8 +356,16 @@ export function MusicFolderDialog({
                 },
               ],
         ),
-        chosen.flatMap(({ match }) =>
-          match.kind === "wishlisted" ? [match.id] : [],
+        chosen.flatMap(({ album, match }) =>
+          match.kind === "wishlisted"
+            ? [
+                {
+                  id: match.id,
+                  coverUrl:
+                    album.releaseGroupId && coverOf(album.releaseGroupId, 500),
+                },
+              ]
+            : [],
         ),
         format!,
       );

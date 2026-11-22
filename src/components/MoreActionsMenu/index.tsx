@@ -6,6 +6,7 @@ import {
   EllipsisOutlined,
   FolderOpenOutlined,
   GithubOutlined,
+  PictureOutlined,
   SettingOutlined,
   UploadOutlined,
 } from "@ant-design/icons";
@@ -19,6 +20,8 @@ import { Album } from "../../types";
 interface MoreActionsMenuProps {
   /** Starts picking albums to change or delete together. */
   onSelectAlbums: () => void;
+  /** Offers to look up covers for the albums without one. */
+  onFindMissingCovers: () => void;
   /** Whether this device syncs with GitHub, which changes the sync item. */
   isSyncConnected: boolean;
   /** Opens the sync setup, or its settings once connected. */
@@ -34,14 +37,16 @@ const isCsv = (file: File) =>
   file.type === "text/csv" || file.name.toLowerCase().endsWith(".csv");
 
 /**
- * The ⋯ menu: select albums, sync with GitHub, save the collection to a file,
- * add albums from one or from a folder of music, or change settings.
+ * The ⋯ menu: select albums, find missing covers, sync with GitHub, save the
+ * collection to a file, add albums from one or from a folder of music, or
+ * change settings.
  */
 export function MoreActionsMenu({
   albums,
   onImport,
   onImportMusicFolder,
   onSelectAlbums,
+  onFindMissingCovers,
   isSyncConnected,
   onOpenSync,
   onOpenSettings,
@@ -106,6 +111,12 @@ export function MoreActionsMenu({
               disabled: albums.length === 0,
             },
             {
+              key: "find-covers",
+              icon: <PictureOutlined />,
+              label: "Find missing covers…",
+              disabled: albums.every((album) => album.coverUrl),
+            },
+            {
               key: "sync",
               icon: <GithubOutlined />,
               label: isSyncConnected ? "Sync settings…" : "Sync with GitHub…",
@@ -143,6 +154,8 @@ export function MoreActionsMenu({
           onClick: ({ key }) => {
             if (key === "select") {
               onSelectAlbums();
+            } else if (key === "find-covers") {
+              onFindMissingCovers();
             } else if (key === "sync") {
               onOpenSync();
             } else if (key === "settings") {

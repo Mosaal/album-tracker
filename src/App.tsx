@@ -18,6 +18,7 @@ import {
   AlbumRow,
   AlbumSection,
   AlbumViewToggle,
+  CoverFinderStatus,
   Layout,
   MoreActionsMenu,
   SelectionBar,
@@ -26,7 +27,8 @@ import {
   SyncSetupDialog,
   SyncStatusButton,
 } from "./components";
-import { useAlbums, useGitHubSync, useSettings } from "./hooks";
+import { describeCoverSearch, LOOKUP_EVERY_MS } from "./covers/coverFinder";
+import { useAlbums, useCoverFinder, useGitHubSync, useSettings } from "./hooks";
 import {
   Album,
   AlbumDecadeFilter,
@@ -105,9 +107,25 @@ export default function App() {
   // Rendered inside Layout below, so dialogs and messages pick up the theme.
   const [modal, modalContextHolder] = Modal.useModal();
   const [messageApi, messageContextHolder] = message.useMessage();
+  const coverFinder = useCoverFinder(store);
   // The albums picked in selection mode, or undefined outside it.
   const [selectedIds, setSelectedIds] = useState<Set<string>>();
   const isSelecting = selectedIds !== undefined;
+
+  useEffect(
+    () =>
+      coverFinder.onEnd((end, state) => {
+        const content = describeCoverSearch(end, state);
+        if (end === "offline" || end === "unavailable") {
+          messageApi.warning(content);
+        } else if (end === "done" && state.found > 0) {
+          messageApi.success(content);
+        } else {
+          messageApi.info(content);
+        }
+      }),
+    [coverFinder, messageApi],
+  );
 
   const artists = useMemo(() => listArtists(albums), [albums]);
   const decades = useMemo(() => listDecades(albums), [albums]);
@@ -310,22 +328,45 @@ export default function App() {
 
   const importFromMusicFolder = (
     found: Pick<AlbumInput, "title" | "artist" | "year" | "coverUrl">[],
-    wishlistedIds: string[],
+    wishlisted: { id: string; coverUrl?: string }[],
     format: AlbumFormat,
   ) => {
     // Throws, leaving the dialog open, if the albums can't be saved.
-    const summary = importMusicFolder(found, wishlistedIds, format);
+    const { withoutCover, ...summary } = importMusicFolder(
+      found,
+      wishlisted,
+      format,
+    );
     setIsMusicFolderOpen(false);
     messageApi.success(describeMusicImport(summary));
+    coverFinder.find(withoutCover);
+  };
+
+  const findMissingCovers = () => {
+    const ids = albums.filter((album) => !album.coverUrl).map(({ id }) => id);
+    const minutes = Math.round((ids.length * LOOKUP_EVERY_MS) / 60_000);
+    modal.confirm({
+      title: `Find covers for ${albumCount(ids.length)}?`,
+      content: `Album Tracker looks each one up on MusicBrainz, about one a second, so it takes ${
+        minutes < 1
+          ? "under a minute"
+          : `about ${minutes} minute${minutes === 1 ? "" : "s"}`
+      }. Covers appear as they're found, while the app stays open.`,
+      okText: "Find covers",
+      onOk: () => coverFinder.find(ids),
+    });
   };
 
   return (
     <Layout
       headerExtra={
-        <SyncStatusButton
-          state={sync.state}
-          onClick={() => setSyncDialog("settings")}
-        />
+        <Flex gap="small" align="center">
+          <CoverFinderStatus finder={coverFinder} />
+          <SyncStatusButton
+            state={sync.state}
+            onClick={() => setSyncDialog("settings")}
+          />
+        </Flex>
       }
     >
       <Flex vertical gap="16px">
@@ -372,6 +413,7 @@ export default function App() {
                 onImport={importAlbums}
                 onImportMusicFolder={() => setIsMusicFolderOpen(true)}
                 onSelectAlbums={() => setSelectedIds(new Set())}
+                onFindMissingCovers={findMissingCovers}
                 isSyncConnected={isSyncConnected}
                 onOpenSync={() =>
                   setSyncDialog(isSyncConnected ? "settings" : "setup")

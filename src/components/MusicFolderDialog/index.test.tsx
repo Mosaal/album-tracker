@@ -10,18 +10,25 @@ import type { ICommonTagsResult } from "music-metadata";
 import { describe, expect, it, vi } from "vitest";
 
 import App from "../../App";
+import { findCover } from "../../api/coverArt";
 import { COVER_ART_URL } from "../../api/musicBrainz";
 import { NoMotion } from "../../test/NoMotion";
 import { Album } from "../../types";
 
 const { parseBlob } = vi.hoisted(() => ({ parseBlob: vi.fn() }));
 vi.mock("music-metadata", () => ({ parseBlob }));
+// Covers for albums without one are looked up after importing.
+vi.mock("../../api/coverArt", async (importOriginal) => ({
+  ...(await importOriginal()),
+  findCover: vi.fn(async () => undefined),
+}));
 
 const STORAGE_KEY = "album-tracker:albums";
 const saved = (): Album[] =>
   JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]");
 
 const OK_COMPUTER = "b1392450-e666-3926-a536-22c65f834433";
+const IN_RAINBOWS = "6e335887-60ba-38f0-95af-fae7774336bf";
 
 const COLLECTION: Album[] = [
   { id: "1", title: "In Rainbows", artist: "Radiohead", status: "wishlisted" },
@@ -43,7 +50,11 @@ const MUSIC: Record<string, Partial<ICommonTagsResult>> = {
     originaldate: "1997-05-21",
     musicbrainz_releasegroupid: OK_COMPUTER,
   },
-  "Radiohead/In Rainbows": { album: "In Rainbows", artist: "Radiohead" },
+  "Radiohead/In Rainbows": {
+    album: "In Rainbows",
+    artist: "Radiohead",
+    musicbrainz_releasegroupid: IN_RAINBOWS,
+  },
   "Miles Davis/Kind of Blue": { album: "Kind of Blue", artist: "Miles Davis" },
   "Massive Attack/Blue Lines": {
     album: "Blue Lines",
@@ -159,10 +170,12 @@ describe("importing a music folder", () => {
       ),
     ).toBeVisible();
     expect(saved()).toEqual([
+      // Marked owned, with the format chosen and the cover its files name.
       {
         ...COLLECTION[0],
         status: "owned",
         format: "digital",
+        coverUrl: `${COVER_ART_URL}/${IN_RAINBOWS}/front-500`,
         updatedAt: expect.any(String),
       },
       COLLECTION[1],
@@ -182,6 +195,13 @@ describe("importing a music folder", () => {
         status: "owned",
       }),
     ]);
+    // Kind of Blue, still without a cover, has one looked up.
+    await waitFor(() =>
+      expect(findCover).toHaveBeenCalledExactlyOnceWith(
+        { title: "Kind of Blue", artist: "Miles Davis", year: undefined },
+        expect.any(AbortSignal),
+      ),
+    );
   });
 
   it("says when a folder has no music, and stops reading when cancelled", async () => {
