@@ -36,6 +36,10 @@ const gridColumns = () =>
     .gridTemplateColumns;
 const columns = (count: number) => `repeat(${count}, minmax(0px, 1fr))`;
 
+/** The space around an album's details on its card. */
+const detailsPadding = () =>
+  getComputedStyle(document.querySelector(".ant-card-body")!).padding;
+
 async function findDialog(title: string) {
   const dialog = await screen.findByRole("dialog");
   expect(dialog).toHaveTextContent(title);
@@ -80,6 +84,16 @@ describe("settings", () => {
     unmount();
     renderApp();
     expect(gridColumns()).toBe(columns(5));
+  });
+
+  it("gives albums in the compact grid less padding around their details", async () => {
+    const { user } = renderApp();
+    expect(detailsPadding()).toBe("24px");
+
+    const dialog = await openSettings(user);
+    await user.click(within(dialog).getByText("Compact"));
+
+    expect(detailsPadding()).toBe("12px");
   });
 
   it("opens with the view and sort order last chosen", async () => {

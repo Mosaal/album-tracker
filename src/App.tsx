@@ -340,6 +340,7 @@ export default function App() {
               <AlbumCard
                 key={album.id}
                 album={album}
+                compact={settings.gridDensity === "compact"}
                 onEdit={openEditForm}
                 onDelete={confirmDelete}
                 onStatusChange={changeStatus}
