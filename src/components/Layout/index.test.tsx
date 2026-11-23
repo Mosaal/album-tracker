@@ -1,12 +1,13 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { Input, Select } from "antd";
-import { afterEach, describe, expect, it } from "vitest";
+import { Input, Modal, Select } from "antd";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { NoMotion } from "../../test/NoMotion";
 import { Layout } from ".";
 
 const realMatchMedia = window.matchMedia;
+const realScrollY = Object.getOwnPropertyDescriptor(window, "scrollY")!;
 
 /** The font size of each kind of field, on a touch screen or with a mouse. */
 function fieldFontSizes(isTouch: boolean) {
@@ -30,6 +31,8 @@ function fieldFontSizes(isTouch: boolean) {
 describe("Layout", () => {
   afterEach(() => {
     window.matchMedia = realMatchMedia;
+    Object.defineProperty(window, "scrollY", realScrollY);
+    vi.restoreAllMocks();
   });
 
   // iOS zooms in on a field with text smaller than 16px when it's focused.
@@ -61,5 +64,42 @@ describe("Layout", () => {
     await user.click(await screen.findByRole("menuitem", { name: /system/i }));
     expect(shownTheme()).toBe("dark");
     expect(savedTheme()).toBeNull();
+  });
+
+  // antd only hides the body's vertical overflow, which iOS ignores for touch.
+  it("leaves the page nothing to scroll behind dialogs, then scrolls it back", async () => {
+    let pageScroll = 300;
+    Object.defineProperty(window, "scrollY", {
+      configurable: true,
+      get: () => pageScroll,
+    });
+    const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+    const page = (isEditing: boolean, isConfirming: boolean) => (
+      <Layout>
+        <Modal open={isEditing} title="Edit album" />
+        <Modal open={isConfirming} title="Delete this album?" />
+      </Layout>
+    );
+    const isCutToWindow = () =>
+      [document.documentElement, document.body].every(
+        ({ style }) => style.overflow === "hidden" && style.height === "100%",
+      );
+
+    const { rerender } = render(page(true, false), { wrapper: NoMotion });
+    await waitFor(() => expect(isCutToWindow()).toBe(true));
+    // As tall as the window, the page has nothing left to scroll.
+    pageScroll = 0;
+
+    rerender(page(true, true));
+    rerender(page(true, false));
+    await waitFor(() =>
+      expect(screen.getByText("Delete this album?")).not.toBeVisible(),
+    );
+    expect(isCutToWindow()).toBe(true);
+    expect(scrollTo).not.toHaveBeenCalled();
+
+    rerender(page(false, false));
+    await waitFor(() => expect(scrollTo).toHaveBeenCalledWith(0, 300));
+    expect(isCutToWindow()).toBe(false);
   });
 });
