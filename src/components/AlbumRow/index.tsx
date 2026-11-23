@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import { Avatar, Card, Flex, Tag, theme, Typography } from "antd";
 import { PictureOutlined } from "@ant-design/icons";
 
@@ -45,18 +45,29 @@ interface AlbumRowProps {
   onEdit: (album: Album) => void;
   onDelete: (album: Album) => void;
   onStatusChange: (album: Album, status: Album["status"]) => void;
-  /** Set in selection mode, which swaps the row's buttons for a checkbox. */
-  selection?: AlbumSelection;
+  /**
+   * Whether the album is picked, set only in selection mode, which swaps the
+   * row's buttons for a checkbox.
+   */
+  selected?: boolean;
+  onToggleSelected: (album: Album) => void;
 }
 
-export function AlbumRow({
+// Memoised, so a change to one album, or to the page around them, doesn't
+// render every row again.
+export const AlbumRow = memo(function AlbumRow({
   album,
   onEdit,
   onDelete,
   onStatusChange,
-  selection,
+  selected,
+  onToggleSelected,
 }: AlbumRowProps) {
   const { token } = theme.useToken();
+  const selection: AlbumSelection | undefined =
+    selected === undefined
+      ? undefined
+      : { selected, onToggle: onToggleSelected };
 
   return (
     <Card size="small">
@@ -93,4 +104,4 @@ export function AlbumRow({
       </Flex>
     </Card>
   );
-}
+});

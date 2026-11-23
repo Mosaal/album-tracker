@@ -104,6 +104,7 @@ A few ideas explain most of the decisions below.
 | vite-plugin-pwa (Workbox)                       | The service worker and the web app manifest | Installable and offline with a few lines of config                                                                                 |
 | `barcode-detector` and `zxing-wasm`             | Reading barcodes where the browser can't    | The same API as the browser's own `BarcodeDetector`, backed by ZXing compiled to WebAssembly                                       |
 | `music-metadata`                                | Reading the tags of music files             | Reads the tags of every common audio format in the browser, a slice of each file at a time, loading each format's parser as needed |
+| `@tanstack/react-virtual`                       | Building only the albums near the screen    | Handles rows of different heights that follow the page's scrolling, and leaves the markup to the app                               |
 | Vitest, Testing Library and jsdom               | Tests                                       | Vitest shares Vite's config, and Testing Library tests the app the way people use it                                               |
 | ESLint and Prettier                             | Linting and formatting                      | Checked in CI                                                                                                                      |
 | GitHub Actions, release-please and GitHub Pages | CI, releases and hosting                    | Free, with nothing to run                                                                                                          |
@@ -205,7 +206,8 @@ are parts of those.
 | `Layout`             | The theme, the header (name, version, sync icon and theme menu) and the page background. `theme.ts` beside it has the theme overrides, and `pinPage.ts` holds the page still behind dialogs |
 | `AlbumFilters`       | Search, sort, grouping, the status, format, artist and decade filters, and the album count                                                                                                  |
 | `AlbumViewToggle`    | Grid or list                                                                                                                                                                                |
-| `AlbumSection`       | A heading and its albums, when they're grouped                                                                                                                                              |
+| `AlbumSection`       | A heading and its albums, when they're grouped. A long collection only uses the heading                                                                                                     |
+| `AlbumView`          | The albums shown, as a grid or a list, in sections when grouped. A long collection only has the rows near the screen built                                                                  |
 | `MoreActionsMenu`    | The ⋯ menu: select albums, sync, export, import and settings                                                                                                                                |
 | `MusicFolderDialog`  | Imports the albums in a folder of music files: choose the folder, read it, pick the format and the albums                                                                                   |
 | `AlbumCard`          | An album in the grid                                                                                                                                                                        |
@@ -408,10 +410,10 @@ From top to bottom, it renders `Layout` with the header, which shows
 `CoverFinderStatus` and `SyncStatusButton` while they have something to show;
 the toolbar, with
 `AlbumFilters` on one side and `AlbumViewToggle`, **Add album** and
-`MoreActionsMenu` on the other; `SelectionBar` in selection mode; and the albums
-that `selectAlbums` picks, as `AlbumCard`s in a grid or `AlbumRow`s in a list.
-When they're grouped, `groupAlbums` splits them into sections, each an
-`AlbumSection` with its own grid or list, and a divider between them. The
+`MoreActionsMenu` on the other; `SelectionBar` in selection mode; and
+`AlbumView`, with the albums that `selectAlbums` picks, as `AlbumCard`s in a
+grid or `AlbumRow`s in a list. When they're grouped, `groupAlbums` splits them
+into sections, each under a heading, with a divider between them. The
 dialogs come last: `AlbumFormModal`, `SyncSetupDialog`, `SyncSettingsDialog`,
 `SettingsDialog` and `MusicFolderDialog`. The last is loaded with `lazy()` and
 only rendered once it's first opened, so its code, about 10 kB compressed,
@@ -434,6 +436,19 @@ Some details:
 - **The grid** has 5, 4, 3, 2 or 1 columns, from the widest screens to phones,
   or 6 to 2 when it's compact. Compact cards also have half the padding around
   their details, using antd's small card size.
+- **Long collections only have the albums near the screen built.** Up to 100
+  albums shown, `AlbumView` builds every card, as it always did. Above that,
+  where 2,000 antd cards took more than 2 seconds, it splits them into rows:
+  as many albums as fit across in the grid, one in the list, and a heading
+  before each section's. TanStack Virtual's `useWindowVirtualizer` then builds
+  only the rows on screen and a couple either side, placed in a box as tall as
+  all of them, as the page scrolls. The columns come from the same breakpoints
+  as the grid's styles. A row starts at an estimated height, is measured once
+  built, and again whenever its size changes.
+- **A card only renders again when its album does.** `AlbumCard` and
+  `AlbumRow` are memoised, `App` gives them handlers that stay the same, and
+  selection reaches them as a plain `selected` flag. So flipping a switch,
+  ticking an album or opening a dialog renders one card, not all of them.
 - **The add and edit form** wraps the whole dialog in its `Form`, through
   `modalRender`, so Enter and the button in the footer submit it, and the footer
   can see the fields. A click outside doesn't close it, so a half-filled form
@@ -840,7 +855,8 @@ collection with it to know whether there's anything to send. That's the
 
 - **For each album, the latest change wins,** by `updatedAt`. On a tie, the
   repository's copy wins, so an edit made on GitHub, which leaves `updatedAt`
-  as it was, sticks.
+  as it was, sticks. When both copies are the same, this device's stays, so
+  the albums that didn't change aren't drawn again.
 - **A deletion wins over the changes made before it.** If either side deleted
   an album at or after its last change, it's gone. If it changed after it was
   deleted, by an undo or an import, it stays, and the deletion is forgotten.
@@ -1083,7 +1099,9 @@ Testing antd in jsdom has a few catches:
 jsdom has no layout, camera or service worker, so those are checked by hand in a
 browser. Reading real music files is too: the tests replace music-metadata's
 `parseBlob` with `vi.mock`, and give files a `webkitRelativePath`, which jsdom's
-files lack.
+files lack. jsdom measures every row of a long collection as 0 tall, so
+`AlbumView` uses its estimated heights there, and the tests can still tell that
+only the first rows are built.
 
 ## Build, releases and deploys
 
@@ -1178,6 +1196,7 @@ default, and listen for `storage` events if open tabs should follow.
 | Missing covers only when the title and artist match         | A wrong cover is worse than none                                                        | Albums named differently from MusicBrainz get none, and need **Find covers** by hand           |
 | One cover lookup a second                                   | MusicBrainz asks for it, and turns busier clients away                                  | A big library takes a while: about 7 minutes for 400 albums                                    |
 | Deploy on release, not on merge                             | The site is always a released version                                                   | Merged changes wait for the next release                                                       |
+| Only the rows near the screen, above 100 albums             | 2,000 albums took more than 2 seconds to show, and any change drew every card again     | Find-in-page and screen readers only reach the albums near the screen, and two paths to test   |
 
 ## Known limitations
 
@@ -1194,9 +1213,10 @@ default, and listen for `storage` events if open tabs should follow.
 - **Size.** Every change saves the whole list in `localStorage`, and the whole
   `albums.json` on GitHub. That's fine for a personal collection, but it isn't
   built for tens of thousands of albums.
-- **Every album shown is rendered.** The grid and the list draw every album the
-  filters let through. A couple of thousand, which one music folder can add,
-  take a few seconds to show.
+- **Find-in-page and screen readers only reach the albums near the screen** in
+  a collection of more than 100 albums shown, as the rest aren't built. The
+  app's search still finds them all. A card that has the focus is lost if you
+  scroll it far out of view.
 - **Music on phones.** Phones' browsers can only pick folders from their file
   apps, so music that apps like Music or Spotify keep can't be imported. A
   computer can import it, and sync brings the albums to the phone.

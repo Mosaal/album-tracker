@@ -1,5 +1,12 @@
-import { Fragment, lazy, Suspense, useEffect, useMemo, useState } from "react";
-import { Button, Divider, Empty, Flex, message, Modal } from "antd";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { Button, Empty, Flex, message, Modal } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { createStyles } from "antd-style";
 import { albumCount, describeMusicImport } from "./albums/albumFiles";
@@ -12,11 +19,9 @@ import {
 } from "./albums/albumList";
 import { createCollectionStore } from "./albums/albumStore";
 import {
-  AlbumCard,
   AlbumFilters,
   AlbumFormModal,
-  AlbumRow,
-  AlbumSection,
+  AlbumView,
   AlbumViewToggle,
   CoverFinderStatus,
   Layout,
@@ -36,11 +41,7 @@ import {
   AlbumFormatFilter,
   AlbumInput,
   AlbumStatusFilter,
-  GridDensity,
 } from "./types";
-
-// minmax(0, 1fr) rather than 1fr so wide covers shrink instead of overflowing.
-const gridColumns = (count: number) => `repeat(${count}, minmax(0, 1fr))`;
 
 // Loaded the first time it's opened, as few people need it.
 const MusicFolderDialog = lazy(() =>
@@ -49,36 +50,17 @@ const MusicFolderDialog = lazy(() =>
   })),
 );
 
-// Albums in each row, from the widest screens down to phones.
-const GRID_COLUMNS: Record<GridDensity, number[]> = {
-  normal: [5, 4, 3, 2, 1],
-  compact: [6, 5, 4, 3, 2],
-};
-
-const useStyles = createStyles(({ responsive }, density: GridDensity) => {
-  const [widest, lg, md, sm, xs] = GRID_COLUMNS[density];
-  return {
-    grid: {
-      display: "grid",
-      gridTemplateColumns: gridColumns(widest),
-      gap: 16,
-      // Max-width queries overlap: keep them widest first so the narrowest wins.
-      [responsive.lg]: { gridTemplateColumns: gridColumns(lg) },
-      [responsive.md]: { gridTemplateColumns: gridColumns(md) },
-      [responsive.sm]: { gridTemplateColumns: gridColumns(sm) },
-      [responsive.xs]: { gridTemplateColumns: gridColumns(xs) },
-    },
-    // Kept at the end of the toolbar, even when it wraps onto a line of its
-    // own. On phones the view toggle and the buttons sit at either end of it.
-    actions: { marginInlineStart: "auto", [responsive.xs]: { width: "100%" } },
-  };
-});
+const useStyles = createStyles(({ responsive }) => ({
+  // Kept at the end of the toolbar, even when it wraps onto a line of its
+  // own. On phones the view toggle and the buttons sit at either end of it.
+  actions: { marginInlineStart: "auto", [responsive.xs]: { width: "100%" } },
+}));
 
 export default function App() {
   const { settings, updateSettings } = useSettings();
   // Saved with the settings, so the app opens the way it was left.
   const { sortOrder, viewMode, grouping } = settings;
-  const { styles } = useStyles(settings.gridDensity);
+  const { styles } = useStyles();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [store] = useState(createCollectionStore);
   const {
@@ -184,10 +166,12 @@ export default function App() {
     setIsFormOpen(true);
   };
 
-  const openEditForm = (album: Album) => {
+  // The handlers given to every album are stable, so the memoised cards and
+  // rows don't render again whenever App does.
+  const openEditForm = useCallback((album: Album) => {
     setEditingAlbum(album);
     setIsFormOpen(true);
-  };
+  }, []);
 
   const handleFormSubmit = (input: AlbumInput) => {
     if (editingAlbum) {
@@ -198,50 +182,59 @@ export default function App() {
     setIsFormOpen(false);
   };
 
-  const changeStatus = (album: Album, status: Album["status"]) => {
-    setAlbumsStatus([album.id], status);
-  };
+  const changeStatus = useCallback(
+    (album: Album, status: Album["status"]) => {
+      setAlbumsStatus([album.id], status);
+    },
+    [setAlbumsStatus],
+  );
 
   /** Says what was deleted, with an Undo that brings it back. */
-  const showDeleted = (content: string, restore: () => void) => {
-    const key = crypto.randomUUID();
-    messageApi.success({
-      key,
-      content: (
-        <>
-          {content}
-          <Button
-            type="link"
-            size="small"
-            onClick={() => {
-              restore();
-              messageApi.destroy(key);
-            }}
-          >
-            Undo
-          </Button>
-        </>
-      ),
-      // Long enough to notice the message and reach Undo.
-      duration: 8,
-    });
-  };
+  const showDeleted = useCallback(
+    (content: string, restore: () => void) => {
+      const key = crypto.randomUUID();
+      messageApi.success({
+        key,
+        content: (
+          <>
+            {content}
+            <Button
+              type="link"
+              size="small"
+              onClick={() => {
+                restore();
+                messageApi.destroy(key);
+              }}
+            >
+              Undo
+            </Button>
+          </>
+        ),
+        // Long enough to notice the message and reach Undo.
+        duration: 8,
+      });
+    },
+    [messageApi],
+  );
 
-  const confirmDelete = (album: Album) => {
-    modal.confirm({
-      title: "Delete this album?",
-      content: `"${album.title}" by ${album.artist} will be removed from your collection.`,
-      okText: "Delete",
-      okButtonProps: { danger: true },
-      // Start on Cancel so pressing Enter can't delete by accident.
-      focusable: { autoFocusButton: "cancel" },
-      onOk: () => {
-        showDeleted(`Deleted "${album.title}".`, deleteAlbums([album.id]));
-      },
-    });
-  };
+  const confirmDelete = useCallback(
+    (album: Album) => {
+      modal.confirm({
+        title: "Delete this album?",
+        content: `"${album.title}" by ${album.artist} will be removed from your collection.`,
+        okText: "Delete",
+        okButtonProps: { danger: true },
+        // Start on Cancel so pressing Enter can't delete by accident.
+        focusable: { autoFocusButton: "cancel" },
+        onOk: () => {
+          showDeleted(`Deleted "${album.title}".`, deleteAlbums([album.id]));
+        },
+      });
+    },
+    [modal, showDeleted, deleteAlbums],
+  );
 
-  const toggleSelected = (album: Album) => {
+  const toggleSelected = useCallback((album: Album) => {
     setSelectedIds((current) => {
       const next = new Set(current);
       if (!next.delete(album.id)) {
@@ -249,44 +242,7 @@ export default function App() {
       }
       return next;
     });
-  };
-
-  const selectionOf = (album: Album) =>
-    selectedIds && {
-      selected: selectedIds.has(album.id),
-      onToggle: toggleSelected,
-    };
-
-  /** The albums as cards in the grid, or rows in the list. */
-  const renderAlbums = (shown: Album[]) =>
-    viewMode === "grid" ? (
-      <div className={styles.grid}>
-        {shown.map((album) => (
-          <AlbumCard
-            key={album.id}
-            album={album}
-            compact={settings.gridDensity === "compact"}
-            onEdit={openEditForm}
-            onDelete={confirmDelete}
-            onStatusChange={changeStatus}
-            selection={selectionOf(album)}
-          />
-        ))}
-      </div>
-    ) : (
-      <Flex vertical gap="16px">
-        {shown.map((album) => (
-          <AlbumRow
-            key={album.id}
-            album={album}
-            onEdit={openEditForm}
-            onDelete={confirmDelete}
-            onStatusChange={changeStatus}
-            selection={selectionOf(album)}
-          />
-        ))}
-      </Flex>
-    );
+  }, []);
 
   const markSelected = (status: Album["status"]) => {
     setAlbumsStatus(
@@ -459,19 +415,18 @@ export default function App() {
               </Button>
             )}
           </Empty>
-        ) : groups ? (
-          <div>
-            {groups.map((group, index) => (
-              <Fragment key={group.key}>
-                {index > 0 && <Divider />}
-                <AlbumSection title={group.label} count={group.albums.length}>
-                  {renderAlbums(group.albums)}
-                </AlbumSection>
-              </Fragment>
-            ))}
-          </div>
         ) : (
-          renderAlbums(visibleAlbums)
+          <AlbumView
+            albums={visibleAlbums}
+            groups={groups}
+            viewMode={viewMode}
+            density={settings.gridDensity}
+            selectedIds={selectedIds}
+            onEdit={openEditForm}
+            onDelete={confirmDelete}
+            onStatusChange={changeStatus}
+            onToggleSelected={toggleSelected}
+          />
         )}
       </Flex>
       <AlbumFormModal
