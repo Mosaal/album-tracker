@@ -27,6 +27,7 @@ import {
 } from "../../importExport/musicLibrary";
 import { readTracks } from "../../importExport/musicTags";
 import { Album, AlbumFormat, AlbumInput } from "../../types";
+import { CoverImage } from "../CoverImage";
 
 const useStyles = createStyles(({ token }) => ({
   list: {
@@ -143,10 +144,9 @@ function Cover({
   return (
     <span className={className}>
       {thumbnail && thumbnail !== failedUrl ? (
-        <img
+        <CoverImage
           src={thumbnail}
           alt=""
-          loading="lazy"
           onError={() => setFailedUrl(thumbnail)}
         />
       ) : (

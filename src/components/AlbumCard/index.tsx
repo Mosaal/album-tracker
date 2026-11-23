@@ -10,19 +10,24 @@ import { AlbumByline } from "../AlbumByline";
 import { AlbumCheckbox, AlbumSelection } from "../AlbumCheckbox";
 import { AlbumNotesButton } from "../AlbumNotesButton";
 import { AlbumStatusSwitch } from "../AlbumStatusSwitch";
+import { CoverImage } from "../CoverImage";
 
 const useCoverStyles = createStyles(({ token }) => ({
-  image: {
+  // A tinted square, which shows while the cover loads or if there's none.
+  frame: {
     aspectRatio: "1 / 1",
-    objectFit: "cover",
-  },
-  placeholder: {
-    aspectRatio: "1 / 1",
+    overflow: "hidden",
     alignContent: "center",
     textAlign: "center",
     fontSize: token.fontSizeHeading1,
     color: token.colorTextQuaternary,
     background: token.colorFillTertiary,
+  },
+  image: {
+    display: "block",
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
   },
 }));
 
@@ -48,23 +53,22 @@ function AlbumCover({ album }: { album: Album }) {
   const { styles } = useCoverStyles();
   // Tracks the URL that failed, so editing in a different one tries again.
   const [failedUrl, setFailedUrl] = useState<string>();
-
-  if (!album.coverUrl || album.coverUrl === failedUrl) {
-    return (
-      <div className={styles.placeholder}>
-        <PictureOutlined />
-      </div>
-    );
-  }
+  const { coverUrl } = album;
 
   return (
-    <img
-      className={styles.image}
-      alt={album.title}
-      src={album.coverUrl}
-      loading="lazy"
-      onError={() => setFailedUrl(album.coverUrl)}
-    />
+    <div className={styles.frame}>
+      {coverUrl && coverUrl !== failedUrl ? (
+        <CoverImage
+          key={coverUrl}
+          className={styles.image}
+          alt={album.title}
+          src={coverUrl}
+          onError={() => setFailedUrl(coverUrl)}
+        />
+      ) : (
+        <PictureOutlined />
+      )}
+    </div>
   );
 }
 

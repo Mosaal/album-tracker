@@ -9,8 +9,10 @@ import { AlbumByline } from "../AlbumByline";
 import { AlbumCheckbox, AlbumSelection } from "../AlbumCheckbox";
 import { AlbumNotesButton } from "../AlbumNotesButton";
 import { AlbumStatusSwitch } from "../AlbumStatusSwitch";
+import { CoverImage } from "../CoverImage";
 
 function AlbumThumbnail({ album }: { album: Album }) {
+  const { token } = theme.useToken();
   // Tracks the URL that failed, so editing in a different one tries again.
   const [failedUrl, setFailedUrl] = useState<string>();
   const coverUrl = album.coverUrl === failedUrl ? undefined : album.coverUrl;
@@ -20,13 +22,16 @@ function AlbumThumbnail({ album }: { album: Album }) {
       shape="square"
       size={64}
       icon={<PictureOutlined />}
+      // antd clears the square's background behind an image, which would leave
+      // it blank while the cover loads.
+      style={coverUrl ? { background: token.colorTextPlaceholder } : undefined}
       // An image rather than its URL, so it only loads when scrolled near.
       src={
         coverUrl ? (
-          <img
+          <CoverImage
+            key={coverUrl}
             src={coverUrl}
             alt={album.title}
-            loading="lazy"
             onError={() => setFailedUrl(coverUrl)}
           />
         ) : undefined

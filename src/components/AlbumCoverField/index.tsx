@@ -7,6 +7,7 @@ import { CoverResult, searchCovers } from "../../api/coverArt";
 import { MusicBrainzError } from "../../api/musicBrainz";
 import { AlbumInput } from "../../types";
 import { isHttpUrl } from "../../utils/urls";
+import { CoverImage } from "../CoverImage";
 
 type CoverSearch =
   | { status: "idle" | "loading" }
@@ -45,14 +46,19 @@ const useStyles = createStyles(({ token }) => ({
     borderColor: token.colorPrimary,
     boxShadow: `0 0 0 1px ${token.colorPrimary}`,
   },
+  // Shows while the thumbnail loads.
+  thumbnail: {
+    display: "block",
+    aspectRatio: "1 / 1",
+    overflow: "hidden",
+    borderRadius: token.borderRadiusSM,
+    background: token.colorFillTertiary,
+  },
   image: {
     display: "block",
     width: "100%",
-    aspectRatio: "1 / 1",
+    height: "100%",
     objectFit: "cover",
-    borderRadius: token.borderRadiusSM,
-    // Shows while the thumbnail loads.
-    background: token.colorFillTertiary,
   },
   caption: {
     overflow: "hidden",
@@ -166,12 +172,16 @@ export function AlbumCoverField() {
                 title={details ? `${cover.title} (${details})` : cover.title}
                 onClick={() => pickCover(cover)}
               >
-                <img
-                  className={styles.image}
-                  src={cover.thumbnailUrl}
-                  alt=""
-                  onError={() => setFailedIds((ids) => [...ids, cover.id])}
-                />
+                <span className={styles.thumbnail}>
+                  <CoverImage
+                    className={styles.image}
+                    src={cover.thumbnailUrl}
+                    alt=""
+                    // Not lazy: each must try to load, so the failures drop out.
+                    loading="eager"
+                    onError={() => setFailedIds((ids) => [...ids, cover.id])}
+                  />
+                </span>
                 <span className={styles.caption}>{cover.title}</span>
                 <span className={cx(styles.caption, styles.details)}>
                   {details}
