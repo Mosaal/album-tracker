@@ -462,3 +462,49 @@ describe("years and notes", () => {
     ).toBeNull();
   });
 });
+
+describe("a long collection", () => {
+  // Above 100 albums shown, only the rows near the screen are built.
+  const LONG: Album[] = Array.from({ length: 150 }, (_, index) => ({
+    id: `long-${index}`,
+    title: `Album ${String(index + 1).padStart(3, "0")}`,
+    artist: `Artist ${Math.floor(index / 15)}`,
+    status: index < 60 ? "wishlisted" : "owned",
+  }));
+
+  it("only builds the albums near the top of the page", async () => {
+    const user = renderApp(LONG);
+    const built = cardTitles();
+    expect(built[0]).toBe("Album 001");
+    expect(built.length).toBeLessThan(LONG.length);
+    expect(built).not.toContain("Album 150");
+
+    // 100 or fewer are all built.
+    await choose(user, "Filter by status", "Wishlisted");
+    expect(cardTitles()).toHaveLength(60);
+  });
+
+  it("does the same in the list, and in sections", async () => {
+    const user = renderApp(LONG);
+    await user.click(screen.getByText("List"));
+    expect(screen.getByText("Album 001")).toBeInTheDocument();
+    expect(screen.queryByText("Album 150")).toBeNull();
+
+    await choose(user, "Group albums", "Group by artist");
+    expect(
+      screen.getByRole("heading", { name: "Artist 0" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Artist 9" })).toBeNull();
+  });
+
+  it("selects every album, built or not", async () => {
+    const user = renderApp(LONG);
+    await user.click(screen.getByRole("button", { name: "More actions" }));
+    await user.click(await screen.findByText("Select albums"));
+    await user.click(screen.getByRole("button", { name: "Select all" }));
+    expect(screen.getByText("150 albums selected")).toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: "Mark owned" }));
+    expect(saved().every((album) => album.status === "owned")).toBe(true);
+  });
+});

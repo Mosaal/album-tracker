@@ -1,5 +1,6 @@
 import { timeOf } from "../albums/timestamps";
 import { Album, Collection } from "../types";
+import { sameAlbum } from "./syncFile";
 
 /** The more recently changed version of an album. The second wins a tie. */
 const newer = (a: Album, b: Album) =>
@@ -47,7 +48,14 @@ export function mergeCollections(
   for (const id of ids) {
     const mine = localAlbums.get(id);
     const theirs = remoteAlbums.get(id);
-    const album = mine && theirs ? newer(mine, theirs) : (theirs ?? mine)!;
+    // This device's copy when they're the same, so the albums that didn't
+    // change stay as they were and aren't drawn again.
+    const album =
+      mine && theirs
+        ? sameAlbum(mine, theirs)
+          ? mine
+          : newer(mine, theirs)
+        : (theirs ?? mine)!;
     const deletion = deletedAt.get(id);
     if (deletion !== undefined && timeOf(deletion) >= timeOf(album.updatedAt)) {
       continue;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import { Card, Flex, Tag } from "antd";
 import { PictureOutlined } from "@ant-design/icons";
 import { createStyles } from "antd-style";
@@ -79,19 +79,30 @@ interface AlbumCardProps {
   onEdit: (album: Album) => void;
   onDelete: (album: Album) => void;
   onStatusChange: (album: Album, status: Album["status"]) => void;
-  /** Set in selection mode, which swaps the card's buttons for a checkbox. */
-  selection?: AlbumSelection;
+  /**
+   * Whether the album is picked, set only in selection mode, which swaps the
+   * card's buttons for a checkbox.
+   */
+  selected?: boolean;
+  onToggleSelected: (album: Album) => void;
 }
 
-export function AlbumCard({
+// Memoised, so a change to one album, or to the page around them, doesn't
+// render every card again.
+export const AlbumCard = memo(function AlbumCard({
   album,
   compact,
   onEdit,
   onDelete,
   onStatusChange,
-  selection,
+  selected,
+  onToggleSelected,
 }: AlbumCardProps) {
   const { styles, cx } = useCardStyles();
+  const selection: AlbumSelection | undefined =
+    selected === undefined
+      ? undefined
+      : { selected, onToggle: onToggleSelected };
 
   return (
     <Card
@@ -140,4 +151,4 @@ export function AlbumCard({
       </Flex>
     </Card>
   );
-}
+});

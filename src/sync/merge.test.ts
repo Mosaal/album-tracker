@@ -32,6 +32,22 @@ describe("mergeCollections", () => {
     expect(titles(merged)).toEqual(["Blue Lines", "Protection", "Mezzanine"]);
   });
 
+  it("keeps this device's copy of an album the repository has unchanged", () => {
+    const local = collection([
+      album("1", "Blue Lines", MARCH_1),
+      album("2", "Protection", MARCH_1),
+    ]);
+    const remote = collection([
+      album("1", "Blue Lines", MARCH_1),
+      album("2", "Protection (Remastered)", MARCH_2),
+    ]);
+    const merged = mergeCollections(local, remote);
+
+    // The same object, so the album isn't drawn again.
+    expect(merged.albums[0]).toBe(local.albums[0]);
+    expect(merged.albums[1]).toBe(remote.albums[1]);
+  });
+
   it("keeps the most recent change to an album, from either side", () => {
     const local = collection([
       album("1", "Blue Lines (Remastered)", MARCH_2),

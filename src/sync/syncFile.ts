@@ -159,7 +159,8 @@ export function readSyncFile(text: string): Collection {
 
 const name = (album: Album) => `"${album.title}" by ${album.artist}`;
 
-const sameAlbum = (a: Album, b: Album) =>
+/** The same album, with the same details, however they were written. */
+export const sameAlbum = (a: Album, b: Album) =>
   JSON.stringify(tidy(a)) === JSON.stringify(tidy(b));
 
 /** Only the status changed, to `status`. */
