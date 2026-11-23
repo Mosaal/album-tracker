@@ -200,33 +200,33 @@ Each component has a folder with an `index.tsx`, and some an `index.test.tsx`.
 `MusicFolderDialog`, which `App.tsx` loads the first time it's opened. The rest
 are parts of those.
 
-| Component            | What it is                                                                                                                            |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `Layout`             | The theme, the header (name, version, sync icon and theme menu) and the page background. `theme.ts` beside it has the theme overrides |
-| `AlbumFilters`       | Search, sort, grouping, the status, format, artist and decade filters, and the album count                                            |
-| `AlbumViewToggle`    | Grid or list                                                                                                                          |
-| `AlbumSection`       | A heading and its albums, when they're grouped                                                                                        |
-| `MoreActionsMenu`    | The ⋯ menu: select albums, sync, export, import and settings                                                                          |
-| `MusicFolderDialog`  | Imports the albums in a folder of music files: choose the folder, read it, pick the format and the albums                             |
-| `AlbumCard`          | An album in the grid                                                                                                                  |
-| `AlbumRow`           | An album in the list                                                                                                                  |
-| `AlbumByline`        | The artist and year, like "Miles Davis · 1959"                                                                                        |
-| `AlbumStatusSwitch`  | Owned or wishlisted, switched in one click                                                                                            |
-| `AlbumNotesButton`   | Shows an album's notes in a popover                                                                                                   |
-| `AlbumActionButtons` | The edit and delete buttons                                                                                                           |
-| `AlbumCheckbox`      | Picks an album in selection mode                                                                                                      |
-| `SelectionBar`       | What to do with the selected albums                                                                                                   |
-| `AlbumFormModal`     | The add and edit dialog                                                                                                               |
-| `AlbumCoverField`    | The cover field, and the cover search                                                                                                 |
-| `BarcodeScanDialog`  | The camera or a typed number, and the barcode lookup                                                                                  |
-| `SettingsDialog`     | The grid density and the format for new albums                                                                                        |
-| `SyncSetupDialog`    | Connects to a repository, as a new setup or with a setup code                                                                         |
-| `SyncSettingsDialog` | The sync status, Sync now, the setup code, the token and Disconnect                                                                   |
-| `SyncStatusButton`   | The sync icon in the header                                                                                                           |
-| `CoverFinderStatus`  | How finding covers is going, as a ring in the header, with **Stop**                                                                   |
-| `ThemeMenu`          | The theme button in the header, with Light, Dark and System to pick from                                                              |
-| `ExternalLink`       | A link that opens in a new tab                                                                                                        |
-| `formRules.ts`       | Form checks the sync dialogs share                                                                                                    |
+| Component            | What it is                                                                                                                                                                                  |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Layout`             | The theme, the header (name, version, sync icon and theme menu) and the page background. `theme.ts` beside it has the theme overrides, and `pinPage.ts` holds the page still behind dialogs |
+| `AlbumFilters`       | Search, sort, grouping, the status, format, artist and decade filters, and the album count                                                                                                  |
+| `AlbumViewToggle`    | Grid or list                                                                                                                                                                                |
+| `AlbumSection`       | A heading and its albums, when they're grouped                                                                                                                                              |
+| `MoreActionsMenu`    | The ⋯ menu: select albums, sync, export, import and settings                                                                                                                                |
+| `MusicFolderDialog`  | Imports the albums in a folder of music files: choose the folder, read it, pick the format and the albums                                                                                   |
+| `AlbumCard`          | An album in the grid                                                                                                                                                                        |
+| `AlbumRow`           | An album in the list                                                                                                                                                                        |
+| `AlbumByline`        | The artist and year, like "Miles Davis · 1959"                                                                                                                                              |
+| `AlbumStatusSwitch`  | Owned or wishlisted, switched in one click                                                                                                                                                  |
+| `AlbumNotesButton`   | Shows an album's notes in a popover                                                                                                                                                         |
+| `AlbumActionButtons` | The edit and delete buttons                                                                                                                                                                 |
+| `AlbumCheckbox`      | Picks an album in selection mode                                                                                                                                                            |
+| `SelectionBar`       | What to do with the selected albums                                                                                                                                                         |
+| `AlbumFormModal`     | The add and edit dialog                                                                                                                                                                     |
+| `AlbumCoverField`    | The cover field, and the cover search                                                                                                                                                       |
+| `BarcodeScanDialog`  | The camera or a typed number, and the barcode lookup                                                                                                                                        |
+| `SettingsDialog`     | The grid density and the format for new albums                                                                                                                                              |
+| `SyncSetupDialog`    | Connects to a repository, as a new setup or with a setup code                                                                                                                               |
+| `SyncSettingsDialog` | The sync status, Sync now, the setup code, the token and Disconnect                                                                                                                         |
+| `SyncStatusButton`   | The sync icon in the header                                                                                                                                                                 |
+| `CoverFinderStatus`  | How finding covers is going, as a ring in the header, with **Stop**                                                                                                                         |
+| `ThemeMenu`          | The theme button in the header, with Light, Dark and System to pick from                                                                                                                    |
+| `ExternalLink`       | A link that opens in a new tab                                                                                                                                                              |
+| `formRules.ts`       | Form checks the sync dialogs share                                                                                                                                                          |
 
 ### `src/test` and `src/utils`
 
@@ -1010,6 +1010,13 @@ manifest, both configured in `vite.config.ts`. It's off in development.
 - **Dialogs** get 24 px of space below them, through the `modal` setting
   `Layout` gives `ConfigProvider`. antd 6 leaves none, so a dialog taller than
   the screen would end flush with its bottom edge.
+- **The page behind a dialog stays still.** antd stops it scrolling by hiding
+  the body's vertical overflow, which iOS Safari ignores when you drag the page.
+  So while antd's lock is on, `pinPage.ts` in `Layout` cuts the page to the
+  window's height and scrolls the body instead, keeping the same albums in
+  view, then scrolls the page back when the last dialog closes. It doesn't fix
+  the body in place, the usual way, because that turns the strips behind
+  Safari 26's status bar and toolbar grey.
 - **Styles** live with their component, written with antd-style's
   `createStyles` and the theme's tokens, so they follow the theme. The only
   global CSS is antd's reset, loaded in `main.tsx`.

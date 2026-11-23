@@ -1,4 +1,4 @@
-import { useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import {
   App as AntdApp,
   ConfigProvider,
@@ -12,6 +12,7 @@ import { createStyles } from "antd-style";
 
 import { ThemeMode, useMediaQuery, useThemeMode } from "../../hooks";
 import { ThemeMenu } from "../ThemeMenu";
+import { pinPageBehindDialogs } from "./pinPage";
 import { getThemeConfig } from "./theme";
 
 // antd 6 moves each dialog 100px down the page but, unlike antd 5, leaves no
@@ -31,6 +32,8 @@ interface LayoutProps {
 export function Layout({ children, headerExtra }: LayoutProps) {
   const { mode, isDark, setMode } = useThemeMode();
   const isTouch = useMediaQuery("(pointer: coarse)");
+  useEffect(() => pinPageBehindDialogs(), []);
+
   return (
     <ConfigProvider
       theme={getThemeConfig(isDark, isTouch)}
