@@ -211,6 +211,7 @@ are parts of those.
 | `AlbumCard`          | An album in the grid                                                                                                                                                                        |
 | `AlbumRow`           | An album in the list                                                                                                                                                                        |
 | `AlbumByline`        | The artist and year, like "Miles Davis · 1959"                                                                                                                                              |
+| `CoverImage`         | A cover that fades in once it has loaded, wherever covers show                                                                                                                              |
 | `AlbumStatusSwitch`  | Owned or wishlisted, switched in one click                                                                                                                                                  |
 | `AlbumNotesButton`   | Shows an album's notes in a popover                                                                                                                                                         |
 | `AlbumActionButtons` | The edit and delete buttons                                                                                                                                                                 |
@@ -441,7 +442,14 @@ Some details:
   anyway**. **Scan a barcode** only shows when adding.
 - **Covers** in the grid and list are `<img loading="lazy">`, so only the ones
   near the screen load. One that's missing or fails to load shows a
-  placeholder.
+  placeholder. Each is a `CoverImage`, as are the cover picker's thumbnails and
+  the music folder list's. It stays hidden over a tinted square until it has
+  loaded, then fades in, so covers don't pop in as they arrive, which can take
+  a second or two. A cover that's ready within a tenth of a second, as one from
+  a cache is, shows straight away, so switching between grid and list doesn't
+  make covers fade again. There's no fade either for people who ask their
+  device to reduce motion. Whether a cover has loaded is kept on the
+  `<img>` itself, so a long list doesn't render again as each one arrives.
 
 ## Album rules
 
@@ -1019,7 +1027,10 @@ manifest, both configured in `vite.config.ts`. It's off in development.
   Safari 26's status bar and toolbar grey.
 - **Styles** live with their component, written with antd-style's
   `createStyles` and the theme's tokens, so they follow the theme. The only
-  global CSS is antd's reset, loaded in `main.tsx`.
+  global CSS is antd's reset, loaded in `main.tsx`. `CoverImage` builds its
+  styles once with `createStaticStyles` instead, using antd's CSS variables,
+  because `createStyles` does a little work for every copy of a component, which
+  adds up in a grid of thousands of covers.
 - **Accessibility.** Buttons with only an icon have a label, the album count and
   the sync status are announced as they change (`role="status"`), and
   confirmations that delete or disconnect start on **Cancel**.
