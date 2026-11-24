@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.13.0](https://github.com/Mosaal/album-tracker/compare/v0.12.0...v0.13.0) (2026-11-23)
+
+
+### Features
+
+* fade covers in as they arrive ([#67](https://github.com/Mosaal/album-tracker/issues/67)) ([1ac33b4](https://github.com/Mosaal/album-tracker/commit/1ac33b47d3ddd1c7065bb9673358823abe4cef02))
+* find missing covers in the background ([#65](https://github.com/Mosaal/album-tracker/issues/65)) ([2e84995](https://github.com/Mosaal/album-tracker/commit/2e849951cff891967e6a432fc1cfc2b9255f0d09))
+* import albums from a music folder ([#63](https://github.com/Mosaal/album-tracker/issues/63)) ([244d7ba](https://github.com/Mosaal/album-tracker/commit/244d7bac5bfc61fa4bd08f3068fe5652358e33cf))
+* set the format of selected albums ([#62](https://github.com/Mosaal/album-tracker/issues/62)) ([9ea004b](https://github.com/Mosaal/album-tracker/commit/9ea004b173d0fc8e8ba7eb68aceba42b417179c0))
+
+
+### Bug Fixes
+
+* stop the page behind a dialog scrolling on phones ([#66](https://github.com/Mosaal/album-tracker/issues/66)) ([a7ede8a](https://github.com/Mosaal/album-tracker/commit/a7ede8a48ecbb538b034570d0b8d6080cfe576c1))
+
+
+### Performance Improvements
+
+* render only the albums near the screen ([#68](https://github.com/Mosaal/album-tracker/issues/68)) ([96fce02](https://github.com/Mosaal/album-tracker/commit/96fce020ea6c00b4b81df88ee398181397908242))
+
 ## [0.12.0](https://github.com/Mosaal/album-tracker/compare/v0.11.0...v0.12.0) (2026-11-22)
 
 
